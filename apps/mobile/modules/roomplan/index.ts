@@ -27,6 +27,12 @@ export interface RoomPlanNativeModule {
 
 export type CameraPermission = 'authorized' | 'denied' | 'restricted' | 'notDetermined';
 export type CaptureStatus = 'idle' | 'scanning' | 'processing' | 'done' | 'error';
+export type RoomPlanCapabilityReason = 'ready' | 'native-module-missing' | 'unsupported-device';
+export interface RoomPlanCapability {
+  moduleLinked: boolean;
+  supported: boolean;
+  reason: RoomPlanCapabilityReason;
+}
 /** Payload of `onCaptureStatus`. Counts are live while scanning (didUpdate) and final on `done`. */
 export interface CaptureProgress {
   status: CaptureStatus;
@@ -66,6 +72,19 @@ export function isSupported(): boolean {
     return Boolean(mod.isSupported());
   } catch {
     return false;
+  }
+}
+
+export function getRoomPlanCapability(): RoomPlanCapability {
+  const mod = getRoomPlanModule();
+  if (!mod) {
+    return { moduleLinked: false, supported: false, reason: 'native-module-missing' };
+  }
+  try {
+    const supported = Boolean(mod.isSupported());
+    return { moduleLinked: true, supported, reason: supported ? 'ready' : 'unsupported-device' };
+  } catch {
+    return { moduleLinked: true, supported: false, reason: 'unsupported-device' };
   }
 }
 

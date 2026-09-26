@@ -8,9 +8,9 @@ import {
   type CaptureProgress,
   type CaptureStatus,
   EMPTY_EXPORT,
+  getRoomPlanCapability,
   getRoomPlanModule,
-  isRoomPlanAvailable,
-  isSupported,
+  type RoomPlanCapability,
   RoomPlanView,
 } from '../modules/roomplan';
 import { api } from '../src/api';
@@ -25,8 +25,8 @@ import { Linking } from 'react-native';
 import { formatArea, formatDims } from '../src/units';
 
 export default function Scan() {
-  const supported = useMemo(() => isSupported(), []);
-  return supported ? <LiveScan /> : <Fallback />;
+  const capability = useMemo(() => getRoomPlanCapability(), []);
+  return capability.supported ? <LiveScan /> : <Fallback capability={capability} />;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -158,7 +158,7 @@ function LiveScan() {
 // ---------------------------------------------------------------------------------------------
 // Fallback (Expo Go, Simulator, non-LiDAR device, Android).
 // ---------------------------------------------------------------------------------------------
-function Fallback() {
+function Fallback({ capability }: { capability: RoomPlanCapability }) {
   const router = useRouter();
   const toast = useToast();
   const insets = useSafeAreaInsets();
@@ -169,9 +169,10 @@ function Fallback() {
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasted, setPasted] = useState('');
 
-  const reason = isRoomPlanAvailable()
-    ? 'This device has no LiDAR sensor, so RoomPlan cannot run here.'
-    : 'You are running in Expo Go or the Simulator, where the RoomPlan native module is not linked.';
+  const title = capability.moduleLinked ? 'RoomPlan needs a LiDAR iPhone or iPad Pro' : 'Install the TestFlight build on a LiDAR iPhone';
+  const reason = capability.moduleLinked
+    ? 'RoomPlan is linked, but Apple reports this device cannot run room capture. Use an iPhone Pro or iPad Pro with LiDAR on iOS 16 or newer.'
+    : 'This runtime does not include our RoomPlan native module. Expo Go, web, and generic simulator builds cannot scan rooms.';
 
   const openEditor = useCallback(
     (layoutId: string) => router.replace(`/editor/${encodeURIComponent(layoutId)}`),
@@ -222,10 +223,10 @@ function Fallback() {
             <View style={styles.heroIcon}>
               <MaterialCommunityIcons name="cube-scan" size={40} color={colors.tile} />
             </View>
-            <Text style={[type.h2, { textAlign: 'center' }]}>RoomPlan needs a LiDAR iPhone and the dev-client build</Text>
+            <Text style={[type.h2, { textAlign: 'center' }]}>{title}</Text>
             <Text style={[type.body, { textAlign: 'center', color: colors.inkSoft }]}>{reason}</Text>
             <Text style={[type.small, { textAlign: 'center' }]}>
-              Run <Text style={styles.mono}>npx expo run:ios --device</Text> on an iPhone Pro to scan for real. Meanwhile, pick another way in:
+              Install the latest TestFlight build, or run <Text style={styles.mono}>npx expo run:ios --device</Text> on a LiDAR iPhone Pro to scan for real. Meanwhile, pick another way in:
             </Text>
           </Tile>
 

@@ -1,0 +1,10 @@
+{
+  "name": "expo-roomplan",
+  "version": "0.1.0",
+  "description": "Local Expo module for Apple RoomPlan capture in Adaptive Room Planner.",
+  "main": "index.ts",
+  "private": true,
+  "expo-module": {
+    "platforms": ["apple"]
+  }
+}
