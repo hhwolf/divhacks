@@ -1,4 +1,4 @@
-import type { FurnitureItem, Layout, Room, ValidationResult } from '@arp/contracts';
+import type { FurnitureItem, HousingProfile, Layout, PaymentPurpose, PaymentQuote, RentAssessment, Room, ValidationResult } from '@arp/contracts';
 
 let base = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000';
 export function setApiBase(url: string) { base = url.replace(/\/$/, ''); }
@@ -17,6 +17,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 export interface LayoutResponse { layout: Layout; furniture: Record<string, FurnitureItem>; validation?: ValidationResult; room?: Room }
 export interface RoomResponse { room: Room; layouts: Layout[]; currentLayout?: Layout }
 export interface AgentResponse { plan: unknown; layout: Layout | null; reply: string; status: string; links?: string[]; requestId?: string }
+export interface RentAssessBody extends HousingProfile { layoutId?: string | null }
 export interface CompareResponse {
   a: Layout; b: Layout;
   deltas: { openFloor: number; conflicts: number; reachableStorage: number; largestFreeRectArea: number };
@@ -43,6 +44,9 @@ export const api = {
     return res.json() as Promise<FurnitureItem | { item: FurnitureItem }>;
   },
   agent: (body: { text: string; roomId: string; baseLayoutId: string; furnitureId?: string; channel: 'app' }) => req<AgentResponse>('/agent/request', { method: 'POST', body: JSON.stringify(body) }),
+  assessRent: (body: RentAssessBody) => req<{ assessment: RentAssessment }>('/rent/assess', { method: 'POST', body: JSON.stringify(body) }),
+  paymentQuote: (body: { purpose: PaymentPurpose; amount: number; rentAmount?: number | null; roomId?: string; assessmentId?: string }) => req<{ quote: PaymentQuote }>('/payments/quote', { method: 'POST', body: JSON.stringify(body) }),
+  paymentCheckout: (body: { purpose: PaymentPurpose; amount: number; rentAmount?: number | null; roomId?: string; assessmentId?: string }) => req<{ quote: PaymentQuote; url: string | null }>('/payments/checkout', { method: 'POST', body: JSON.stringify(body) }),
 };
 
 export function unwrapLayout(r: LayoutResponse | Layout): Layout { return 'layout' in r ? r.layout : r; }

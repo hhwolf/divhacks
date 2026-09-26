@@ -32,6 +32,10 @@ class Settings:
     photon_webhook_secret: str
     photon_base_url: str
     photon_from: str
+    stripe_secret_key: str
+    stripe_webhook_secret: str
+    stripe_price_mode: str
+    stripe_connect_enabled: bool
     demo_phone: str
     public_web_url: str
     public_api_url: str
@@ -52,6 +56,10 @@ class Settings:
             photon_webhook_secret=_env("PHOTON_WEBHOOK_SECRET"),
             photon_base_url=_env("PHOTON_BASE_URL", "https://spectrum.photon.codes"),
             photon_from=_env("PHOTON_FROM"),
+            stripe_secret_key=_env("STRIPE_SECRET_KEY"),
+            stripe_webhook_secret=_env("STRIPE_WEBHOOK_SECRET"),
+            stripe_price_mode=_env("STRIPE_PRICE_MODE", "mock"),
+            stripe_connect_enabled=_env("STRIPE_CONNECT_ENABLED", "false").lower() in _TRUE,
             demo_phone=_env("DEMO_PHONE", "+15555550100"),
             public_web_url=_env("PUBLIC_WEB_URL", "http://localhost:5173"),
             public_api_url=_env("PUBLIC_API_URL", "http://localhost:8000"),
@@ -73,6 +81,10 @@ class Settings:
     @property
     def photon_live(self) -> bool:
         return self.live(self.photon_api_key)
+
+    @property
+    def stripe_live(self) -> bool:
+        return self.live(self.stripe_secret_key) and self.stripe_price_mode != "mock"
 
     @property
     def mongo_live(self) -> bool:

@@ -60,7 +60,7 @@ export interface Layout {
 
 export interface Room { id: string; userId?: string | null; name: string; skeleton: RoomSkeleton; source: 'scan' | 'manual' | 'sample'; createdAt?: string }
 
-export type Intent = 'fit_item' | 'make_space' | 'keep_clear' | 'compare' | 'clarify';
+export type Intent = 'fit_item' | 'make_space' | 'keep_clear' | 'compare' | 'rent_check' | 'payment_check' | 'housing_quality' | 'clarify';
 export interface PlanConstraint { type: 'lock' | 'adjacent' | 'keep_clear' | 'clear_zone'; item?: string; feature?: 'window' | 'door' | 'outlet' | 'wall'; w_m?: number; d_m?: number; label?: string; optional?: boolean }
 export interface PlanAction { type: 'add' | 'move' | 'remove' | 'rotate'; item: string; zone?: string; rotation?: number }
 export interface AgentPlan { intent: Intent; variantName?: string; constraints?: PlanConstraint[]; actions?: PlanAction[]; reply: string; clarifyingQuestion?: string; preferencesLearned?: string[] }
@@ -78,3 +78,71 @@ export type BridgeType =
 export interface BridgeMessage<T = unknown> { type: BridgeType; id?: string; payload?: T }
 
 export type Units = 'imperial' | 'metric';
+
+// ---- Rent reality check + guarded payment prototype ----
+export type OccupancyType = 'whole_apartment' | 'studio' | 'private_room' | 'shared_room';
+export type FloorMaterial = 'hardwood' | 'engineered_wood' | 'tile' | 'laminate' | 'concrete' | 'carpet' | 'vinyl' | 'unknown';
+export type Confidence = 'high' | 'medium' | 'low';
+export type PaymentPurpose = 'rent_payment' | 'deposit' | 'application_fee' | 'furniture_purchase';
+export type PaymentStatus = 'mock' | 'ready' | 'blocked' | 'paid_test';
+export interface HousingProfile {
+  roomId: string;
+  address?: string | null;
+  zip?: string | null;
+  borough?: string | null;
+  neighborhood?: string | null;
+  bbl?: string | null;
+  source?: 'user' | 'fixture' | 'open_data';
+  askingRent: number;
+  depositRequested?: number | null;
+  applicationFee?: number | null;
+  utilitiesIncluded?: boolean;
+  occupancyType?: OccupancyType;
+  bedrooms?: number | null;
+  declaredIssues?: string[];
+}
+export interface SpaceQuality {
+  floorAreaSqFt: number;
+  usableAreaSqFt: number;
+  openFloorPct: number;
+  ceilingHeightFt: number;
+  windowCount: number;
+  floorMaterial: FloorMaterial;
+  materialConfidence: Confidence;
+  conditionScore: number;
+  issuePenalties: string[];
+}
+export interface RentRange { low: number; mid: number; high: number }
+export interface SourceBreakdown { source: string; label: string; value: string }
+export interface RentAssessment {
+  id: string;
+  roomId: string;
+  layoutId?: string | null;
+  profile: HousingProfile;
+  spaceQuality: SpaceQuality;
+  estimatedFairRange: RentRange;
+  askingRent: number;
+  deltaVsMid: number;
+  pricePerSqFt: number;
+  confidence: Confidence;
+  explanation: string[];
+  sourceBreakdown: SourceBreakdown[];
+  legalFlags: string[];
+  buildingHealthSignals: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+export interface PaymentQuote {
+  id: string;
+  roomId?: string | null;
+  assessmentId?: string | null;
+  purpose: PaymentPurpose;
+  amount: number;
+  rentAmount?: number | null;
+  status: PaymentStatus;
+  guardrails: string[];
+  stripeCheckoutUrl?: string | null;
+  stripeSessionId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

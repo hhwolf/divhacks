@@ -35,7 +35,8 @@
     "dev": "expo start --dev-client",
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit",
-    "export": "expo export --platform ios --output-dir /tmp/arp-export"
+    "export": "expo export --platform ios --output-dir /tmp/arp-export",
+    "android": "expo run:android"
   },
   "private": true
 }

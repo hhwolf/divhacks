@@ -91,7 +91,7 @@ Lines that moved: F3 (clean clone → `make setup` 8 s → `make test` green: 3 
 | E4 Expo Go without RoomPlan | 2 | 1 | **2** | Expo Go 57.0.9 renders Home; Scan shows the fallback; `mobile-expo-go-home.png`, `mobile-scan-fallback.png` |
 | **Total** | | 79 | **83** | |
 
-Still open: a dev-client/TestFlight build (needs Xcode 26 on this Mac), a real LiDAR scan saved to `fixtures/rooms/`, an on-device recording, and real-mode keys.
+Update (iter-4b): after moving `apps/mobile` to Expo SDK 54, the dev client **builds on this Mac with Xcode 16.0** — simulator and unsigned arm64 device (`xcodebuild … -sdk iphoneos CODE_SIGNING_ALLOWED=NO` → BUILD SUCCEEDED, `RoomPlanModule.swift`/`RoomPlanView.swift`/`SkeletonExporter.swift` compiled, `ExpoRoomPlan` in `Podfile.lock`), and the dev client runs on the simulator (`docs/screenshots/iter-4/mobile-devclient-home.png`, `mobile-devclient-editor.png` via `roomplanner://layout/<id>`). Still open: a signed TestFlight build (Apple 2FA pending), a real LiDAR scan saved to `fixtures/rooms/`, an on-device recording, and real-mode keys.
 
 ## Iteration log
 

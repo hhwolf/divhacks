@@ -1,0 +1,46 @@
+{
+  "10027": {
+    "neighborhood": "Morningside Heights / West Harlem",
+    "privateRoomMid": 1380,
+    "sharedRoomMid": 980,
+    "studioMid": 2650,
+    "oneBedroomMid": 3350,
+    "hudFmr0": 2470,
+    "hudFmr1": 2670,
+    "baselinePrivateSqFt": 115,
+    "source": "fixture seeded from HUD FMR plus market-rent index style comps"
+  },
+  "10025": {
+    "neighborhood": "Upper West Side",
+    "privateRoomMid": 1550,
+    "sharedRoomMid": 1120,
+    "studioMid": 2920,
+    "oneBedroomMid": 3800,
+    "hudFmr0": 2470,
+    "hudFmr1": 2670,
+    "baselinePrivateSqFt": 120,
+    "source": "fixture seeded from HUD FMR plus market-rent index style comps"
+  },
+  "11221": {
+    "neighborhood": "Bedford-Stuyvesant / Bushwick",
+    "privateRoomMid": 1220,
+    "sharedRoomMid": 860,
+    "studioMid": 2350,
+    "oneBedroomMid": 2950,
+    "hudFmr0": 2470,
+    "hudFmr1": 2670,
+    "baselinePrivateSqFt": 115,
+    "source": "fixture seeded from HUD FMR plus market-rent index style comps"
+  },
+  "default": {
+    "neighborhood": "NYC",
+    "privateRoomMid": 1300,
+    "sharedRoomMid": 900,
+    "studioMid": 2470,
+    "oneBedroomMid": 2670,
+    "hudFmr0": 2470,
+    "hudFmr1": 2670,
+    "baselinePrivateSqFt": 115,
+    "source": "HUD FMR fallback fixture"
+  }
+}

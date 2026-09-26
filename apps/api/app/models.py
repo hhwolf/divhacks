@@ -15,6 +15,11 @@ Severity = Literal["error", "warning"]
 RuleId = Literal["bounds", "overlap", "locked", "door_clearance", "window_keep_clear", "access_edge", "clear_zone", "walkable_path"]
 Intent = Literal["fit_item", "make_space", "keep_clear", "compare", "clarify"]
 Channel = Literal["app", "imessage"]
+OccupancyType = Literal["whole_apartment", "studio", "private_room", "shared_room"]
+FloorMaterial = Literal["hardwood", "engineered_wood", "tile", "laminate", "concrete", "carpet", "vinyl", "unknown"]
+Confidence = Literal["high", "medium", "low"]
+PaymentPurpose = Literal["rent_payment", "deposit", "application_fee", "furniture_purchase"]
+PaymentStatus = Literal["mock", "ready", "blocked", "paid_test"]
 
 
 class Strict(BaseModel):
@@ -218,3 +223,78 @@ class AgentRequestLog(Loose):
     reply: str
     violations: list[Violation] = []
     createdAt: str
+
+
+class HousingProfile(Loose):
+    roomId: str
+    address: str | None = None
+    zip: str | None = None
+    borough: str | None = None
+    neighborhood: str | None = None
+    bbl: str | None = None
+    source: Literal["user", "fixture", "open_data"] = "user"
+    askingRent: float
+    depositRequested: float | None = None
+    applicationFee: float | None = None
+    utilitiesIncluded: bool = False
+    occupancyType: OccupancyType = "private_room"
+    bedrooms: int | None = None
+    declaredIssues: list[str] = []
+
+
+class SpaceQuality(Loose):
+    floorAreaSqFt: float
+    usableAreaSqFt: float
+    openFloorPct: float
+    ceilingHeightFt: float
+    windowCount: int
+    floorMaterial: FloorMaterial = "unknown"
+    materialConfidence: Confidence = "low"
+    conditionScore: int
+    issuePenalties: list[str] = []
+
+
+class RentRange(Strict):
+    low: int
+    mid: int
+    high: int
+
+
+class SourceBreakdown(Strict):
+    source: str
+    label: str
+    value: str
+
+
+class RentAssessment(Loose):
+    id: str
+    roomId: str
+    layoutId: str | None = None
+    profile: HousingProfile
+    spaceQuality: SpaceQuality
+    estimatedFairRange: RentRange
+    askingRent: float
+    deltaVsMid: float
+    pricePerSqFt: float
+    confidence: Confidence
+    explanation: list[str]
+    sourceBreakdown: list[SourceBreakdown]
+    legalFlags: list[str]
+    buildingHealthSignals: list[str]
+    createdAt: str
+    updatedAt: str
+
+
+class PaymentQuote(Loose):
+    id: str
+    roomId: str | None = None
+    assessmentId: str | None = None
+    purpose: PaymentPurpose
+    amount: float
+    rentAmount: float | None = None
+    status: PaymentStatus
+    guardrails: list[str]
+    stripeCheckoutUrl: str | None = None
+    stripeSessionId: str | None = None
+    createdAt: str
+    updatedAt: str
