@@ -9,6 +9,7 @@
 //   exportSkeleton(): Promise<Export>   SkeletonExporter.export(lastRoom) — see SkeletonExporter.swift
 //   <RoomPlanView onCaptureStatus>      { status, message?, walls?, doors?, windows?, objects? }
 
+import AVFoundation
 import ExpoModulesCore
 #if canImport(RoomPlan)
 import RoomPlan
@@ -22,14 +23,37 @@ public class RoomPlanModule: Module {
       return RoomPlanCoordinator.isSupported
     }
 
-    AsyncFunction("startCapture") { () throws -> Void in
+    /// Camera permission state as JS sees it: 'authorized' | 'denied' | 'restricted' | 'notDetermined'.
+    Function("cameraPermission") { () -> String in
+      return RoomPlanCoordinator.cameraPermissionString()
+    }
+
+    /// Requests camera access if undetermined; resolves with the resulting permission string.
+    AsyncFunction("requestCameraPermission") { (promise: Promise) in
+      RoomPlanCoordinator.requestCamera { promise.resolve(RoomPlanCoordinator.cameraPermissionString()) }
+    }
+
+    AsyncFunction("startCapture") { (promise: Promise) in
       #if canImport(RoomPlan)
       if #available(iOS 16.0, *) {
-        try RoomPlanCoordinator.shared.start()
+        // ARKit prompts for the camera implicitly, but a previous denial would make the session fail without a
+        // useful message — so resolve the permission explicitly first and give JS a clear error to act on.
+        RoomPlanCoordinator.requestCamera {
+          guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else {
+            promise.reject(Exception(name: "CameraPermissionDenied", description: "Camera access is off for Room Planner. Enable it in Settings › Privacy › Camera to scan."))
+            return
+          }
+          do {
+            try RoomPlanCoordinator.shared.start()
+            promise.resolve()
+          } catch {
+            promise.reject(error)
+          }
+        }
         return
       }
       #endif
-      throw RoomPlanUnavailableException()
+      promise.reject(RoomPlanUnavailableException())
     }.runOnQueue(.main)
 
     AsyncFunction("stopCapture") { (promise: Promise) in
@@ -77,6 +101,25 @@ internal final class RoomPlanCoordinator: NSObject {
     }
     #endif
     return false
+  }
+
+  static func cameraPermissionString() -> String {
+    switch AVCaptureDevice.authorizationStatus(for: .video) {
+    case .authorized: return "authorized"
+    case .denied: return "denied"
+    case .restricted: return "restricted"
+    case .notDetermined: return "notDetermined"
+    @unknown default: return "notDetermined"
+    }
+  }
+
+  /// Runs `completion` on the main queue once camera access is settled (prompting if it was never asked).
+  static func requestCamera(_ completion: @escaping () -> Void) {
+    if AVCaptureDevice.authorizationStatus(for: .video) == .notDetermined {
+      AVCaptureDevice.requestAccess(for: .video) { _ in DispatchQueue.main.async(execute: completion) }
+    } else {
+      DispatchQueue.main.async(execute: completion)
+    }
   }
 
   static func emptyExport() -> [String: Any] {

@@ -20,6 +20,8 @@ import { Button, Chip, Screen, Tile } from '../src/components/ui';
 import { useStore } from '../src/store';
 import { colors, radius, spacing, type } from '../src/theme';
 import type { Dimensions, RoomDraft, RoomPlanExport } from '../src/types';
+import { useKeepAwake } from 'expo-keep-awake';
+import { Linking } from 'react-native';
 import { formatArea, formatDims } from '../src/units';
 
 export default function Scan() {
@@ -41,6 +43,8 @@ function LiveScan() {
   const [busy, setBusy] = useState<'stop' | null>(null);
   const mod = getRoomPlanModule();
   const status: CaptureStatus = progress.status;
+  const [cameraDenied, setCameraDenied] = useState(false);
+  useKeepAwake(); // a room scan takes a minute or two; never let the screen sleep mid-capture
 
   const onCaptureStatus = useCallback((e: { nativeEvent: CaptureProgress }) => {
     // Keep the last known counts when an instruction-only event arrives.
@@ -50,11 +54,15 @@ function LiveScan() {
   const start = async () => {
     try {
       setScan(null);
+      setCameraDenied(false);
       await mod?.startCapture();
       setProgress({ status: 'scanning', walls: 0, doors: 0, windows: 0, objects: 0 });
     } catch (e) {
-      setProgress({ status: 'error', message: (e as Error).message });
-      toast(`Could not start capture: ${(e as Error).message}`, { tone: 'danger' });
+      const err = e as Error & { code?: string };
+      const denied = err.code === 'CameraPermissionDenied' || /camera access/i.test(err.message);
+      setCameraDenied(denied);
+      setProgress({ status: 'error', message: denied ? 'Camera access is off for Room Planner.' : err.message });
+      if (!denied) toast(`Could not start capture: ${err.message}`, { tone: 'danger' });
     }
   };
 
@@ -119,6 +127,9 @@ function LiveScan() {
           </Text>
         ) : null}
 
+        {cameraDenied ? (
+          <Button label="Open Settings to allow the camera" icon="cog" onPress={() => Linking.openSettings()} variant="secondary" style={{ marginTop: spacing.sm }} />
+        ) : null}
         <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
           {status === 'done' && scan ? (
             <>

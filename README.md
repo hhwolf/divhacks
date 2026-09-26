@@ -99,6 +99,16 @@ The agent can answer rent/payment prompts such as “I pay $1600 for this room i
 
 The editor screen locks to landscape and embeds the web editor through a typed `postMessage` bridge (`packages/contracts/schemas/bridge.schema.json`).
 
+### Scanning a real room (LiDAR iPhone Pro / iPad Pro, iOS 16+)
+
+The Scan screen hosts Apple's `RoomCaptureView` through the local Expo module in `apps/mobile/modules/roomplan` (Swift). Flow on device:
+
+1. **Start** — the app asks for camera access (first time), then runs a `RoomCaptureSession` with coaching on. Walk the room slowly; the chip shows Apple's instructions ("Move closer to the wall", "Slow down") and live wall / door / window / object counts.
+2. **Stop** — RoomPlan post-processes the capture; the promise resolves only when the final `CapturedRoom` arrives (30 s timeout), then it is exported to our skeleton JSON: walls projected to the floor plane and chained into a closed polygon, doors/windows as offsets along their parent wall, detected furniture mapped to the catalog (bed → `bed_double`/`bed_single` by width, table near a chair → `desk`, storage → `wardrobe`/`dresser` by height, sofa, chair, television → `tv_stand`).
+3. **Use this scan** → room setup (space types → elements) → the clean scanned room opens in the editor. Detected furniture stays on the room as `detectedObjects`.
+
+If the camera is denied the screen shows an "Open Settings" button. Without LiDAR (or in Expo Go / the Simulator) the screen falls back to sample room, typed dimensions, or pasted RoomPlan JSON — `fixtures/rooms/roomplan-export-sample.json` is a hand-authored export in exactly the shape the module produces.
+
 ## Photon (iMessage) in real mode
 
 ```bash

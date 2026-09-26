@@ -10,7 +10,11 @@ import type { RoomPlanExport } from '../../src/types';
 export interface RoomPlanNativeModule {
   /** `RoomCaptureSession.isSupported` — true only on LiDAR iPhones/iPads running iOS 16+. */
   isSupported(): boolean;
-  /** Starts the capture session shown by the mounted RoomPlanView. Rejects if no view is mounted. */
+  /** Camera permission as iOS reports it. */
+  cameraPermission(): CameraPermission;
+  /** Prompts for camera access if it was never asked; resolves with the resulting state. */
+  requestCameraPermission(): Promise<CameraPermission>;
+  /** Starts the capture session shown by the mounted RoomPlanView. Rejects (`CameraPermissionDenied`) when the camera is off, or if no view is mounted. */
   startCapture(): Promise<void>;
   /**
    * Stops the session and resolves only once RoomPlan has finished post-processing the final CapturedRoom
@@ -21,6 +25,7 @@ export interface RoomPlanNativeModule {
   exportSkeleton(): Promise<RoomPlanExport>;
 }
 
+export type CameraPermission = 'authorized' | 'denied' | 'restricted' | 'notDetermined';
 export type CaptureStatus = 'idle' | 'scanning' | 'processing' | 'done' | 'error';
 /** Payload of `onCaptureStatus`. Counts are live while scanning (didUpdate) and final on `done`. */
 export interface CaptureProgress {
