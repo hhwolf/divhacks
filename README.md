@@ -95,6 +95,7 @@ The agent can answer rent/payment prompts such as “I pay $1600 for this room i
 2. `cd apps/mobile && npm install`.
 3. **Expo Go** (everything except live scan): `npx expo start`, scan the QR.
 4. **Dev client with RoomPlan** (iPhone Pro, LiDAR): `npx expo run:ios --device`, then `make mobile`.
+5. **TestFlight** (Xcode-free, cloud build): `npx eas-cli build --platform ios --profile production` then `npx eas-cli submit --platform ios --profile production --latest`. The first build needs an interactive Apple login (2FA); App Store Connect app id 6816528380, team 59MGA3685P are in `eas.json`.
 
 The editor screen locks to landscape and embeds the web editor through a typed `postMessage` bridge (`packages/contracts/schemas/bridge.schema.json`).
 
