@@ -18,6 +18,11 @@ def _env(name: str, default: str = "") -> str:
     return os.environ.get(name, default).strip()
 
 
+def _supabase_url(raw: str) -> str:
+    """Accept either `https://<ref>.supabase.co` or the copied Data API URL ending in `/rest/v1`."""
+    return raw.rstrip("/").removesuffix("/rest/v1")
+
+
 @dataclass(frozen=True)
 class Settings:
     mock_mode: bool
@@ -29,6 +34,7 @@ class Settings:
     gemini_model: str
     backboard_api_key: str
     backboard_base_url: str
+    spectrum_project_id: str
     photon_api_key: str
     photon_webhook_secret: str
     photon_base_url: str
@@ -42,7 +48,7 @@ class Settings:
     def from_env(cls) -> Settings:
         return cls(
             mock_mode=_env("MOCK_MODE", "true").lower() in _TRUE,
-            supabase_url=_env("SUPABASE_URL"),
+            supabase_url=_supabase_url(_env("SUPABASE_URL")),
             supabase_secret_key=_env("SUPABASE_SECRET_KEY") or _env("SUPABASE_SERVICE_ROLE_KEY"),
             supabase_table=_env("SUPABASE_TABLE", "arp_documents"),
             blob_token=_env("BLOB_READ_WRITE_TOKEN"),
@@ -50,7 +56,8 @@ class Settings:
             gemini_model=_env("GEMINI_MODEL", "gemini-2.5-flash"),
             backboard_api_key=_env("BACKBOARD_API_KEY"),
             backboard_base_url=_env("BACKBOARD_BASE_URL", "https://app.backboard.io/api"),
-            photon_api_key=_env("PHOTON_API_KEY"),
+            spectrum_project_id=_env("SPECTRUM_PROJECT_ID") or _env("PHOTON_PROJECT_ID"),
+            photon_api_key=_env("PHOTON_API_KEY") or _env("SPECTRUM_PROJECT_SECRET") or _env("PHOTON_PROJECT_SECRET"),
             photon_webhook_secret=_env("PHOTON_WEBHOOK_SECRET"),
             photon_base_url=_env("PHOTON_BASE_URL", "https://spectrum.photon.codes"),
             photon_from=_env("PHOTON_FROM"),

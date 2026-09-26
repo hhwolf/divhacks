@@ -32,7 +32,7 @@ from app.repo.base import Collection, Doc, Repository
 
 class SupabaseStore(Repository):
     def __init__(self, url: str, key: str, table: str = "arp_documents", client: httpx.AsyncClient | None = None) -> None:
-        self._base = url.rstrip("/") + "/rest/v1"
+        self._base = url.rstrip("/").removesuffix("/rest/v1") + "/rest/v1"
         self._key = key
         self._table = table
         self._client = client or httpx.AsyncClient(timeout=15.0)

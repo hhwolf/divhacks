@@ -12,7 +12,7 @@ DivHacks 2026 · **Live Better** track. Scan your NYC room once, text furniture 
 | API + OpenAPI docs | https://adaptive-room-planner-api.vercel.app/docs · `GET /health` shows live vs mock per service |
 | Photon webhook (real mode) | `POST https://adaptive-room-planner-api.vercel.app/webhooks/photon` |
 
-Redeploy: `scripts/deploy_api.sh` then `scripts/deploy_web.sh https://adaptive-room-planner-api.vercel.app` (Vercel CLI, logged in, team `ast18`). The deployed API persists to a Vercel Blob store shared by all instances; `scripts/sync_env_to_vercel.sh` pushes real-mode keys (Gemini, Backboard, Photon, Atlas) from `.env` and redeploys.
+Redeploy: `scripts/deploy_api.sh` then `scripts/deploy_web.sh https://adaptive-room-planner-api.vercel.app` (Vercel CLI, logged in, team `ast18`). The deployed API persists to Supabase when `SUPABASE_URL` and a server-only key are configured, otherwise it can fall back to Vercel Blob or local JSON. `scripts/sync_env_to_vercel.sh` pushes real-mode keys from `.env` and redeploys.
 
 ## One-command setup
 
@@ -103,7 +103,8 @@ The editor screen locks to landscape and embeds the web editor through a typed `
 
 ```bash
 ngrok http 8000           # public URL for the webhook
-# in the Photon dashboard: webhook → https://<ngrok>/webhooks/photon ; put the signing secret in PHOTON_WEBHOOK_SECRET
+# set SPECTRUM_PROJECT_ID + SPECTRUM_PROJECT_SECRET (or PHOTON_API_KEY) plus PHOTON_WEBHOOK_SECRET
+# in the Photon dashboard: webhook → https://<ngrok>/webhooks/photon
 .venv/bin/python scripts/simulate_photon.py     # posts fixtures/photon/*.json to the local webhook (works in mock mode too)
 ```
 

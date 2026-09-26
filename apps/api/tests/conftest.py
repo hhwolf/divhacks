@@ -15,7 +15,11 @@ FIXTURES = ROOT / "fixtures"
 def data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Isolated JSON store; forces mock mode regardless of the developer's .env."""
     monkeypatch.setenv("ARP_DATA_DIR", str(tmp_path))
-    for var in ("MOCK_MODE", "SUPABASE_URL", "SUPABASE_SECRET_KEY", "SUPABASE_SERVICE_ROLE_KEY", "GEMINI_API_KEY", "BACKBOARD_API_KEY", "PHOTON_API_KEY", "PHOTON_WEBHOOK_SECRET"):
+    for var in (
+        "MOCK_MODE", "SUPABASE_URL", "SUPABASE_SECRET_KEY", "SUPABASE_SERVICE_ROLE_KEY",
+        "GEMINI_API_KEY", "BACKBOARD_API_KEY", "PHOTON_API_KEY", "PHOTON_PROJECT_ID", "PHOTON_PROJECT_SECRET",
+        "SPECTRUM_PROJECT_ID", "SPECTRUM_PROJECT_SECRET", "PHOTON_WEBHOOK_SECRET",
+    ):
         monkeypatch.delenv(var, raising=False)
     return tmp_path
 

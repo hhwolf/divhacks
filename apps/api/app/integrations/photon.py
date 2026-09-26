@@ -106,6 +106,7 @@ class PhotonAdapter:
         self.live = settings.photon_live
         self.secret = settings.photon_webhook_secret
         self.sender = settings.photon_from
+        self.project_id = settings.spectrum_project_id
         self._base = settings.photon_base_url.rstrip("/")
         self._key = settings.photon_api_key
         self.outbox: list[dict[str, Any]] = []
@@ -122,7 +123,7 @@ class PhotonAdapter:
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.post(
                 f"{self._base}/messages",
-                headers={"Authorization": f"Bearer {self._key}"},
+                headers={"Authorization": f"Bearer {self._key}", **({"X-Spectrum-Project-Id": self.project_id} if self.project_id else {})},
                 json={"to": to, "from": self.sender or None, "text": "\n".join([text, *links])},
             )
             resp.raise_for_status()
