@@ -7,11 +7,13 @@ from pydantic import BaseModel
 from app.agent import pipeline
 from app.agent.router import route
 from app.deps import AppContext, get_ctx
+from app.imports import URL_RE
 from app.integrations.photon import Attachment
 from app.models import Channel, HousingProfile
 from app.rent import assess_rent, guard_payment
 
 router = APIRouter(prefix="/agent", tags=["agent"])
+APP_ASSISTANT_SPATIAL_ONLY = "Use iMessage/Photon to send new furniture links or photos. In the app, ask me to arrange the room: make space for yoga, create a reading corner, place the desk near the window, or don't move my bed."
 
 
 class AgentRequestBody(BaseModel):
@@ -29,6 +31,16 @@ async def agent_request(body: AgentRequestBody, ctx: AppContext = Depends(get_ct
     housing = await _maybe_housing_reply(ctx, body)
     if housing is not None:
         return housing
+    if body.channel == "app" and body.furnitureId is None and (body.imageUrl or URL_RE.search(body.text or "")):
+        return {
+            "plan": {"intent": "clarify", "reply": APP_ASSISTANT_SPATIAL_ONLY, "clarifyingQuestion": APP_ASSISTANT_SPATIAL_ONLY},
+            "layout": None,
+            "reply": APP_ASSISTANT_SPATIAL_ONLY,
+            "status": "clarify",
+            "links": [],
+            "requestId": uuid.uuid4().hex[:12],
+            "violations": [],
+        }
     attachments = [Attachment(url=body.imageUrl, mime_type="image/jpeg")] if body.imageUrl else []
     routed = await route(ctx, user.id, body.text, attachments, body.furnitureId)
     out = await pipeline.run(

@@ -13,9 +13,10 @@ from fastapi.testclient import TestClient
 from tests.conftest import FIXTURES, load_fixture
 
 PHOTON_FIXTURES = sorted(p.name for p in (FIXTURES / "photon").glob("*.json"))
+PHOTON_FURNITURE_FIXTURES = [name for name in PHOTON_FIXTURES if name != "yoga.json"]
 
 
-@pytest.mark.parametrize("name", PHOTON_FIXTURES)
+@pytest.mark.parametrize("name", PHOTON_FURNITURE_FIXTURES)
 def test_fixture_round_trip_creates_variant(client: TestClient, bedroom: dict, name: str, data_dir: Path) -> None:
     payload = load_fixture("photon", name)
     r = client.post("/webhooks/photon", json=payload)
@@ -32,6 +33,16 @@ def test_fixture_round_trip_creates_variant(client: TestClient, bedroom: dict, n
     assert json.loads(lines[-1])["links"] == outbox[-1]["links"]
 
 
+def test_photon_plain_spatial_request_redirects_to_app(client: TestClient, bedroom: dict) -> None:
+    r = client.post("/webhooks/photon", json=load_fixture("photon", "yoga.json"))
+    assert r.status_code == 200
+    body = r.json()
+    assert body["ok"] is True and body["layoutId"] is None
+    assert "listing link or photo" in body["reply"]
+    assert "in-app assistant" in body["reply"]
+    assert [l["name"] for l in client.get(f"/rooms/{bedroom['roomId']}").json()["layouts"]] == ["Current Room"]
+
+
 def test_unknown_shape_gets_clarifying_reply(client: TestClient) -> None:
     r = client.post("/webhooks/photon", json={"hello": "world"})
     assert r.status_code == 200 and r.json()["ok"] is True and r.json()["reply"].endswith("?")
@@ -40,7 +51,7 @@ def test_unknown_shape_gets_clarifying_reply(client: TestClient) -> None:
 
 
 def test_no_room_yet_replies_gracefully(client: TestClient) -> None:
-    r = client.post("/webhooks/photon", json=load_fixture("photon", "yoga.json"))
+    r = client.post("/webhooks/photon", json=load_fixture("photon", "text-question.json"))
     assert r.status_code == 200 and r.json()["layoutId"] is None and "room" in r.json()["reply"]
 
 

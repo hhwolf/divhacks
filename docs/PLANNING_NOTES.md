@@ -27,6 +27,7 @@ This planning phase produces **one execution prompt** the user will run on their
 ## Assumptions for the PRD's open questions (stated in the prompt, not asked again)
 
 - Photon reply = one sentence + deep link `roomplanner://layout/{id}` (and https universal link to the web editor). Rendered PNG snapshot is P1.
+- Channel split = Photon/iMessage imports new furniture from listing links/photos and creates fit variants; the in-app assistant handles spatial planning and room changes such as reading corners, yoga space, desk placement, and locked-item rules.
 - Gemini: latest Flash model via `GEMINI_MODEL` env (default `gemini-2.5-flash`), **structured output** with a JSON schema for the plan.
 - One shared demo user keyed by phone number; no sign-in.
 - Onboarding = the app's home screen (Scan / Sample room / Manual dims cards), not a separate wizard.

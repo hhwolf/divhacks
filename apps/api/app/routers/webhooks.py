@@ -10,12 +10,14 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from app.agent import pipeline
 from app.agent.router import route
 from app.deps import AppContext, get_ctx
+from app.imports import URL_RE
 from app.integrations.photon import normalize_inbound, verify_signature
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 log = logging.getLogger(__name__)
 CLARIFY = "I can help fit furniture into your room. Could you send a listing link or photo, or ask me something like: will this fit beside my window?"
 NO_ROOM = "I don't have a room for you yet. Open the app and load or scan a room first, then ask me again."
+FURNITURE_ONLY = "Text me a furniture listing link or photo, then ask if it fits. Use the in-app assistant for room changes like yoga space or reading corners."
 
 
 @router.post("/photon")
@@ -44,9 +46,16 @@ async def photon_webhook(request: Request, ctx: AppContext = Depends(get_ctx)) -
         return {"ok": True, "reply": NO_ROOM, "layoutId": None, "outbound": outbound}
 
     try:
-        routed = await route(ctx, user.id, inbound.text, inbound.attachments)
-        out = await pipeline.run(ctx, request_text=routed.text, user_id=user.id, room_id=room["id"], base_layout_id=base["id"], furniture_id=routed.furniture_id, channel="imessage")
-        reply, links, layout_id = out.reply, out.links, out.layout["id"] if out.layout else None
+        has_furniture_input = bool(URL_RE.search(inbound.text or "")) or any(a.url for a in inbound.attachments)
+        if not has_furniture_input:
+            reply, links, layout_id = FURNITURE_ONLY, [], None
+        else:
+            routed = await route(ctx, user.id, inbound.text, inbound.attachments)
+            if routed.furniture_id is None:
+                reply, links, layout_id = FURNITURE_ONLY, [], None
+            else:
+                out = await pipeline.run(ctx, request_text=routed.text, user_id=user.id, room_id=room["id"], base_layout_id=base["id"], furniture_id=routed.furniture_id, channel="imessage")
+                reply, links, layout_id = out.reply, out.links, out.layout["id"] if out.layout else None
     except Exception as exc:
         log.exception("photon webhook failed: %s", exc)
         reply, links, layout_id = CLARIFY, [], None

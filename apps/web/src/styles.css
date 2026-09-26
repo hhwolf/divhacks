@@ -138,7 +138,10 @@ a { color: inherit; }
 .request-bar { position: absolute; right: calc(77 * var(--u) + env(safe-area-inset-right, 0px)); bottom: calc(79 * var(--u)); width: calc(400 * var(--u)); background: var(--tile); border-radius: calc(14 * var(--u)); padding: calc(10 * var(--u)) calc(12 * var(--u)); display: flex; flex-direction: column; gap: calc(8 * var(--u)); box-shadow: 0 calc(10 * var(--u)) calc(24 * var(--u)) var(--tile-shadow); z-index: 4; }
 .request-head { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: calc(14 * var(--u)); }
 .request-bar textarea { border: 0; border-radius: var(--r); background: #fff; padding: calc(8 * var(--u)) calc(10 * var(--u)); font: inherit; font-size: calc(13 * var(--u)); resize: none; color: var(--ink); }
+.request-hint { font-size: calc(11 * var(--u)); color: #6b5040; line-height: 1.25; }
 .request-actions { display: flex; gap: calc(6 * var(--u)); align-items: center; } .attached { flex: 1; font-size: calc(11 * var(--u)); color: #6b5040; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.suggestions { flex: 1; display: flex; flex-wrap: wrap; gap: calc(5 * var(--u)); min-width: 0; }
+.suggestion { border: 0; border-radius: calc(8 * var(--u)); padding: calc(4 * var(--u)) calc(7 * var(--u)); background: rgba(74, 51, 39, .1); font-size: calc(10.5 * var(--u)); font-weight: 800; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .reply { background: rgba(74, 51, 39, .08); border-radius: var(--r); padding: calc(8 * var(--u)) calc(10 * var(--u)); font-size: calc(13 * var(--u)); line-height: 1.4; border-left: calc(4 * var(--u)) solid var(--green); }
 .btn { border: 0; border-radius: var(--r); padding: calc(10 * var(--u)) calc(16 * var(--u)); font-weight: 800; font-size: calc(14 * var(--u)); display: inline-flex; align-items: center; gap: calc(6 * var(--u)); text-decoration: none; }
 .btn.small { padding: calc(6 * var(--u)) calc(10 * var(--u)); font-size: calc(12 * var(--u)); } .btn svg { width: calc(16 * var(--u)); height: calc(16 * var(--u)); }

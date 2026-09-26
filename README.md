@@ -25,6 +25,8 @@ make web            # Vite editor on :5173
 
 Everything runs in **mock mode with zero env vars and no network**: the JSON store lives in `.data/`, Gemini/Backboard/Photon return deterministic fixtures. Copy `.env.example` to `.env` and add keys to switch each service to its real implementation independently (`GET /health` shows live vs mock per service).
 
+Channel split: **Photon/iMessage brings new furniture into the room** from listing links or photos, checks it against the saved scan, and creates a layout variant. The **in-app AI assistant arranges the room**: reading corners, yoga space, window placement, locked-item rules, and other spatial changes inside the existing 3D room.
+
 ```bash
 make test           # pnpm typecheck + lint + vitest, then pytest (incl. TS/Python parity on fixtures/validation)
 make bench          # validation p95, room-load, import and agent timings → .data/bench.json
@@ -111,6 +113,8 @@ If the camera is denied the screen shows an "Open Settings" button. Without LiDA
 
 ## Photon (iMessage) in real mode
 
+Photon is the external furniture input channel. Text the line a Facebook Marketplace, IKEA, Amazon, or other store link/photo plus a fit question; the webhook imports the item, checks it against the saved room, and replies with a new layout variant link. Spatial planning requests without new furniture belong in the in-app assistant.
+
 ```bash
 ngrok http 8000           # public URL for the webhook
 # set SPECTRUM_PROJECT_ID + SPECTRUM_PROJECT_SECRET (or PHOTON_API_KEY) plus PHOTON_WEBHOOK_SECRET
@@ -130,7 +134,7 @@ Setup before walking up: `make api`, `make web`, phone on the same Wi-Fi with th
 | 1:05 | Drag the dresser into the door swing → red, analysis tile counts the conflict → drag back | "Fit validation runs on every drag: bounds, overlaps, the 90 cm you need in front of a door, a 75 cm edge to get into bed." |
 | 1:20 | Phone: iMessage the Marketplace link + "Will this fit beside my window without moving my bed?" | "I don't open an app to ask. I text the room." |
 | 1:40 | Reply arrives with a link; **Marketplace Desk** tab animates in; desk sits beside the window, bed untouched | "Gemini read the listing and turned the question into constraints. Backboard remembered the bed rule. Plain Python placed it and the same validator signed off: 2 inches to spare." |
-| 2:05 | Second text: "make space for yoga, keep my dresser" → **Yoga corner** variant with the blue zone | "Every answer is a named variant. The Current Room is never overwritten." |
+| 2:05 | In-app assistant: "make space for yoga, keep my dresser" → **Yoga corner** variant with the blue zone | "Furniture comes in over text. Room changes happen right inside the app, and every answer is a named variant. The Current Room is never overwritten." |
 | 2:25 | 🌲 ghost compare, then the compare view: open floor 62 → 55 %, "Added Desk" | "Two layouts side by side, what moved, how much floor I keep. I can buy with confidence." |
 | 2:45 | Menu → health chip shows live/mock per service | "Real room, casual input, game-like editing, saved variants. Same solver later checks a 1.5 m wheelchair turning radius or stages an apartment listing." |
 
@@ -140,7 +144,7 @@ Optional rent beat: open the Rent tab, enter ZIP `10027` and rent `$1600`, then 
 
 **Adaptive Room Planner — Where did my space go?** (Live Better)
 
-Renters in 100–150 sq ft NYC rooms buy secondhand and guess. We scan the room once with RoomPlan, rebuild the furniture you already own in a cozy isometric editor, and then let you *text* the room: send a Facebook Marketplace link over iMessage and ask "will this fit beside my window without moving my bed?". Gemini turns the listing and the question into structured constraints, Backboard remembers your non-negotiables ("never move the bed"), a Python placement solver finds a spot on a 10 cm grid, and a shared TypeScript/Python fit validator checks bounds, overlaps, door swing clearance, access edges and walkable paths before anything is saved. Every answer becomes a named layout variant next to your untouched Current Room, with open-floor %, conflicts and walkability side by side in a compare view. Supabase stores rooms, furniture, rent assessments and variants when configured; everything degrades to an offline mock mode so the demo never depends on Wi-Fi.
+Renters in 100–150 sq ft NYC rooms buy secondhand and guess. We scan the room once with RoomPlan, rebuild the furniture you already own in a cozy isometric editor, and split the AI workflow into two natural channels: text a Facebook Marketplace/IKEA/Amazon listing or photo over iMessage to bring new furniture into the room, then use the in-app assistant for layout changes like "make space for yoga" or "place the desk near the window." Gemini turns listings and spatial requests into structured constraints, Backboard remembers your non-negotiables ("never move the bed"), a Python placement solver finds a spot on a 10 cm grid, and a shared TypeScript/Python fit validator checks bounds, overlaps, door swing clearance, access edges and walkable paths before anything is saved. Every answer becomes a named layout variant next to your untouched Current Room, with open-floor %, conflicts and walkability side by side in a compare view. Supabase stores rooms, furniture, rent assessments and variants when configured; everything degrades to an offline mock mode so the demo never depends on Wi-Fi.
 
 Sponsors used: **Photon** (iMessage in/out), **Gemini API** (structured output + listing/photo extraction), **Backboard** (preference memory), **Supabase** (storage).
 
