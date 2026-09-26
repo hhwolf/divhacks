@@ -75,7 +75,15 @@ Other lines that moved: D3 README demo script 0 → **2** (timestamps + spoken l
 
 Controls verified working in this iteration (every visible control): menu drawer, snapshot download, undo, view cycle (cutaway → half → plan), paint drawer (wall + floor), help, palette tiles/paging/search/categories, side panel (rotate, lock, duplicate, delete, 38 swatches over 2 pages), bottom cluster (overlays popover with 3 toggles, ghost popover, night, sound), variant tabs (switch, +, context menu), analysis tile expand, request bar (send, paste link, photo).
 
+## Iteration 3 — Agent + integrations + DEMO-READY checkpoint — 77 / 100
+
+Lines that moved: F3 (.env.example + README verified: `make setup && make test` from the Makefile now non-interactive, README has setup, phone, Photon, demo script, blurb, live URLs) 1 → **2**; D1 unchanged (8) — `make demo` 9.6 s locally; deploy line (part of §12 deliverables, not scored separately): web https://adaptive-room-planner.vercel.app and API https://adaptive-room-planner-api.vercel.app are live, `/docs` renders, `POST /rooms` works. Photon simulator (`make photon`) → 4 variants + outbox entries with deep links. A5/A8 mock evidence unchanged; real-mode adapters are implemented but unproven (no keys yet). **Known gap:** the deployed API's JSON store is per-instance until `MONGODB_URI` (or another shared store) is configured, so cross-request flows on the public API can 404 — the local stack and `make demo` are unaffected.
+
 ## Iteration log
+
+### iter-3 — 77/100 (demo-ready checkpoint)
+- Makefile targets verified (`make test`, `make bench`, `make demo`, `make e2e`, `make photon`); pnpm 12 build approval fixed; Vercel deploys for web (static) and API (Python function); README live URLs, demo script, Devpost blurb; ngrok installed for the local path.
+- Open: shared persistence for the serverless API, real-mode keys, RoomPlan module + device run (iter-4), phone recording, fps measurement.
 
 ### iter-2 — 75/100
 - Measured ref2/ref3 geometry + colours applied to every §7 element; side panel restructured to ref3's 3 × 8 grid with ✕ first; button inner rim, dim toggles, knotted corner marks, thumbnail framing by projected extent; README demo script + Devpost blurb.

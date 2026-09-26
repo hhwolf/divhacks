@@ -53,7 +53,7 @@ class Settings:
             demo_phone=_env("DEMO_PHONE", "+15555550100"),
             public_web_url=_env("PUBLIC_WEB_URL", "http://localhost:5173"),
             public_api_url=_env("PUBLIC_API_URL", "http://localhost:8000"),
-            data_dir=Path(_env("ARP_DATA_DIR") or REPO_ROOT / ".data"),
+            data_dir=_writable_data_dir(),
         )
 
     def live(self, key: str) -> bool:
@@ -75,3 +75,18 @@ class Settings:
     @property
     def mongo_live(self) -> bool:
         return bool(self.mongodb_uri)
+
+
+def _writable_data_dir() -> Path:
+    """`ARP_DATA_DIR`, else `<repo>/.data`; falls back to /tmp on read-only filesystems (Vercel/Lambda)."""
+    candidate = Path(_env("ARP_DATA_DIR") or REPO_ROOT / ".data")
+    try:
+        candidate.mkdir(parents=True, exist_ok=True)
+        probe = candidate / ".write-test"
+        probe.write_text("ok")
+        probe.unlink()
+        return candidate
+    except OSError:
+        fallback = Path("/tmp/arp-data")
+        fallback.mkdir(parents=True, exist_ok=True)
+        return fallback

@@ -1,18 +1,18 @@
 {
  "ok": true,
- "totalMs": 8813,
+ "totalMs": 9602,
  "steps": [
   {
    "step": "API health",
-   "ms": 9
+   "ms": 10
   },
   {
    "step": "Load sample room",
-   "ms": 8
+   "ms": 9
   },
   {
    "step": "Simulated Photon message \u2192 variant",
-   "ms": 74
+   "ms": 68
   },
   {
    "step": "Fetch Marketplace Desk variant",
@@ -20,25 +20,25 @@
   },
   {
    "step": "Open variant in editor",
-   "ms": 3226
+   "ms": 3575
   },
   {
    "step": "Drag desk into door swing \u2192 red",
-   "ms": 811
+   "ms": 894
   },
   {
    "step": "Drag back \u2192 clean",
-   "ms": 910
+   "ms": 906
   },
   {
    "step": "Compare view",
-   "ms": 3765
+   "ms": 4129
   },
   {
    "step": "Compare API",
-   "ms": 6
+   "ms": 7
   }
  ],
  "mode": "mock",
- "at": "2026-09-26T15:42:45"
+ "at": "2026-09-26T16:01:13"
 }

@@ -56,3 +56,10 @@ Every ambiguity resolved while building, newest at the bottom. Decisions from EX
 - **Top-right view/paint toggles render "dim"** when inactive because ref2 draws them lighter than the help button.
 - **Sound defaults on in a browser, off in the WebView** (autoplay policy: the first thunk plays after the first drop gesture).
 - **Thumbnails are framed by projected iso extent** (`h·cos35° + (w+d)/2·sin35°` vs `(w+d)·cos45°`) so a moving box and a bed fill the tile equally.
+
+## Iteration 3 — demo-ready checkpoint
+
+- **API deploys to Vercel too**, not Render/Railway (no CLI or account for those on this Mac; Vercel is logged in). `api/index.py` exposes the FastAPI ASGI app; root `vercel.json` rewrites every path to it; root `requirements.txt` is the slim runtime set. This also gives Photon a stable public webhook URL without ngrok. `ngrok` is installed anyway (`brew install ngrok/ngrok/ngrok`) for the local-API path in the README.
+- **Serverless persistence caveat.** Without `MONGODB_URI` the JSON store falls back to `/tmp` on a read-only filesystem, so data on the deployed API is per-instance and ephemeral. Set `MONGODB_URI` in the Vercel project for real persistence; locally nothing changes.
+- **Web deploys as a prebuilt static site** (`scripts/deploy_web.sh <api-url>`): Vite bakes `VITE_API_URL`, the build copies `assets/` + `fixtures/` (dereferencing the dev symlinks) and writes SPA rewrites into `dist/vercel.json`.
+- **pnpm 12 build approval** is `allowBuilds: { esbuild: true }` in `pnpm-workspace.yaml` (the older `onlyBuiltDependencies` key is ignored by pnpm 12.3), so `make setup` is non-interactive.

@@ -4,6 +4,16 @@ DivHacks 2026 · **Live Better** track. Scan your NYC room once, text furniture 
 
 > Renter in a 100–150 sq ft room, buying secondhand, wants one more thing to fit. Bed can't move. Will the Marketplace desk fit beside the window?
 
+## Live demo (judges' test links)
+
+| | URL |
+|---|---|
+| Web editor | https://adaptive-room-planner.vercel.app — "Load sample room", then drag, ask, compare |
+| API + OpenAPI docs | https://adaptive-room-planner-api.vercel.app/docs · `GET /health` shows live vs mock per service |
+| Photon webhook (real mode) | `POST https://adaptive-room-planner-api.vercel.app/webhooks/photon` |
+
+Redeploy: `scripts/deploy_api.sh` then `scripts/deploy_web.sh https://adaptive-room-planner-api.vercel.app` (Vercel CLI, logged in). Without `MONGODB_URI` the deployed API keeps its JSON store in `/tmp`, so rooms there are per-instance and short-lived; add the Atlas URI in the Vercel project env for persistence.
+
 ## One-command setup
 
 ```bash
@@ -77,7 +87,7 @@ Renters in 100–150 sq ft NYC rooms buy secondhand and guess. We scan the room 
 
 Sponsors used: **Photon** (iMessage in/out), **Gemini API** (structured output + listing/photo extraction), **Backboard** (preference memory), **MongoDB Atlas** (storage).
 
-Try it: web editor (Vercel URL in the submission) · source: this repo · `make demo` replays the 3-minute script headlessly.
+Try it: https://adaptive-room-planner.vercel.app · API docs: https://adaptive-room-planner-api.vercel.app/docs · source: this repo · `make demo` replays the 3-minute script headlessly.
 
 ## Future applications
 

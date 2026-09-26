@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 UVICORN := .venv/bin/uvicorn
 
-.PHONY: setup api web mobile test bench demo thumbs screenshots
+.PHONY: setup api web mobile test bench demo e2e thumbs screenshots photon
 
 setup: .venv/.ok node_modules/.ok
 
@@ -37,3 +37,9 @@ screenshots: setup
 
 demo: setup
 	$(PY) scripts/demo.py
+
+e2e: setup
+	$(PY) scripts/e2e_editor.py
+
+photon: setup
+	$(PY) scripts/simulate_photon.py
