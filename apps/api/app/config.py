@@ -23,6 +23,7 @@ class Settings:
     mock_mode: bool
     mongodb_uri: str
     mongodb_db: str
+    blob_token: str
     gemini_api_key: str
     gemini_model: str
     backboard_api_key: str
@@ -42,6 +43,7 @@ class Settings:
             mock_mode=_env("MOCK_MODE", "true").lower() in _TRUE,
             mongodb_uri=_env("MONGODB_URI"),
             mongodb_db=_env("MONGODB_DB", "roomplanner"),
+            blob_token=_env("BLOB_READ_WRITE_TOKEN"),
             gemini_api_key=_env("GEMINI_API_KEY"),
             gemini_model=_env("GEMINI_MODEL", "gemini-2.5-flash"),
             backboard_api_key=_env("BACKBOARD_API_KEY"),
@@ -75,6 +77,11 @@ class Settings:
     @property
     def mongo_live(self) -> bool:
         return bool(self.mongodb_uri)
+
+    @property
+    def store_kind(self) -> str:
+        """'live' (Mongo) | 'blob' (Vercel Blob, shared across serverless instances) | 'json' (local file)."""
+        return "live" if self.mongo_live else "blob" if self.blob_token else "json"
 
 
 def _writable_data_dir() -> Path:

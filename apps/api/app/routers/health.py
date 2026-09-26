@@ -13,7 +13,7 @@ async def health(ctx: AppContext = Depends(get_ctx)) -> dict:
         "gemini": "live" if s.gemini_live else "mock",
         "backboard": "live" if s.backboard_live else "mock",
         "photon": "live" if s.photon_live else "mock",
-        "mongo": "live" if s.mongo_live else "json",
+        "mongo": s.store_kind,
     }
     states = {integrations["gemini"], integrations["backboard"], integrations["photon"]}
     mode = "live" if states == {"live"} else "mock" if states == {"mock"} else "mixed"

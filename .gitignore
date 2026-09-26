@@ -19,3 +19,6 @@ playwright-report/
 .DS_Store
 apps/mobile/modules/roomplan/ios/build/
 .vercel
+.env*
+.env.vercel.local
+!.env.example
