@@ -98,6 +98,11 @@ Update (iter-4b): after moving `apps/mobile` to Expo SDK 54, the dev client **bu
 ### iter-4 — 83/100
 - RoomPlan Swift module (exporter typechecks against the iOS 18 SDK; full build blocked by Xcode 16.0 vs SDK 57's Xcode 26 requirement), RoomPlan-shaped fixture round-trips through the API, Expo Go run with 7 simulator screenshots, 60 fps WebView drag, simulator recording, host bridge fixes (navigate loop, layout unwrap, safe areas), WebKit thumbnail fix in the web editor.
 
+### post-iter-4 add-on — Rent Reality Check + guarded payments
+- Added evidence for the requested financial layer: `tests/test_rent_payments.py` covers scanned sq ft rent estimates, ZIP-only confidence, HPD/311/rodent/material condition penalties, rent-stabilization warning copy, security-deposit and application-fee blocks, Stripe mock checkout, and rent/payment agent prompts that do not mutate Current Room.
+- New API surface is included in OpenAPI and `/health`: `/rent/assess`, `/rooms/{room_id}/rent-assessment`, `/payments/quote`, `/payments/checkout`, `/webhooks/stripe`; Stripe reports mock unless real/test env is configured.
+- Verification after add-on: `make test` green (3 contract schema tests, 16 geometry tests, 8 web tests, 65 pytest); `make bench` green (validation p95 1.78 ms, room create 13 ms, import 7 ms, agent 79 ms).
+
 ### iter-3 — 79/100 (demo-ready checkpoint; B 24 after the glyph pass, C5 1 from the browser fps run)
 - Makefile targets verified (`make test`, `make bench`, `make demo`, `make e2e`, `make photon`); pnpm 12 build approval fixed; Vercel deploys for web (static) and API (Python function); README live URLs, demo script, Devpost blurb; ngrok installed for the local path.
 - Open: shared persistence for the serverless API, real-mode keys, RoomPlan module + device run (iter-4), phone recording, fps measurement.

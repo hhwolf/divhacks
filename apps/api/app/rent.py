@@ -200,7 +200,7 @@ async def assess_rent(ctx: AppContext, profile: HousingProfile, layout_id: str |
         SourceBreakdown(source="materials", label=material_info.get("label", material), value=f"condition {condition}/100"),
         SourceBreakdown(source="nyc_open_data", label="HPD/311/rodent signals", value=f"{hpd} HPD, {complaints} 311, {rodents} rodent"),
     ]
-    confidence: Confidence = "high" if profile.zip and layout else "medium" if profile.zip else "low"
+    confidence: Confidence = "high" if profile.address and profile.zip and layout else "medium" if profile.zip else "low"
     now = now_iso()
     out = RentAssessment(
         id=new_id(),

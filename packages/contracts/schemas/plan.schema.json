@@ -7,7 +7,7 @@
   "required": ["intent", "reply"],
   "additionalProperties": false,
   "properties": {
-    "intent": {"type": "string", "enum": ["fit_item", "make_space", "keep_clear", "compare", "clarify"]},
+    "intent": {"type": "string", "enum": ["fit_item", "make_space", "keep_clear", "compare", "rent_check", "payment_check", "housing_quality", "clarify"]},
     "variantName": {"type": "string"},
     "constraints": {
       "type": "array",

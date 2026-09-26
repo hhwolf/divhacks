@@ -52,6 +52,24 @@ Storage picks itself: `MONGODB_URI` → MongoDB Atlas; else `BLOB_READ_WRITE_TOK
 | `fixtures/` | sample rooms, validation parity suite, canned plans, listing page, Photon payloads |
 | `docs/` | specs, reference images, per-iteration screenshots, demo recording |
 
+## Rent Reality Check + guarded payments
+
+The editor's analysis tile now has **Fit / Space / Rent** tabs. Rent check combines the scanned floor polygon, current open-floor metrics, fixture-backed ZIP rent baselines, material/condition penalties, and NYC open-data-style building signals into an explainable estimated fair range. It is intentionally labeled as an estimate, not a legal rent or appraisal.
+
+Mock-first endpoints:
+
+```bash
+POST /rent/assess
+GET  /rooms/{room_id}/rent-assessment
+POST /payments/quote
+POST /payments/checkout
+POST /webhooks/stripe
+```
+
+Payment guardrails block security deposits above one month of rent and application fees above $20. Stripe stays in mock mode unless `MOCK_MODE=false`, `STRIPE_SECRET_KEY` is present, and `STRIPE_PRICE_MODE=test`; real landlord/seller payouts remain disabled unless `STRIPE_CONNECT_ENABLED=true`. No escrow or stored card data is implemented.
+
+The agent can answer rent/payment prompts such as “I pay $1600 for this room in 10027. Is that fair?”, “Can I safely send a $500 deposit?”, and “This application fee is $75.” Furniture-planning prompts still use the original Gemini/solver pipeline.
+
 ## Running on the phone
 
 1. `cp .env.example .env`, set `EXPO_PUBLIC_API_URL=http://<mac-lan-ip>:8000` and `EXPO_PUBLIC_WEB_URL=http://<mac-lan-ip>:5173`.
@@ -84,6 +102,8 @@ Setup before walking up: `make api`, `make web`, phone on the same Wi-Fi with th
 | 2:05 | Second text: "make space for yoga, keep my dresser" → **Yoga corner** variant with the blue zone | "Every answer is a named variant. The Current Room is never overwritten." |
 | 2:25 | 🌲 ghost compare, then the compare view: open floor 62 → 55 %, "Added Desk" | "Two layouts side by side, what moved, how much floor I keep. I can buy with confidence." |
 | 2:45 | Menu → health chip shows live/mock per service | "Real room, casual input, game-like editing, saved variants. Same solver later checks a 1.5 m wheelchair turning radius or stages an apartment listing." |
+
+Optional rent beat: open the Rent tab, enter ZIP `10027` and rent `$1600`, then run “Rent check.” Say: “Now the scan becomes a price sanity check: it measures the private room, discounts for rats/leaks or rough floors, and warns before you send a deposit or illegal application fee.”
 
 ## Devpost blurb
 

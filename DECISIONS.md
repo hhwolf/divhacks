@@ -73,3 +73,9 @@ Every ambiguity resolved while building, newest at the bottom. Decisions from EX
 - **Simulator evidence only.** Screenshots and the 30 s recording (`docs/demo/run-simulator.mp4`) are Expo Go 57.0.9 on an iPhone 16 Pro simulator; the editor segment is rotated inside the portrait frame because the Simulator window could not be rotated without Accessibility permission. Deep links in Expo Go take the form `exp://127.0.0.1:8081/--/<path>`; `roomplanner://` works only in the dev-client build.
 - **WebKit fixes found on the phone:** `%` heights on an `<img>` inside a `<button>` resolve to 0 in WebKit, so palette thumbnails were blank on iOS — tiles now position the image absolutely. Editor clusters add `env(safe-area-inset-*)` so the Dynamic Island never covers the palette. The host ignores the editor's self-`editor:navigate` for the layout already shown (it was pushing a new screen each load).
 - **Expo CLI rewrites `apps/mobile/tsconfig.json` `include` on every start**; the committed version is kept and the rewrite is discarded.
+# Rent/payment addition
+
+- Rent Reality Check uses a deterministic backend estimate, not Gemini math. Gemini/the agent can route and explain, but `apps/api/app/rent.py` owns the scanned square-foot calculation, condition penalties, legal flags, and payment guardrails.
+- The “Material Science project” dataset was not present in the repo, so the implementation looks for fixture-backed material quality and falls back to a transparent floor-material rubric (`fixtures/housing/material_quality.json`).
+- Facebook Marketplace remains user-provided link/photo/manual import only. We do not scrape Marketplace at scale or depend on an unofficial API.
+- Stripe is mock/test-first. The app never stores card/bank data, does not implement escrow, and blocks deposits above one month rent and application fees above $20 before returning a checkout URL.
