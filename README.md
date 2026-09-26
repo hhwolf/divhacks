@@ -12,7 +12,7 @@ DivHacks 2026 · **Live Better** track. Scan your NYC room once, text furniture 
 | API + OpenAPI docs | https://adaptive-room-planner-api.vercel.app/docs · `GET /health` shows live vs mock per service |
 | Photon webhook (real mode) | `POST https://adaptive-room-planner-api.vercel.app/webhooks/photon` |
 
-Redeploy: `scripts/deploy_api.sh` then `scripts/deploy_web.sh https://adaptive-room-planner-api.vercel.app` (Vercel CLI, logged in). Without `MONGODB_URI` the deployed API keeps its JSON store in `/tmp`, so rooms there are per-instance and short-lived; add the Atlas URI in the Vercel project env for persistence.
+Redeploy: `scripts/deploy_api.sh` then `scripts/deploy_web.sh https://adaptive-room-planner-api.vercel.app` (Vercel CLI, logged in, team `ast18`). The deployed API persists to a Vercel Blob store shared by all instances; `scripts/sync_env_to_vercel.sh` pushes real-mode keys (Gemini, Backboard, Photon, Atlas) from `.env` and redeploys.
 
 ## One-command setup
 
@@ -29,9 +29,15 @@ Everything runs in **mock mode with zero env vars and no network**: the JSON sto
 make test           # pnpm typecheck + lint + vitest, then pytest (incl. TS/Python parity on fixtures/validation)
 make bench          # validation p95, room-load, import and agent timings → .data/bench.json
 make demo           # headless 3-minute demo via Playwright + API (must never fail)
+make e2e            # 14 real-pointer editor checks in Chromium (needs api + web running)
+make photon         # post fixtures/photon/*.json to the local webhook and print the replies
+make fps            # drag frame rate in a headed Chromium at iPhone-landscape proportions → .data/fps.json
+make record         # re-record docs/demo/run.mp4 (browser recording of the demo at phone proportions)
 make thumbs         # re-render palette thumbnails from the GLBs
 make screenshots    # docs/screenshots/iter-N (needs api + web running)
 ```
+
+Storage picks itself: `MONGODB_URI` → MongoDB Atlas; else `BLOB_READ_WRITE_TOKEN` → Vercel Blob snapshots (what the deployed API uses so every serverless instance sees the same rooms); else a JSON file in `.data/`. `GET /health` reports which one is active.
 
 ## Repository layout
 
