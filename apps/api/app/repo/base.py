@@ -1,4 +1,4 @@
-"""Repository interface shared by the JSON-file store and the Mongo store. Documents are plain dicts with an `id` key."""
+"""Repository interface shared by the JSON, Blob and Supabase stores. Documents are plain dicts with an `id` key."""
 
 from __future__ import annotations
 

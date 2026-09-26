@@ -4,7 +4,7 @@ Every ambiguity resolved while building, newest at the bottom. Decisions from EX
 
 ## Iteration 0
 
-- **Python 3.13, not 3.12.** The Mac has 3.13.7 via miniconda; FastAPI/pydantic/motor all support it. `uv` is not installed, so the Makefile uses a plain `python3 -m venv .venv`.
+- **Python 3.13, not 3.12.** The Mac has 3.13.7 via miniconda; FastAPI/pydantic/httpx all support it. `uv` is not installed, so the Makefile uses a plain `python3 -m venv .venv`.
 - **Expo app is not in the pnpm workspace.** `apps/mobile` installs with `npm install` on its own; pnpm's strict linking breaks Metro/Expo autolinking. Root `pnpm` covers `apps/web` and `packages/*`.
 - **Coordinates & rotation.** Origin = min corner of the floor polygon; `x` along wall 0, `z` toward the viewer. Rotation is degrees about vertical; the item's *front* faces `+z` at 0°, `+x` at 90°, `-z` at 180°, `-x` at 270°. Footprint swaps `w`/`d` at 90°/270°.
 - **Wall numbering & compass words.** Walls are listed as floor segments in order; doors/windows use `{wall, offset}` from `(x1,z1)` along the wall. For the solver, `north` = wall with min z, `south` = max z, `west` = min x, `east` = max x (by midpoint).
@@ -28,7 +28,7 @@ Every ambiguity resolved while building, newest at the bottom. Decisions from EX
 - **Photon real-mode sending needs a relay.** The Spectrum OpenAPI (`spectrum.photon.codes`) is a management plane only (webhooks, lines, tokens); runtime sending goes through the `spectrum-ts` SDK. Live `send_text` POSTs `{to, from, text}` with a Bearer key to `{PHOTON_BASE_URL}/messages`, the shape a thin spectrum-ts relay would expose. Mock mode (outbox at `.data/photon_outbox.jsonl`) is what the demo uses.
 - **Photon inbound shape & signatures.** Body `{event:"messages", space{…}, message{id, direction, sender{id}, content{type:"text",text}|{type:"attachment",…}}}`; `message.id` is the idempotency key. Signature = `X-Spectrum-Signature: v0=hex(HMAC-SHA256(secret, "v0:{ts}:{body}"))` with `X-Spectrum-Timestamp` (5-minute skew) — Standard-Webhooks headers are accepted too. Our fixture shape and any `from/text`-like body are also normalised.
 - **Backboard.** Base `https://app.backboard.io/api`, header `X-API-Key`; memories live under an *assistant*: `POST/GET /assistants/{id}/memories`, `POST …/memories/search`. Live mode lazily creates one assistant per demo user and stores its id on the user doc.
-- **"Live" per service** = `MOCK_MODE=false` **and** that service's key present. Mongo is live whenever `MONGODB_URI` is set. `/health.mode` is `live` / `mock` / `mixed` across Gemini + Backboard + Photon.
+- **"Live" per service** = `MOCK_MODE=false` **and** that service's key present. Supabase shared storage is active whenever `SUPABASE_URL` plus a server-only secret/service key are set. `/health.mode` is `live` / `mock` / `mixed` across Gemini + Backboard + Photon.
 - **Solver candidates are wall-flush only** (10 cm edge grid, back to the wall). A *named* wall restricts candidates to that wall so "won't fit on the window wall" rejections are honest; an unnamed wall scans all four. Zone phrases may list alternatives with " or ". "Beside window" = closest to the window span with a penalty for standing in front of it; the reply's gap is the smaller along-wall clearance to the nearest obstacle.
 - **Clear zones** are placed at the corner of the validator's largest free rectangle, oriented to fit; if the requested size can't fit, the largest rectangle is used and the reply says so.
 - **`add` actions** resolve to the request's imported `furnitureId` unless the plan names a *different* exact catalog id; new instance ids are `<furnitureId>_<n>`. A link-only message is treated as "Will this fit in my room?".
@@ -45,7 +45,7 @@ Every ambiguity resolved while building, newest at the bottom. Decisions from EX
 - **Rotating may wall-snap.** `R` re-runs the snap/clamp pass, so an item within 15 cm of a wall after rotating hugs it. Accepted as consistent with "snap to walls".
 - **Redo has no button** (the reference's top-left cluster has exactly three buttons). ⌘⇧Z redoes; the help overlay documents it.
 - **Real-pointer evidence for A3** lives in `scripts/e2e_editor.py` (Playwright + Chromium against the running API/web): palette tap → floor drop, 10 cm snap, mouse drag, R, L, collision red + blocked save, ⌘Z, Delete, persistence, variant fork surviving reload. Unit-level evidence is `apps/web/src/store.test.ts`.
-- **Mongo evidence without a local mongod** uses `pymongo_inmemory`, which downloads a mongod binary on first run (~440 MB, cached inside `.venv`). `apps/api/tests/test_mongo_store.py` skips with the reason if that download is impossible.
+- **Supabase evidence without a live project** uses an `httpx.MockTransport` fake of the Supabase Data REST API in `apps/api/tests/test_supabase_store.py`, so storage tests stay offline.
 - **Fixture preview route** `/preview/:sample` renders a sample room with no API (read-only) for design work and offline screenshots.
 
 ## Iteration 2 — UI clone
@@ -60,10 +60,10 @@ Every ambiguity resolved while building, newest at the bottom. Decisions from EX
 ## Iteration 3 — demo-ready checkpoint
 
 - **API deploys to Vercel too**, not Render/Railway (no CLI or account for those on this Mac; Vercel is logged in). `api/index.py` exposes the FastAPI ASGI app; root `vercel.json` rewrites every path to it; root `requirements.txt` is the slim runtime set. This also gives Photon a stable public webhook URL without ngrok. `ngrok` is installed anyway (`brew install ngrok/ngrok/ngrok`) for the local-API path in the README.
-- **Serverless persistence caveat.** Without `MONGODB_URI` the JSON store falls back to `/tmp` on a read-only filesystem, so data on the deployed API is per-instance and ephemeral. Set `MONGODB_URI` in the Vercel project for real persistence; locally nothing changes.
+- **Serverless persistence caveat.** Without Supabase or Blob storage the JSON store falls back to `/tmp` on a read-only filesystem, so data on the deployed API is per-instance and ephemeral. Set `SUPABASE_URL` plus `SUPABASE_SECRET_KEY` in the Vercel project for real persistence; locally nothing changes.
 - **Web deploys as a prebuilt static site** (`scripts/deploy_web.sh <api-url>`): Vite bakes `VITE_API_URL`, the build copies `assets/` + `fixtures/` (dereferencing the dev symlinks) and writes SPA rewrites into `dist/vercel.json`.
 - **pnpm 12 build approval** is `allowBuilds: { esbuild: true }` in `pnpm-workspace.yaml` (the older `onlyBuiltDependencies` key is ignored by pnpm 12.3), so `make setup` is non-interactive.
-- **Shared persistence on Vercel = Vercel Blob snapshots** (`apps/api/app/repo/blob_store.py`), chosen because the CLI can provision it non-interactively (`vercel blob create-store arp-db --access private --yes`) while Atlas needs the user's account. Each mutation uploads an immutable `db-<ms>-<rand>.json`; every read first asks the (never CDN-cached) list API for the newest snapshot, so a room created on one function instance is visible to the next request on another. The last 4 snapshots are kept. Store selection order: `MONGODB_URI` → `BLOB_READ_WRITE_TOKEN` → local JSON file; `/health.integrations.mongo` reports `live` / `blob` / `json`.
+- **Shared persistence on Vercel = Supabase first, Vercel Blob fallback.** Store selection order: `SUPABASE_URL` + secret key → `BLOB_READ_WRITE_TOKEN` → local JSON file; `/health.integrations.supabase` reports `supabase` / `blob` / `json`.
 - **Blob API facts** (learned by reading `@vercel/blob@2.8.0`): `PUT https://blob.vercel-storage.com/?pathname=<p>` with `x-api-version: 12`, `x-vercel-blob-access: private`, `x-add-random-suffix: 0`; list `GET /?prefix=`; delete `POST /delete {urls}`; private blobs are read with the same bearer token on their URL. Putting the pathname in the URL path returns "Invalid pathname".
 
 ## Iteration 4 — RoomPlan module + simulator
@@ -78,4 +78,4 @@ Every ambiguity resolved while building, newest at the bottom. Decisions from EX
 - Rent Reality Check uses a deterministic backend estimate, not Gemini math. Gemini/the agent can route and explain, but `apps/api/app/rent.py` owns the scanned square-foot calculation, condition penalties, legal flags, and payment guardrails.
 - The “Material Science project” dataset was not present in the repo, so the implementation looks for fixture-backed material quality and falls back to a transparent floor-material rubric (`fixtures/housing/material_quality.json`).
 - Facebook Marketplace remains user-provided link/photo/manual import only. We do not scrape Marketplace at scale or depend on an unofficial API.
-- Stripe is mock/test-first. The app never stores card/bank data, does not implement escrow, and blocks deposits above one month rent and application fees above $20 before returning a checkout URL.
+- Payments are record-only in Supabase/the active repository. The app never stores card/bank data, does not implement escrow, and blocks deposits above one month rent and application fees above $20 before returning a payment record URL.

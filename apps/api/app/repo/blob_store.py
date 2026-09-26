@@ -4,7 +4,7 @@ Same single-document-set semantics as JsonStore, persisted as immutable versione
 Every operation first asks the Blob *list API* (never CDN-cached) for the newest snapshot and reloads it if it is newer
 than what this instance holds, so a room created by one instance is visible to the next request on another instance.
 Mutations upload a new snapshot and prune old ones (keeping the last few). Selected when BLOB_READ_WRITE_TOKEN is set and
-MONGODB_URI is not.
+Supabase is not configured.
 """
 
 from __future__ import annotations

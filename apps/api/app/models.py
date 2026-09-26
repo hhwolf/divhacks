@@ -294,7 +294,7 @@ class PaymentQuote(Loose):
     rentAmount: float | None = None
     status: PaymentStatus
     guardrails: list[str]
-    stripeCheckoutUrl: str | None = None
-    stripeSessionId: str | None = None
+    checkoutUrl: str | None = None
+    paymentRecordId: str | None = None
     createdAt: str
     updatedAt: str

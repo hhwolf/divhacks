@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; cd "$ROOT"
 [ -f .env ] || { echo ".env not found — copy .env.example and add keys first"; exit 1; }
 SCOPE="${VERCEL_SCOPE:-ast18}"
-for VAR in MOCK_MODE GEMINI_API_KEY GEMINI_MODEL BACKBOARD_API_KEY BACKBOARD_BASE_URL PHOTON_API_KEY PHOTON_WEBHOOK_SECRET PHOTON_BASE_URL PHOTON_FROM MONGODB_URI MONGODB_DB DEMO_PHONE; do
+for VAR in MOCK_MODE GEMINI_API_KEY GEMINI_MODEL BACKBOARD_API_KEY BACKBOARD_BASE_URL PHOTON_API_KEY PHOTON_WEBHOOK_SECRET PHOTON_BASE_URL PHOTON_FROM SUPABASE_URL SUPABASE_SECRET_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_TABLE DEMO_PHONE; do
   VAL="$(grep -E "^${VAR}=" .env | head -1 | cut -d= -f2- | sed -E 's/[[:space:]]+#.*$//' | tr -d '"' || true)"
   [ -n "$VAL" ] || continue
   vercel env rm "$VAR" production --yes --scope "$SCOPE" >/dev/null 2>&1 || true

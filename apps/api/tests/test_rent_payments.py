@@ -51,7 +51,7 @@ def test_payment_mock_checkout_for_allowed_fee(client: TestClient, bedroom: dict
     assert r.status_code == 200
     q = r.json()["quote"]
     assert q["status"] == "mock"
-    assert "checkout" in q["stripeCheckoutUrl"]
+    assert "payment" in q["checkoutUrl"]
 
 
 def test_agent_rent_and_payment_questions_do_not_mutate_current_room(client: TestClient, bedroom: dict) -> None:

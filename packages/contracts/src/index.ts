@@ -141,8 +141,8 @@ export interface PaymentQuote {
   rentAmount?: number | null;
   status: PaymentStatus;
   guardrails: string[];
-  stripeCheckoutUrl?: string | null;
-  stripeSessionId?: string | null;
+  checkoutUrl?: string | null;
+  paymentRecordId?: string | null;
   createdAt: string;
   updatedAt: string;
 }

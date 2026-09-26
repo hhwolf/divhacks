@@ -2,7 +2,7 @@
 
 ## Context
 
-Henry's team is building **Adaptive Room Planner** ("Where Did My Space Go?") at DivHacks 2026 (Columbia, Sep 26–27 2026, submissions due **Sep 27 10:30 AM ET**). Track: **Live Better** — "strictly personal utility: the grind of daily NYC life, optimized… apartment hacks." Judging rubric (from the DivHacks 2026 Devpost): Concept 30%, Functionality 30% ("how well does the demo run?"), Wow Factor 20%, UX/Design 10%, Value to Community 10%. Sponsor challenges relevant to this build: **Photon** (iMessage, $400 + credits), **Backboard** (memory), **Gemini API**, **MongoDB Atlas**.
+Henry's team is building **Adaptive Room Planner** ("Where Did My Space Go?") at DivHacks 2026 (Columbia, Sep 26–27 2026, submissions due **Sep 27 10:30 AM ET**). Track: **Live Better** — "strictly personal utility: the grind of daily NYC life, optimized… apartment hacks." Judging rubric (from the DivHacks 2026 Devpost): Concept 30%, Functionality 30% ("how well does the demo run?"), Wow Factor 20%, UX/Design 10%, Value to Community 10%. Sponsor challenges relevant to this build: **Photon** (iMessage, $400 + credits), **Backboard** (memory), **Gemini API**, **Supabase**.
 
 The repo `hhwolf/divhacks` is **empty** (no commits locally or on origin). Three attachments exist under `.context/attachments/assets/`: the PRD (13 pp), the MVP spec (10 pp), and "DivHacks 2026.pdf" (6 pp) whose only content is 7 reference images (page 1 also repeats the PRD summary; page 6 is the heading "UI/UX").
 
@@ -15,7 +15,7 @@ This planning phase produces **one execution prompt** the user will run on their
 | Frontend | **Expo iOS app** (dev client via `npx expo run:ios`) with a **WebView-hosted Three.js editor** (Vite + React + react-three-fiber). The same web build deploys standalone to Vercel as the judges' test link. |
 | Scanning | Custom **Expo Module (Swift) wrapping RoomPlan**. Everything except live scan must also work in Expo Go via sample room / manual dimensions. |
 | Device | iPhone Pro (LiDAR). Editor screen **locked to landscape**; scan/chat screens portrait. |
-| Backend | **FastAPI + MongoDB Atlas as specced**, with a local JSON-file store fallback when no `MONGODB_URI`. Validation exists in TS (browser) and Python (solver); parity enforced by a shared JSON fixture suite both must pass identically. |
+| Backend | **FastAPI + Supabase REST/Postgres**, with a local JSON-file store fallback when no `SUPABASE_URL`/secret key is configured. Validation exists in TS (browser) and Python (solver); parity enforced by a shared JSON fixture suite both must pass identically. |
 | Credentials | None in hand yet; free accounts can be created. Every external service sits behind an adapter with a **mock mode that is the default**; real mode via env vars. |
 | UI | **Clone the low-poly room-decorator game UI exactly** (reference images 2 and 3), adding our variant tabs / request bar / analysis tile in the same visual language. |
 | Units | Toggle in settings, **default feet & inches**; meters internally. |
@@ -69,6 +69,6 @@ Before handing off, confirm the prompt below: (a) names all three PDFs and the e
 ## Notes for Henry (outside the prompt)
 
 - **Deadline math**: the prompt front-loads a demo-ready checkpoint at iteration 3 because submissions close tomorrow morning. Iterations 4+ are the benchmark loop you asked for.
-- **Accounts to create when the prompt starts running** (all free): Google AI Studio key (Gemini), Backboard API key, Photon account + iMessage line (needs a public webhook URL; `ngrok http 8000`), MongoDB Atlas M0 cluster. Everything works in mock mode until keys exist.
+- **Accounts to create when the prompt starts running** (all free): Google AI Studio key (Gemini), Backboard API key, Photon account + iMessage line (needs a public webhook URL; `ngrok http 8000`), Supabase project. Everything works in mock mode until keys exist.
 - **Two spec conflicts to tell the team**: coordinates are `x,z` (not `x,y`), and Gemini returns zone-level actions (never coordinates) — teammates writing prompts or the Swift exporter should follow the MVP spec's shapes.
 - **Team split still holds**: a teammate can own the Swift RoomPlan exporter against `packages/contracts/skeleton.schema.json` while the prompt builds everything else; the prompt's iteration 4 will produce a working module if nobody else does.

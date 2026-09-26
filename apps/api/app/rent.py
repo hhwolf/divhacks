@@ -225,8 +225,8 @@ async def assess_rent(ctx: AppContext, profile: HousingProfile, layout_id: str |
 
 
 def guard_payment(ctx: AppContext, *, purpose: PaymentPurpose, amount: float, rent_amount: float | None = None, room_id: str | None = None, assessment_id: str | None = None) -> PaymentQuote:
-    guards: list[str] = ["Card/bank details are handled by Stripe Checkout only; this app never stores payment credentials."]
-    status = "ready" if ctx.settings.stripe_live else "mock"
+    guards: list[str] = ["Supabase records this guarded payment quote only; no card, bank, escrow, wire, crypto or cash transfer is processed here."]
+    status = "mock"
     if amount <= 0:
         guards.append("Amount must be greater than $0.")
         status = "blocked"
@@ -246,15 +246,9 @@ def guard_payment(ctx: AppContext, *, purpose: PaymentPurpose, amount: float, re
         else:
             guards.append("Application fee is at or below the $20 cap.")
     elif purpose == "rent_payment":
-        guards.append("Rent payment prototype: verify landlord identity and lease terms before paying.")
+        guards.append("Rent payment record only: verify landlord identity and lease terms before paying outside the app.")
     else:
         guards.append("Furniture purchase prototype: no escrow or cash-transfer protection is provided.")
-    if purpose in ("rent_payment", "deposit") and not ctx.settings.stripe_connect_enabled:
-        guards.append("Real landlord/seller payouts are disabled until a verified Stripe Connect recipient is configured.")
-        if status == "ready":
-            status = "mock"
-    if any("cash" in g.lower() or "wire" in g.lower() for g in guards):
-        status = "blocked"
 
     now = now_iso()
     q = PaymentQuote(
@@ -266,13 +260,12 @@ def guard_payment(ctx: AppContext, *, purpose: PaymentPurpose, amount: float, re
         rentAmount=rent_amount,
         status=status,  # type: ignore[arg-type]
         guardrails=guards,
-        stripeCheckoutUrl=None,
-        stripeSessionId=None,
+        checkoutUrl=None,
+        paymentRecordId=None,
         createdAt=now,
         updatedAt=now,
     )
-    if status in ("mock", "ready"):
-        prefix = "test" if status == "ready" else "mock"
-        q.stripeSessionId = f"cs_{prefix}_{q.id}"
-        q.stripeCheckoutUrl = f"{ctx.settings.public_web_url}/checkout/{q.id}?mode={prefix}"
+    if status == "mock":
+        q.paymentRecordId = f"pay_mock_{q.id}"
+        q.checkoutUrl = f"{ctx.settings.public_web_url}/payment/{q.id}?mode=record"
     return q

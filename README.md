@@ -37,7 +37,26 @@ make thumbs         # re-render palette thumbnails from the GLBs
 make screenshots    # docs/screenshots/iter-N (needs api + web running)
 ```
 
-Storage picks itself: `MONGODB_URI` → MongoDB Atlas; else `BLOB_READ_WRITE_TOKEN` → Vercel Blob snapshots (what the deployed API uses so every serverless instance sees the same rooms); else a JSON file in `.data/`. `GET /health` reports which one is active.
+Storage picks itself: `SUPABASE_URL` + `SUPABASE_SECRET_KEY` → Supabase REST/Postgres; else `BLOB_READ_WRITE_TOKEN` → Vercel Blob snapshots (what the deployed API can use so every serverless instance sees the same rooms); else a JSON file in `.data/`. `GET /health` reports which one is active.
+
+Supabase setup: create this table once in the SQL editor, then add `SUPABASE_URL` and the server-only secret key to `.env` / Vercel env.
+
+```sql
+create table if not exists public.arp_documents (
+  collection text not null,
+  id text not null,
+  room_id text,
+  user_id text,
+  phone text,
+  doc jsonb not null,
+  seq bigint not null,
+  primary key (collection, id)
+);
+create index if not exists arp_documents_collection_seq_idx on public.arp_documents (collection, seq);
+create index if not exists arp_documents_room_idx on public.arp_documents (collection, room_id);
+create index if not exists arp_documents_phone_idx on public.arp_documents (collection, phone);
+grant select, insert, update, delete on public.arp_documents to service_role;
+```
 
 ## Repository layout
 
@@ -63,10 +82,10 @@ POST /rent/assess
 GET  /rooms/{room_id}/rent-assessment
 POST /payments/quote
 POST /payments/checkout
-POST /webhooks/stripe
+POST /payments/supabase-sync
 ```
 
-Payment guardrails block security deposits above one month of rent and application fees above $20. Stripe stays in mock mode unless `MOCK_MODE=false`, `STRIPE_SECRET_KEY` is present, and `STRIPE_PRICE_MODE=test`; real landlord/seller payouts remain disabled unless `STRIPE_CONNECT_ENABLED=true`. No escrow or stored card data is implemented.
+Payment guardrails block security deposits above one month of rent and application fees above $20. Supabase stores the guarded quote/payment record when configured, but no card processor, escrow, wire, crypto, or cash-transfer flow is implemented.
 
 The agent can answer rent/payment prompts such as “I pay $1600 for this room in 10027. Is that fair?”, “Can I safely send a $500 deposit?”, and “This application fee is $75.” Furniture-planning prompts still use the original Gemini/solver pipeline.
 
@@ -109,9 +128,9 @@ Optional rent beat: open the Rent tab, enter ZIP `10027` and rent `$1600`, then 
 
 **Adaptive Room Planner — Where did my space go?** (Live Better)
 
-Renters in 100–150 sq ft NYC rooms buy secondhand and guess. We scan the room once with RoomPlan, rebuild the furniture you already own in a cozy isometric editor, and then let you *text* the room: send a Facebook Marketplace link over iMessage and ask "will this fit beside my window without moving my bed?". Gemini turns the listing and the question into structured constraints, Backboard remembers your non-negotiables ("never move the bed"), a Python placement solver finds a spot on a 10 cm grid, and a shared TypeScript/Python fit validator checks bounds, overlaps, door swing clearance, access edges and walkable paths before anything is saved. Every answer becomes a named layout variant next to your untouched Current Room, with open-floor %, conflicts and walkability side by side in a compare view. MongoDB Atlas stores rooms, furniture and variants; everything degrades to an offline mock mode so the demo never depends on Wi-Fi.
+Renters in 100–150 sq ft NYC rooms buy secondhand and guess. We scan the room once with RoomPlan, rebuild the furniture you already own in a cozy isometric editor, and then let you *text* the room: send a Facebook Marketplace link over iMessage and ask "will this fit beside my window without moving my bed?". Gemini turns the listing and the question into structured constraints, Backboard remembers your non-negotiables ("never move the bed"), a Python placement solver finds a spot on a 10 cm grid, and a shared TypeScript/Python fit validator checks bounds, overlaps, door swing clearance, access edges and walkable paths before anything is saved. Every answer becomes a named layout variant next to your untouched Current Room, with open-floor %, conflicts and walkability side by side in a compare view. Supabase stores rooms, furniture, rent assessments and variants when configured; everything degrades to an offline mock mode so the demo never depends on Wi-Fi.
 
-Sponsors used: **Photon** (iMessage in/out), **Gemini API** (structured output + listing/photo extraction), **Backboard** (preference memory), **MongoDB Atlas** (storage).
+Sponsors used: **Photon** (iMessage in/out), **Gemini API** (structured output + listing/photo extraction), **Backboard** (preference memory), **Supabase** (storage).
 
 Try it: https://adaptive-room-planner.vercel.app · API docs: https://adaptive-room-planner-api.vercel.app/docs · source: this repo · `make demo` replays the 3-minute script headlessly.
 

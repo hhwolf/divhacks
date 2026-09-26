@@ -7,7 +7,7 @@ Facts from https://docs.backboard.io and https://backboard-docs.docsalot.dev (fe
   POST /assistants/{assistant_id}/memories/search {query, limit} -> {memories[], total_count}.
 - The `backboard-sdk` package wraps these with async `BackboardClient(api_key, base_url).add_memory / get_memories / search_memories`
   and `create_assistant(name=...)`; we create one assistant per demo user lazily and keep its id on the user document.
-Mock mode keeps memories on the `users` document (`memories`), which the JSON/Mongo store persists.
+Mock mode keeps memories on the `users` document (`memories`), which the configured repository persists.
 """
 
 from __future__ import annotations

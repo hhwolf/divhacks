@@ -14,7 +14,7 @@
     "rentAmount": {"type": ["number", "null"]},
     "status": {"type": "string", "enum": ["mock", "ready", "blocked", "paid_test"]},
     "guardrails": {"type": "array", "items": {"type": "string"}},
-    "stripeCheckoutUrl": {"type": ["string", "null"]},
-    "stripeSessionId": {"type": ["string", "null"]}
+    "checkoutUrl": {"type": ["string", "null"]},
+    "paymentRecordId": {"type": ["string", "null"]}
   }
 }

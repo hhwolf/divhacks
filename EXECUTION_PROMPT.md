@@ -36,7 +36,7 @@ You are building a hackathon project end to end, autonomously, in iterations, un
 - DivHacks 2026, Columbia. Submissions due **Sep 27 2026, 10:30 AM ET**. Deliver a working demo-ready checkpoint **by the end of iteration 3** no matter what; keep improving after.
 - Track **Live Better**: "strictly personal utility — the grind of daily NYC life, optimized: groceries, meal planning, apartment hacks." Frame everything as: *renter in a 100–150 sq ft NYC room, buying secondhand, wants one more thing to fit without hauling it up three flights.*
 - Judging rubric: **Concept 30%** (overlooked problem / new angle), **Functionality 30%** ("does it work as intended? how well does the demo run?"), **Wow Factor 20%**, **UX & Design 10%**, **Value to Community 10%**. Submission needs a source link + a way to test (deployed web URL).
-- Sponsor challenges we target: **Photon** (iMessage in/out), **Backboard** (memory), **Gemini API** (structured reasoning + vision), **MongoDB Atlas** (storage). Each must be visibly used in the demo *and* degrade gracefully to mock mode.
+- Sponsor challenges we target: **Photon** (iMessage in/out), **Backboard** (memory), **Gemini API** (structured reasoning + vision), **Supabase** (storage). Each must be visibly used in the demo *and* degrade gracefully to mock mode.
 
 ## 2. Decisions already made (do not revisit)
 
@@ -45,9 +45,9 @@ You are building a hackathon project end to end, autonomously, in iterations, un
 | Mobile | **Expo** app (latest SDK, expo-router, TypeScript), run as a **dev client** with `npx expo run:ios` on this Mac. Must also launch in **Expo Go** with every feature except live RoomPlan scan. |
 | Scan | **Custom local Expo Module in Swift wrapping RoomPlan** (`RoomCaptureView` + `RoomCaptureSession`), exporting `CapturedRoom` to our skeleton JSON. Device: iPhone Pro (LiDAR). |
 | Editor | **Web app** (Vite + React + TypeScript + react-three-fiber + zustand) embedded in the Expo app via `react-native-webview` with a typed `postMessage` bridge. The same build deploys standalone to Vercel as the judges' test URL. Editor screen **locks to landscape**. |
-| Backend | **FastAPI** (Python 3.12, pydantic v2, motor). **MongoDB Atlas** when `MONGODB_URI` is set; otherwise a JSON-file repository at `.data/` with the identical interface. |
+| Backend | **FastAPI** (Python 3.12, pydantic v2, httpx). **Supabase REST/Postgres** when `SUPABASE_URL` and a server-only secret/service key are set; otherwise a JSON-file repository at `.data/` with the identical interface. |
 | Geometry | Fit validation implemented in **TypeScript** (`packages/geometry`, runs in the browser on every change) **and** in **Python** (`apps/api/app/solver`). A shared fixture suite `fixtures/validation/*.json` is the single source of truth; a test in each language loads the same fixtures and must produce identical violation lists and metrics. |
-| Integrations | Gemini, Backboard, Photon, Mongo are behind adapters. `MOCK_MODE=true` (default) uses deterministic fixtures so the whole demo runs offline. Real mode is enabled per service by its env var being present. |
+| Integrations | Gemini, Backboard, Photon, Supabase are behind adapters. `MOCK_MODE=true` (default) uses deterministic fixtures so the whole demo runs offline. Real mode is enabled per service by its env var being present. |
 | Units | Meters internally everywhere. UI shows **feet & inches by default** with a settings toggle to metric. Format like `4' 0"` and `18 in`. |
 | Assets | **Kenney Furniture Kit (CC0)** GLBs. Download from https://kenney.nl/assets/furniture-kit (or poly.pizza bundle), keep ~20 items in `assets/furniture/`, and write `assets/furniture/manifest.json` with real-world `dims {w,d,h}` in meters and a per-model scale so each GLB matches its dims exactly. If the download fails, generate procedural low-poly meshes from Three.js primitives with the same manifest and note it in DECISIONS.md. |
 | Look | **Isometric cutaway like the references**: two full-height back walls with windows, the two walls nearest the camera hidden; orbit in 90° steps re-picks hidden walls. The room floats as a rounded island with a thick dark-brown slab edge on a warm flat background with faint corner frame marks. Flat shading, soft warm key light, baked-looking soft AO blob under each item. |
@@ -142,7 +142,7 @@ Stop only when total ≥ 95 with **no single line below 50% of its value**; targ
 - A3 (4) Editor: add, drag on floor plane with 10 cm snap, Shift free-move, R rotate 90°, wall snap, lock badge, remove, undo/redo.
 - A4 (3) Import: fixture link → placeable item with correct dims + price in < 10 s; photo → type + estimated dims; manual dims.
 - A5 (4) Agent: both demo requests return valid plan JSON (schema-validated), bed stays locked, variant saved beside Current Room, reply text sensible; unknown request → clarifying question. Retry-on-violation path tested with a forced bad plan.
-- A6 (3) Variants: rename/duplicate/delete, Current Room never overwritten, both reopen after reload (persistence test in JSON store and, if URI present, Mongo).
+- A6 (3) Variants: rename/duplicate/delete, Current Room never overwritten, both reopen after reload (persistence test in JSON store and, if configured, Supabase).
 - A7 (4) Validation: each §5 rule has a fixture that triggers it; violations named per item; red state blocks save.
 - A8 (3) Photon: simulated inbound link+question → variant created → outbound reply captured (mock) with deep link; real round trip if credentials exist.
 - A9 (3) Compare: side-by-side + metric deltas + moved list; ghost overlay in editor.
@@ -153,7 +153,7 @@ Stop only when total ≥ 95 with **no single line below 50% of its value**; targ
 
 **D. Demo run (15)** — `make demo` runs the full 3-minute script headlessly via Playwright + API (load sample → build Current Room from fixture → lock bed → simulated Photon message → Marketplace Desk variant → drag into door swing → red → drag back → compare) without errors (8); the same script performed manually on the phone in landscape, recorded to `docs/demo/run.mp4` (5); README demo script with timestamps and spoken lines (2).
 
-**E. Robustness (10)** — mock mode works with zero env vars and no network (3); bad Gemini JSON → retry → fallback keeps old layout (2); no `MONGODB_URI` → JSON store; with URI → Mongo (2); Expo Go launch without the RoomPlan module (2); `/health` reports live/mock per service (1).
+**E. Robustness (10)** — mock mode works with zero env vars and no network (3); bad Gemini JSON → retry → fallback keeps old layout (2); no `SUPABASE_URL` → JSON store; with Supabase env → Supabase (2); Expo Go launch without the RoomPlan module (2); `/health` reports live/mock per service (1).
 
 **F. Engineering quality (10)** — `pnpm typecheck && pnpm lint && pnpm test` green (3); `pytest` green including TS/Python parity on `fixtures/validation` (3); `.env.example`, README setup steps verified from a clean clone (2); no secrets committed, conventional commits per iteration (2).
 

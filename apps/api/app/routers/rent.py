@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from app.deps import AppContext, get_ctx
@@ -55,12 +55,8 @@ async def payment_checkout(body: PaymentQuoteBody, ctx: AppContext = Depends(get
     outbox.parent.mkdir(parents=True, exist_ok=True)
     with outbox.open("a") as fh:
         fh.write(q.model_dump_json() + "\n")
-    return {"quote": q.model_dump(), "url": q.stripeCheckoutUrl}
+    return {"quote": q.model_dump(), "url": q.checkoutUrl}
 
-
-@router.post("/webhooks/stripe")
-async def stripe_webhook(request: Request, stripe_signature: str | None = Header(default=None), ctx: AppContext = Depends(get_ctx)) -> dict:
-    if ctx.settings.stripe_webhook_secret and not stripe_signature:
-        raise HTTPException(401, "missing Stripe signature")
-    payload = await request.json()
-    return {"status": "ok", "mode": "verified" if ctx.settings.stripe_webhook_secret else "mock", "type": payload.get("type", "unknown")}
+@router.post("/payments/supabase-sync")
+async def payment_supabase_sync(ctx: AppContext = Depends(get_ctx)) -> dict:
+    return {"status": "ok", "store": ctx.settings.store_kind, "processor": "none"}

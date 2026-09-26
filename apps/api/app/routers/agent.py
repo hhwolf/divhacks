@@ -102,7 +102,7 @@ async def _maybe_housing_reply(ctx: AppContext, body: AgentRequestBody) -> dict 
             "layout": None,
             "reply": reply,
             "status": "rejected" if blocked else "ok",
-            "links": [quote.stripeCheckoutUrl] if quote.stripeCheckoutUrl else [],
+            "links": [quote.checkoutUrl] if quote.checkoutUrl else [],
             "requestId": request_id,
             "violations": [],
             "quote": quote.model_dump(),

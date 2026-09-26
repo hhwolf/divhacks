@@ -1,4 +1,4 @@
-"""Single-file JSON repository (`<data_dir>/db.json`) with atomic writes; the default when MONGODB_URI is unset."""
+"""Single-file JSON repository (`<data_dir>/db.json`) with atomic writes; the default when shared storage is unset."""
 
 from __future__ import annotations
 
