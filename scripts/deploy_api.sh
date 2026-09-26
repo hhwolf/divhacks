@@ -5,4 +5,4 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-vercel deploy --prod --yes --name adaptive-room-planner-api 2>&1 | tail -1
+vercel deploy --prod --yes --scope "${VERCEL_SCOPE:-ast18}" 2>&1 | grep -E "Aliased|error" | tail -1
