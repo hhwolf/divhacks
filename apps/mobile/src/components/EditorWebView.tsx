@@ -21,13 +21,35 @@ interface Props {
   layoutId?: string;
   /** Known room id (used when the editor asks to navigate to /ask). */
   roomId?: string;
+  /** Benchmark C5: after `editor:ready`, drive a synthetic drag for 3 s and report the WebView's fps via editor:log. */
+  fpsProbe?: boolean;
 }
+
+/**
+ * Injected into the page: moves the first unlocked item along a small orbit on every animation frame for 3 s (the same
+ * store call the pointer drag uses) and posts `editor:log {message:'fps', data:{fps, frames, ms}}` back to the host.
+ */
+const FPS_PROBE_JS = `(function(){
+  var store = window.__arpStore; if (!store) return;
+  var st = store.getState(); var item = (st.items || []).find(function(i){ return !i.locked; }); if (!item) return;
+  var id = item.id, cx = item.x, cz = item.z, frames = 0, t0 = performance.now();
+  function tick(now){
+    frames++; var a = (now - t0) / 500;
+    store.getState().moveItem(id, cx + Math.cos(a) * 0.4, cz + Math.sin(a) * 0.4, { free: true, commit: false });
+    if (now - t0 < 3000) requestAnimationFrame(tick);
+    else {
+      var ms = now - t0; store.getState().moveItem(id, cx, cz, { free: true, commit: false });
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'editor:log', payload: { message: 'fps', data: { fps: Math.round(frames / (ms / 1000)), frames: frames, ms: Math.round(ms) } } }));
+    }
+  }
+  requestAnimationFrame(tick);
+})(); true;`;
 
 /**
  * Full-bleed WebView hosting the web editor, locked to landscape while focused, with the typed bridge,
  * a floating native back button and a transient metrics chip.
  */
-export function EditorWebView({ route, layoutId, roomId: roomIdProp }: Props) {
+export function EditorWebView({ route, layoutId, roomId: roomIdProp, fpsProbe }: Props) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const toast = useToast();
@@ -43,12 +65,13 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp }: Props) {
 
   const url = editorRouteUrl(webUrl, route, units);
 
-  // Landscape while focused; release on blur/unmount.
+  // Landscape while focused; every other screen is portrait, so lock back explicitly on blur/unmount (a plain
+  // unlock leaves the interface in landscape until the device is physically rotated).
   useFocusEffect(
     useCallback(() => {
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
       return () => {
-        ScreenOrientation.unlockAsync().catch(() => {});
+        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
       };
     }, []),
   );
@@ -100,15 +123,19 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp }: Props) {
   );
 
   const navigate = useCallback(
-    (route: string, extra: { roomId?: string; layoutId?: string }) => {
+    (route: string, extra: { roomId?: string; layoutId?: string; replace?: boolean }) => {
       const path = route.split('?')[0];
       const parts = path.split('/').filter(Boolean);
       const rid = extra.roomId ?? roomId;
       const lid = extra.layoutId ?? currentLayoutId;
+      const go = extra.replace ? router.replace : router.push;
       if (parts[0] === 'compare' && parts[1] && parts[2]) {
-        router.push(`/compare/${encodeURIComponent(parts[1])}/${encodeURIComponent(parts[2])}`);
+        go(`/compare/${encodeURIComponent(parts[1])}/${encodeURIComponent(parts[2])}`);
       } else if (parts[0] === 'layout' && parts[1]) {
-        router.push(`/editor/${encodeURIComponent(parts[1])}`);
+        // The editor announces its own URL on load (replace:true); re-pushing the layout we already show would
+        // mount a new WebView that announces itself again — an endless push loop.
+        if (parts[1] === (currentLayoutId ?? layoutId)) return;
+        go(`/editor/${encodeURIComponent(parts[1])}`);
       } else if (parts[0] === 'ask') {
         router.push({ pathname: '/ask', params: { roomId: rid ?? '', layoutId: lid ?? '' } });
       } else if (parts[0] === 'variants' || parts[0] === 'rooms') {
@@ -123,7 +150,7 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp }: Props) {
         toast(`Unknown editor route: ${route}`);
       }
     },
-    [router, roomId, currentLayoutId, toast],
+    [router, roomId, currentLayoutId, layoutId, toast],
   );
 
   const onMessage = useCallback(
@@ -135,6 +162,7 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp }: Props) {
           sendHello();
           if (layoutId) send({ type: 'host:openLayout', payload: { layoutId } });
           setLoading(false);
+          if (fpsProbe) setTimeout(() => webRef.current?.injectJavaScript(FPS_PROBE_JS), 2500); // let GLBs settle first
           break;
         case 'editor:layoutChanged':
           if (msg.payload.roomId) setRoomId(msg.payload.roomId);
@@ -156,6 +184,10 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp }: Props) {
         case 'editor:selection':
           break;
         case 'editor:log': {
+          if (msg.payload.message === 'fps') {
+            const fps = (msg.payload.data as { fps?: number } | undefined)?.fps;
+            toast(`WebView drag: ${fps ?? '?'} fps`, { tone: 'ink', ms: 6000 });
+          }
           const level = msg.payload.level ?? 'info';
           const fn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log;
           fn(`[editor] ${msg.payload.message}`, msg.payload.data ?? '');
@@ -163,15 +195,17 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp }: Props) {
         }
       }
     },
-    [layoutId, navigate, saveAndShareSnapshot, send, sendHello, showMetrics, toast],
+    [fpsProbe, layoutId, navigate, saveAndShareSnapshot, send, sendHello, showMetrics, toast],
   );
 
   const top = insets.top + 8;
-  const left = insets.left + 8;
+  // In landscape the Dynamic Island / notch sits on one side; the page has no safe-area CSS, so keep the WebView out of
+  // that strip and park the Back button inside it (falls back to the page's top-left corner on notch-less devices).
+  const left = insets.left >= 48 ? 8 : insets.left + 8;
   const right = insets.right + 8;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { paddingLeft: insets.left, paddingRight: insets.right }]}>
       <WebView
         ref={webRef}
         source={{ uri: url }}
@@ -233,8 +267,7 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp }: Props) {
         hitSlop={8}
         style={({ pressed }) => [styles.back, { top, left }, pressed && { opacity: 0.7 }]}
       >
-        <MaterialCommunityIcons name="chevron-left" size={22} color={colors.tile} />
-        <Text style={styles.backText}>Back</Text>
+        <MaterialCommunityIcons name="chevron-left" size={26} color={colors.tile} />
       </Pressable>
 
       {metrics ? (
@@ -252,8 +285,9 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp }: Props) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg },
-  web: { flex: 1, backgroundColor: colors.bg },
+  // Matches the editor page's own background so the safe-area strips blend in.
+  root: { flex: 1, backgroundColor: '#B57C56' },
+  web: { flex: 1, backgroundColor: '#B57C56' },
   center: { position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: 'rgba(217,165,110,0.85)' },
   loadingText: { color: colors.tile, marginTop: 10, fontWeight: '600' },
   errorTitle: { color: colors.ink, fontSize: 18, fontWeight: '800', marginBottom: 6 },
@@ -262,16 +296,14 @@ const styles = StyleSheet.create({
   pillText: { color: colors.tile, fontWeight: '700' },
   back: {
     position: 'absolute',
-    flexDirection: 'row',
+    width: 40,
+    height: 40,
     alignItems: 'center',
-    paddingLeft: 6,
-    paddingRight: 12,
-    height: 36,
+    justifyContent: 'center',
     borderRadius: radius.pill,
     backgroundColor: 'rgba(74,51,39,0.88)',
     ...shadow.soft,
   },
-  backText: { color: colors.tile, fontWeight: '700', fontSize: 14 },
   chip: {
     position: 'absolute',
     flexDirection: 'row',

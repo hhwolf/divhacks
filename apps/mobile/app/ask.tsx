@@ -147,7 +147,7 @@ export default function Ask() {
             <View style={styles.baseRow}>
               <MaterialCommunityIcons name="floor-plan" size={16} color={colors.inkSoft} />
               <Text style={type.small} numberOfLines={1}>
-                {baseLayout ? `Starting from “${baseLayout.name}”${baseLayout.isCurrent ? ' (Current Room, never modified)' : ''}` : roomId ? 'Loading layout…' : 'No room selected'}
+                {baseLayout ? (baseLayout.isCurrent ? 'Starting from the Current Room (never modified)' : `Starting from “${baseLayout.name}”`) : roomId ? 'Loading layout…' : 'No room selected'}
               </Text>
             </View>
             <TextInput

@@ -36,7 +36,7 @@ export interface EditorSnapshot { dataUrl: string; layoutId?: string; name?: str
 export interface EditorMetrics { layoutId?: string; metrics: LayoutMetrics }
 export interface EditorAgentReply { reply: string; status?: 'ok' | 'clarify' | 'rejected'; layoutId?: string }
 /** `route` is an editor path such as `/compare/{a}/{b}`, `/layout/{id}`, `/ask`, `/variants`, `/settings`. */
-export interface EditorNavigate { route: string; roomId?: string; layoutId?: string }
+export interface EditorNavigate { route: string; roomId?: string; layoutId?: string; replace?: boolean }
 export interface EditorLog { level?: 'debug' | 'info' | 'warn' | 'error'; message: string; data?: unknown }
 
 export type EditorMessage =

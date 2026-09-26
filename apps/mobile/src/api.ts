@@ -86,7 +86,11 @@ export const api = {
   createRoomFromJson: (payload: Record<string, unknown>, name = 'Scanned room') =>
     request<CreateRoomResponse>('/rooms', { method: 'POST', body: json({ name, ...payload }) }),
 
-  getLayout: (id: string) => request<Layout>(`/layouts/${encodeURIComponent(id)}`),
+  /** GET /layouts/{id} returns `{layout, furniture, validation}`; unwrap to the bare Layout. */
+  getLayout: async (id: string): Promise<Layout> => {
+    const data = await request<Layout | { layout: Layout }>(`/layouts/${encodeURIComponent(id)}`);
+    return 'layout' in data ? data.layout : data;
+  },
   forkLayout: (id: string, name: string) =>
     request<Layout>(`/layouts/${encodeURIComponent(id)}/fork`, { method: 'POST', body: json({ name }) }),
   updateLayout: (layout: Layout, patch: Partial<Pick<Layout, 'name' | 'items' | 'zones'>>) =>

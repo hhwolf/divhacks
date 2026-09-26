@@ -97,6 +97,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     if (get().saveState === 'dirty') await get().saveNow();
     history.replaceState(null, '', `/layout/${id}${location.search}`);
     await get().loadLayout(id);
+    // tell the host which layout is now shown (it treats this as a replace, never a push)
     postToHost('editor:navigate', { route: `/layout/${id}`, replace: true });
   },
   setItems(items, zones, pushHistory = true) {

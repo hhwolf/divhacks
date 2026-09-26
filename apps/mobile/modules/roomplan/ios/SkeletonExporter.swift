@@ -37,15 +37,15 @@ enum SkeletonExporter {
     if signedArea(walls) < 0 { walls = walls.reversed().map { $0.flipped() } }
 
     let minX = walls.map { min($0.a.x, $0.b.x) }.min() ?? 0
-    let minZ = walls.map { min($0.a.z, $0.b.z) }.min() ?? 0
+    let minZ = walls.map { min($0.a.y, $0.b.y) }.min() ?? 0
     let maxX = walls.map { max($0.a.x, $0.b.x) }.max() ?? 0
-    let maxZ = walls.map { max($0.a.z, $0.b.z) }.max() ?? 0
+    let maxZ = walls.map { max($0.a.y, $0.b.y) }.max() ?? 0
     let floorY = Double(walls.map { $0.bottomY }.min() ?? 0)
     let origin = SIMD2<Double>(minX, minZ)
     for i in walls.indices { walls[i].a -= origin; walls[i].b -= origin }
 
     let wallsJSON: [[String: Any]] = walls.map {
-      ["x1": r3($0.a.x), "z1": r3($0.a.z), "x2": r3($0.b.x), "z2": r3($0.b.z), "height": r3(clamp($0.height, 1.5, 6))]
+      ["x1": r3($0.a.x), "z1": r3($0.a.y), "x2": r3($0.b.x), "z2": r3($0.b.y), "height": r3(clamp($0.height, 1.5, 6))]
     }
 
     var doors: [[String: Any]] = []
@@ -66,7 +66,7 @@ enum SkeletonExporter {
       ])
     }
 
-    let floorPolygon: [[Double]] = walls.map { [r3($0.a.x), r3($0.a.z)] }
+    let floorPolygon: [[Double]] = walls.map { [r3($0.a.x), r3($0.a.y)] }
     let dimensions: [String: Any] = [
       "l": r3(maxX - minX), "w": r3(maxZ - minZ), "h": r3(clamp(walls.map { $0.height }.max() ?? 2.7, 1.5, 6)),
     ]

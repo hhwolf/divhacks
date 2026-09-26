@@ -81,7 +81,22 @@ Lines that moved: F3 (clean clone → `make setup` 8 s → `make test` green: 3 
 
 **Judge-rubric self-check (iter-3).** *Concept*: "text your room" + never-overwritten variants is the hook; the Live Better framing (100 sq ft, three flights of stairs) is in the copy and the sample room. *Functionality*: the whole loop runs on the public URLs in ~10 s headless; the same script is in the README with spoken lines. *Wow*: the iMessage → variant beat and the ref-faithful cutaway room. *UX*: pixel-measured clone; every control works; a first-time judge still needs the "Load sample room" card to get going — that is the entry point on the web home. *Community value*: NYC renters, movers, and the accessibility line (1.5 m turning radius uses the same solver) are stated in the README.
 
+## Iteration 4 — RoomPlan module + simulator — 83 / 100
+
+| Line | Pts | before | now | Evidence |
+|---|---|---|---|---|
+| A1 RoomPlan JSON fixture loads | 3 | 3 | 3 | `fixtures/rooms/roomplan-export-sample.json` → `POST /rooms` creates a `scan` room with 4 walls, door, window, 3 seeded items, 0 conflicts |
+| C5 60 fps WebView drag | 2 | 1 | **2** | Expo Go WebView on iPhone 16 Pro simulator: 60 fps (181 frames / 3.0 s synthetic drag) — `docs/screenshots/iter-4/mobile-editor-fps.png`; headed Chromium 120 fps |
+| D2 phone run recorded | 5 | 0 | **2** | `docs/demo/run-simulator.mp4` (29.8 s, simulator, Home → landscape editor → Variants → Ask) + `docs/demo/run.mp4` (browser at phone proportions). Not a physical phone and not the full spoken script → partial credit only |
+| E4 Expo Go without RoomPlan | 2 | 1 | **2** | Expo Go 57.0.9 renders Home; Scan shows the fallback; `mobile-expo-go-home.png`, `mobile-scan-fallback.png` |
+| **Total** | | 79 | **83** | |
+
+Still open: a dev-client/TestFlight build (needs Xcode 26 on this Mac), a real LiDAR scan saved to `fixtures/rooms/`, an on-device recording, and real-mode keys.
+
 ## Iteration log
+
+### iter-4 — 83/100
+- RoomPlan Swift module (exporter typechecks against the iOS 18 SDK; full build blocked by Xcode 16.0 vs SDK 57's Xcode 26 requirement), RoomPlan-shaped fixture round-trips through the API, Expo Go run with 7 simulator screenshots, 60 fps WebView drag, simulator recording, host bridge fixes (navigate loop, layout unwrap, safe areas), WebKit thumbnail fix in the web editor.
 
 ### iter-3 — 79/100 (demo-ready checkpoint; B 24 after the glyph pass, C5 1 from the browser fps run)
 - Makefile targets verified (`make test`, `make bench`, `make demo`, `make e2e`, `make photon`); pnpm 12 build approval fixed; Vercel deploys for web (static) and API (Python function); README live URLs, demo script, Devpost blurb; ngrok installed for the local path.
