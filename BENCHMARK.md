@@ -22,7 +22,7 @@ Provisional: functional lines are scored from tests and the headless demo; UI fi
 | C2 room load < 30 s cold / < 3 s warm | 2 | 2 | demo step "Open variant in editor" 2.98 s (cold, headless swiftshader) |
 | C3 import < 10 s | 1 | 1 | demo 24 ms (mock) |
 | C4 agent < 2 s mock | 2 | 2 | demo 58 ms |
-| C5 60 fps WebView drag | 2 | 0 | not measured yet |
+| C5 60 fps WebView drag | 2 | 0 → 1 (iter-3) | `make fps`: 120 fps (display-capped) dragging in headed Chromium at 1278×590@2x, `.data/fps.json`; device/simulator WebView number pending iter-4 |
 | D1 `make demo` headless | 8 | 8 | `docs/demo/demo-run.json` DEMO OK 8.5 s |
 | D2 manual phone run recorded | 5 | 0 | iteration 4 |
 | D3 README demo script | 2 | 0 | placeholder |
@@ -66,16 +66,16 @@ Bugs found by the new evidence and fixed: floor picking never fired (invisible m
 | category / search behaviour | 1 | 1 | `compare-category-search.png` + `web-02-palette.png` — 🔍 toggles the search field, category tabs above the grid |
 | right swatch panel | 3 | 3 | `compare-right-swatch-panel.png` — ✕ first cell, white-bordered swatches, pager, details block |
 | selection diamond + pill | 2 | 2 | `compare-selection-diamond-pill.png` — white footprint outline + corner ticks, pill with two colour dots + name + arrow |
-| bottom-center cluster | 2 | 1 | `compare-bottom-center.png` — geometry matches; tree and speaker glyphs are approximations |
+| bottom-center cluster | 2 | 2 | `compare-bottom-center.png` — geometry matches; filled palette / tiered pine / crescent / speaker glyphs redrawn against the crop (iter-3) |
 | variant tabs / analysis tile / request bar | 2 | 2 | `web-06-variant-tabs.png`, `web-08-request-reply.png` — same tile language, 49 px tab height |
 | landscape iPhone proportions | 2 | 2 | `phone-03-selected-side-panel.png` (2556 × 1179) — all clusters scale with `vmin`, no overlaps |
-| **B total** | **25** | **23** | |
+| **B total** | **25** | **24** | |
 
 Other lines that moved: D3 README demo script 0 → **2** (timestamps + spoken lines, Devpost blurb). **Total 75 / 100** (A 29 · B 23 · C 8 · D 10 · E 9 · F 9 — see iter-0/1 tables for unchanged lines).
 
 Controls verified working in this iteration (every visible control): menu drawer, snapshot download, undo, view cycle (cutaway → half → plan), paint drawer (wall + floor), help, palette tiles/paging/search/categories, side panel (rotate, lock, duplicate, delete, 38 swatches over 2 pages), bottom cluster (overlays popover with 3 toggles, ghost popover, night, sound), variant tabs (switch, +, context menu), analysis tile expand, request bar (send, paste link, photo).
 
-## Iteration 3 — Agent + integrations + DEMO-READY checkpoint — 77 / 100
+## Iteration 3 — Agent + integrations + DEMO-READY checkpoint — 79 / 100
 
 Lines that moved: F3 (clean clone → `make setup` 8 s → `make test` green: 3 + 16 + 8 vitest, 60 pytest; README has setup, phone, Photon, demo script, blurb, live URLs) 1 → **2**; D1 unchanged (8) — `make demo` 9.6 s locally; deploy line (part of §12 deliverables, not scored separately): web https://adaptive-room-planner.vercel.app and API https://adaptive-room-planner-api.vercel.app are live, `/docs` renders, `POST /rooms` works. Photon simulator (`make photon`) → 4 variants + outbox entries with deep links. A5/A8 mock evidence unchanged; real-mode adapters are implemented but unproven (no keys yet). **Known gap:** the deployed API's JSON store is per-instance until `MONGODB_URI` (or another shared store) is configured, so cross-request flows on the public API can 404 — the local stack and `make demo` are unaffected.
 
@@ -83,7 +83,7 @@ Lines that moved: F3 (clean clone → `make setup` 8 s → `make test` green: 3 
 
 ## Iteration log
 
-### iter-3 — 77/100 (demo-ready checkpoint)
+### iter-3 — 79/100 (demo-ready checkpoint; B 24 after the glyph pass, C5 1 from the browser fps run)
 - Makefile targets verified (`make test`, `make bench`, `make demo`, `make e2e`, `make photon`); pnpm 12 build approval fixed; Vercel deploys for web (static) and API (Python function); README live URLs, demo script, Devpost blurb; ngrok installed for the local path.
 - Open: shared persistence for the serverless API, real-mode keys, RoomPlan module + device run (iter-4), phone recording, fps measurement.
 

@@ -10,17 +10,30 @@ import type { RoomPlanExport } from '../../src/types';
 export interface RoomPlanNativeModule {
   /** `RoomCaptureSession.isSupported` — true only on LiDAR iPhones/iPads running iOS 16+. */
   isSupported(): boolean;
-  /** Starts the capture session shown by the mounted RoomPlanView. */
+  /** Starts the capture session shown by the mounted RoomPlanView. Rejects if no view is mounted. */
   startCapture(): Promise<void>;
-  /** Stops the session; RoomPlan then finalizes the CapturedRoom. */
+  /**
+   * Stops the session and resolves only once RoomPlan has finished post-processing the final CapturedRoom
+   * (or rejects on failure / 30 s timeout), so `exportSkeleton()` can be called right after.
+   */
   stopCapture(): Promise<void>;
-  /** Converts the last CapturedRoom into our skeleton JSON + detected objects. Empty skeleton if none. */
+  /** Projects the last CapturedRoom into our skeleton JSON + seeded `objects`. Empty skeleton if nothing captured. */
   exportSkeleton(): Promise<RoomPlanExport>;
 }
 
 export type CaptureStatus = 'idle' | 'scanning' | 'processing' | 'done' | 'error';
+/** Payload of `onCaptureStatus`. Counts are live while scanning (didUpdate) and final on `done`. */
+export interface CaptureProgress {
+  status: CaptureStatus;
+  /** Coaching instruction ("Slow down", "Move closer to the wall") or an error description. */
+  message?: string;
+  walls?: number;
+  doors?: number;
+  windows?: number;
+  objects?: number;
+}
 export interface RoomPlanViewProps extends ViewProps {
-  onCaptureStatus?: (event: { nativeEvent: { status: CaptureStatus; message?: string } }) => void;
+  onCaptureStatus?: (event: { nativeEvent: CaptureProgress }) => void;
 }
 
 let cachedModule: RoomPlanNativeModule | null | undefined;
