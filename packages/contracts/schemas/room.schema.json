@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/room.schema.json",
+  "title": "Room",
+  "type": "object",
+  "required": ["id", "name", "skeleton", "source"],
+  "properties": {
+    "id": {"type": "string"}, "userId": {"type": ["string", "null"]}, "name": {"type": "string"},
+    "skeleton": {"$ref": "skeleton.schema.json"},
+    "source": {"type": "string", "enum": ["scan", "manual", "sample"]},
+    "createdAt": {"type": "string"}
+  }
+}

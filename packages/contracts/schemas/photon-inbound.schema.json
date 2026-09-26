@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/photon-inbound.schema.json",
+  "title": "PhotonInboundEvent",
+  "description": "Normalized shape our webhook understands. Real Photon payloads are mapped onto this in integrations/photon.py; fixtures in fixtures/photon use it directly.",
+  "type": "object",
+  "required": ["event", "message"],
+  "properties": {
+    "event": {"type": "string"},
+    "id": {"type": "string"},
+    "timestamp": {"type": "string"},
+    "message": {
+      "type": "object", "required": ["from", "text"],
+      "properties": {
+        "id": {"type": "string"},
+        "from": {"type": "string", "description": "E.164 phone or handle"},
+        "to": {"type": "string"},
+        "text": {"type": "string"},
+        "attachments": {"type": "array", "items": {"type": "object", "properties": {"url": {"type": "string"}, "mimeType": {"type": "string"}}}}
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/furniture.schema.json",
+  "title": "FurnitureItem",
+  "type": "object",
+  "required": ["id", "name", "category", "kind", "dims", "source"],
+  "additionalProperties": true,
+  "properties": {
+    "id": {"type": "string"},
+    "userId": {"type": ["string", "null"]},
+    "name": {"type": "string"},
+    "category": {"type": "string", "enum": ["bed", "desk", "seating", "storage", "table", "decor", "imported"]},
+    "kind": {"type": "string", "description": "Rule kind used by validation", "enum": ["bed", "desk", "wardrobe", "dresser", "storage", "seating", "table", "decor", "floor"]},
+    "dims": {
+      "type": "object", "required": ["w", "d", "h"], "additionalProperties": false,
+      "properties": {"w": {"type": "number", "exclusiveMinimum": 0}, "d": {"type": "number", "exclusiveMinimum": 0}, "h": {"type": "number", "minimum": 0}}
+    },
+    "glbUrl": {"type": ["string", "null"]},
+    "thumbUrl": {"type": ["string", "null"]},
+    "source": {"type": "string", "enum": ["preset", "link", "photo", "manual", "scan"]},
+    "sourceUrl": {"type": ["string", "null"]},
+    "price": {"type": ["number", "null"]},
+    "color": {"type": ["string", "null"]},
+    "estimated": {"type": "boolean", "default": false},
+    "frontAxis": {"type": "string", "enum": ["+z", "-z", "+x", "-x"], "default": "+z"}
+  }
+}

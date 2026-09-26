@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "Room Planner",
+    "slug": "adaptive-room-planner",
+    "version": "1.0.0",
+    "scheme": "roomplanner",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "dev.roomplanner.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Room Planner uses the camera and LiDAR to scan your room with RoomPlan.",
+        "NSPhotoLibraryUsageDescription": "Room Planner lets you pick a furniture photo so the assistant can size it.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "dev.roomplanner.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#D9A56E",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-dev-client",
+      "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Room Planner lets you pick a furniture photo so the assistant can size it."
+        }
+      ],
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#D9A56E"
+        }
+      ]
+    ]
+  }
+}

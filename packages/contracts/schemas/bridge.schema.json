@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/bridge.schema.json",
+  "title": "BridgeMessage",
+  "description": "Typed postMessage envelope between the Expo WebView and the web editor. Both directions use {type, payload, id?}.",
+  "type": "object",
+  "required": ["type"],
+  "properties": {
+    "type": {"type": "string", "enum": [
+      "host:hello", "editor:ready", "host:openLayout", "editor:layoutChanged", "editor:selection",
+      "editor:snapshot", "host:units", "editor:metrics", "host:request", "editor:agentReply", "editor:navigate", "editor:log"
+    ]},
+    "id": {"type": "string"},
+    "payload": {}
+  }
+}

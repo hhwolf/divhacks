@@ -1,0 +1,49 @@
+import type { FurnitureItem, Layout, Room, ValidationResult } from '@arp/contracts';
+
+let base = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000';
+export function setApiBase(url: string) { base = url.replace(/\/$/, ''); }
+export function apiBase() { return base; }
+
+async function req<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${base}${path}`, { headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) }, ...init });
+  if (!res.ok) {
+    let detail = res.statusText;
+    try { const j = await res.json(); detail = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail ?? j); } catch { /* ignore */ }
+    throw new Error(`${res.status} ${detail}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+export interface LayoutResponse { layout: Layout; furniture: Record<string, FurnitureItem>; validation?: ValidationResult; room?: Room }
+export interface RoomResponse { room: Room; layouts: Layout[]; currentLayout?: Layout }
+export interface AgentResponse { plan: unknown; layout: Layout | null; reply: string; status: string; links?: string[]; requestId?: string }
+export interface CompareResponse {
+  a: Layout; b: Layout;
+  deltas: { openFloor: number; conflicts: number; reachableStorage: number; largestFreeRectArea: number };
+  moved: { id: string; name: string; from: { x: number; z: number; rotation: number }; to: { x: number; z: number; rotation: number } }[];
+  added: { id: string; name: string }[]; removed: { id: string; name: string }[];
+}
+
+export const api = {
+  health: () => req<{ status: string; mode: string; integrations: Record<string, string> }>('/health'),
+  createRoom: (body: unknown) => req<RoomResponse>('/rooms', { method: 'POST', body: JSON.stringify(body) }),
+  rooms: () => req<Room[]>('/rooms'),
+  room: (id: string) => req<RoomResponse>(`/rooms/${id}`),
+  layout: (id: string) => req<LayoutResponse>(`/layouts/${id}`),
+  saveLayout: (id: string, body: Partial<Layout> & { source: 'editor' }) => req<LayoutResponse>(`/layouts/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  fork: (id: string, name?: string) => req<LayoutResponse | Layout>(`/layouts/${id}/fork`, { method: 'POST', body: JSON.stringify({ name }) }),
+  deleteLayout: (id: string) => req<unknown>(`/layouts/${id}`, { method: 'DELETE' }),
+  compare: (a: string, b: string) => req<CompareResponse>(`/layouts/${a}/compare/${b}`),
+  furniture: () => req<{ items: FurnitureItem[] } | FurnitureItem[]>('/furniture'),
+  fromLink: (url: string) => req<FurnitureItem | { item: FurnitureItem }>('/furniture/from-link', { method: 'POST', body: JSON.stringify({ url }) }),
+  fromPhoto: async (file: File) => {
+    const fd = new FormData(); fd.append('image', file);
+    const res = await fetch(`${base}/furniture/from-photo`, { method: 'POST', body: fd });
+    if (!res.ok) throw new Error(`${res.status}`);
+    return res.json() as Promise<FurnitureItem | { item: FurnitureItem }>;
+  },
+  agent: (body: { text: string; roomId: string; baseLayoutId: string; furnitureId?: string; channel: 'app' }) => req<AgentResponse>('/agent/request', { method: 'POST', body: JSON.stringify(body) }),
+};
+
+export function unwrapLayout(r: LayoutResponse | Layout): Layout { return 'layout' in r ? r.layout : r; }
+export function unwrapItem(r: FurnitureItem | { item: FurnitureItem }): FurnitureItem { return 'item' in r ? r.item : r; }

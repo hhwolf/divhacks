@@ -1,0 +1,15 @@
+{
+  "intent": "make_space",
+  "variantName": "Yoga corner",
+  "constraints": [
+    {"type": "lock", "item": "dresser"},
+    {"type": "lock", "item": "bed_double"},
+    {"type": "clear_zone", "w_m": 1.8, "d_m": 1.2, "label": "Yoga"}
+  ],
+  "actions": [
+    {"type": "move", "item": "bookshelf_low", "zone": "east wall, near door"},
+    {"type": "move", "item": "plant", "zone": "corner, near window"}
+  ],
+  "reply": "Cleared a 1.8 x 1.2 m stretch of floor by the door for your mat; the dresser and bed stayed put.",
+  "preferencesLearned": ["does yoga every morning"]
+}

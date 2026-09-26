@@ -1,0 +1,25 @@
+{
+  "name": "@arp/geometry",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint src test bench",
+    "test": "vitest run",
+    "bench": "vitest run bench --reporter=verbose",
+    "gen:expectations": "npx tsx bench/gen_expectations.ts"
+  },
+  "dependencies": { "@arp/contracts": "workspace:*" },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "eslint": "^9.12.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.8.0",
+    "vitest": "^2.1.0"
+  }
+}

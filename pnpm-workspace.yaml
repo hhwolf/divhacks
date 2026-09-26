@@ -1,0 +1,9 @@
+packages:
+  - apps/web
+  - packages/*
+onlyBuiltDependencies:
+  - esbuild
+  - '@esbuild/darwin-arm64'
+ignoredBuiltDependencies: []
+allowBuilds:
+  esbuild: set this to true or false
