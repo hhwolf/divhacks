@@ -5,6 +5,7 @@ import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import type { FurnitureItem, LayoutItem } from '@arp/contracts';
 import { footprint } from '@arp/geometry';
 import { aoTexture } from './textures';
+import { styleMaterial } from './materials';
 import { apiBase } from '../lib/api';
 
 export function glbUrl(f: FurnitureItem): string | null {
@@ -32,19 +33,16 @@ function GlbModel({ url, f, tint, color, opacity }: { url: string; f: FurnitureI
   useEffect(() => {
     obj.traverse((o) => {
       const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined; if (!m || !(o as THREE.Mesh).isMesh) return;
-      m.emissive = new THREE.Color(tint ?? '#000000'); m.emissiveIntensity = tint ? 0.55 : 0; m.transparent = opacity < 1; m.opacity = opacity; m.depthWrite = opacity >= 1;
-      const base = (m.userData.baseColor ??= m.color.clone()) as THREE.Color;
-      if (color) m.color.copy(base).lerp(new THREE.Color(color), 0.75); else m.color.copy(base);
-      m.flatShading = true; m.needsUpdate = true;
+      styleMaterial(m, f, color, tint, opacity);
     });
-  }, [obj, tint, color, opacity]);
+  }, [obj, f, tint, color, opacity]);
   return <primitive object={obj} />;
 }
 function BoxModel({ f, tint, color, opacity }: { f: FurnitureItem; tint: string | null; color?: string | null; opacity: number }) {
   return (
     <mesh position={[0, f.dims.h / 2, 0]} castShadow>
       <boxGeometry args={[f.dims.w, f.dims.h, f.dims.d]} />
-      <meshStandardMaterial color={color ?? f.color ?? '#C9A27E'} emissive={tint ?? '#000'} emissiveIntensity={tint ? 0.5 : 0} transparent={opacity < 1} opacity={opacity} flatShading />
+      <meshStandardMaterial color={color ?? f.color ?? '#C9A27E'} roughness={0.75} emissive={tint ?? '#000'} emissiveIntensity={tint ? 0.5 : 0} transparent={opacity < 1} opacity={opacity} flatShading />
     </mesh>
   );
 }

@@ -16,10 +16,10 @@
    "thumbUrl": "/assets/furniture/thumbs/bed_double.png",
    "source": "preset",
    "price": null,
-   "color": "#C9B79C",
+   "color": "#8E6A48",
    "colors": [
-    "#C9B79C",
-    "#8A5A3C"
+    "#8E6A48",
+    "#F2EFEA"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -39,6 +39,12 @@
      1.0891,
      0.9937
     ]
+   },
+   "materials": {
+    "wood": "#8E6A48",
+    "carpetWhite": "#F2EFEA",
+    "carpet": "#B9C7D1",
+    "metal": "#8F9397"
    }
   },
   {
@@ -55,10 +61,10 @@
    "thumbUrl": "/assets/furniture/thumbs/bed_single.png",
    "source": "preset",
    "price": null,
-   "color": "#C9B79C",
+   "color": "#A38363",
    "colors": [
-    "#C9B79C",
-    "#8A5A3C"
+    "#A38363",
+    "#F4F1EC"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -78,6 +84,12 @@
      1.0891,
      1.0042
     ]
+   },
+   "materials": {
+    "wood": "#A38363",
+    "carpetWhite": "#F4F1EC",
+    "carpet": "#93A68C",
+    "metal": "#8F9397"
    }
   },
   {
@@ -94,10 +106,10 @@
    "thumbUrl": "/assets/furniture/thumbs/desk.png",
    "source": "preset",
    "price": null,
-   "color": "#D9B48F",
+   "color": "#B58B5E",
    "colors": [
-    "#D9B48F",
-    "#3E2F27"
+    "#B58B5E",
+    "#4B4F55"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -117,6 +129,10 @@
      1.9511,
      1.0786
     ]
+   },
+   "materials": {
+    "wood": "#B58B5E",
+    "metal": "#4B4F55"
    }
   },
   {
@@ -133,10 +149,10 @@
    "thumbUrl": "/assets/furniture/thumbs/chair_desk.png",
    "source": "preset",
    "price": null,
-   "color": "#3E3E46",
+   "color": "#3A3F45",
    "colors": [
-    "#3E3E46",
-    "#8A8A94"
+    "#3A3F45",
+    "#2F3338"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -156,6 +172,10 @@
      2.1552,
      1.2409
     ]
+   },
+   "materials": {
+    "metalMedium": "#3A3F45",
+    "carpet": "#2F3338"
    }
   },
   {
@@ -172,10 +192,9 @@
    "thumbUrl": "/assets/furniture/thumbs/chair.png",
    "source": "preset",
    "price": null,
-   "color": "#C89B6D",
+   "color": "#C19B6C",
    "colors": [
-    "#C89B6D",
-    "#5C3B2A"
+    "#C19B6C"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -195,6 +214,9 @@
      1.9149,
      2.25
     ]
+   },
+   "materials": {
+    "wood": "#C19B6C"
    }
   },
   {
@@ -211,10 +233,9 @@
    "thumbUrl": "/assets/furniture/thumbs/dresser.png",
    "source": "preset",
    "price": null,
-   "color": "#B98860",
+   "color": "#EAE5DC",
    "colors": [
-    "#B98860",
-    "#6B4A34"
+    "#EAE5DC"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -234,6 +255,9 @@
      1.0127,
      2.0
     ]
+   },
+   "materials": {
+    "wood": "#EAE5DC"
    }
   },
   {
@@ -250,10 +274,10 @@
    "thumbUrl": "/assets/furniture/thumbs/wardrobe.png",
    "source": "preset",
    "price": null,
-   "color": "#B98860",
+   "color": "#A98661",
    "colors": [
-    "#B98860",
-    "#6B4A34"
+    "#A98661",
+    "#9A9A9A"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -273,6 +297,10 @@
      2.3529,
      2.2222
     ]
+   },
+   "materials": {
+    "wood": "#A98661",
+    "metal": "#9A9A9A"
    }
   },
   {
@@ -289,10 +317,9 @@
    "thumbUrl": "/assets/furniture/thumbs/bookshelf.png",
    "source": "preset",
    "price": null,
-   "color": "#B98860",
+   "color": "#C8AB80",
    "colors": [
-    "#B98860",
-    "#E5DCCB"
+    "#C8AB80"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -312,6 +339,9 @@
      2.0455,
      1.2
     ]
+   },
+   "materials": {
+    "wood": "#C8AB80"
    }
   },
   {
@@ -328,10 +358,9 @@
    "thumbUrl": "/assets/furniture/thumbs/bookshelf_low.png",
    "source": "preset",
    "price": null,
-   "color": "#B98860",
+   "color": "#6E5140",
    "colors": [
-    "#B98860",
-    "#E5DCCB"
+    "#6E5140"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -351,6 +380,9 @@
      2.0,
      1.2
     ]
+   },
+   "materials": {
+    "wood": "#6E5140"
    }
   },
   {
@@ -367,10 +399,10 @@
    "thumbUrl": "/assets/furniture/thumbs/nightstand.png",
    "source": "preset",
    "price": null,
-   "color": "#B98860",
+   "color": "#9C7448",
    "colors": [
-    "#B98860",
-    "#6B4A34"
+    "#9C7448",
+    "#E8E2D8"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -390,6 +422,11 @@
      2.2796,
      1.049
     ]
+   },
+   "materials": {
+    "wood": "#9C7448",
+    "_defaultMat": "#E8E2D8",
+    "metal": "#8C8C8C"
    }
   },
   {
@@ -406,10 +443,10 @@
    "thumbUrl": "/assets/furniture/thumbs/sofa.png",
    "source": "preset",
    "price": null,
-   "color": "#D68A5C",
+   "color": "#5E7B99",
    "colors": [
-    "#D68A5C",
-    "#5C3B2A"
+    "#5E7B99",
+    "#5C4033"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -429,6 +466,10 @@
      1.8478,
      2.1951
     ]
+   },
+   "materials": {
+    "carpet": "#5E7B99",
+    "wood": "#5C4033"
    }
   },
   {
@@ -445,10 +486,10 @@
    "thumbUrl": "/assets/furniture/thumbs/armchair.png",
    "source": "preset",
    "price": null,
-   "color": "#D68A5C",
+   "color": "#C9A24A",
    "colors": [
-    "#D68A5C",
-    "#5C3B2A"
+    "#C9A24A",
+    "#6B4E3A"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -468,6 +509,10 @@
      1.8478,
      2.1951
     ]
+   },
+   "materials": {
+    "carpet": "#C9A24A",
+    "wood": "#6B4E3A"
    }
   },
   {
@@ -484,10 +529,9 @@
    "thumbUrl": "/assets/furniture/thumbs/coffee_table.png",
    "source": "preset",
    "price": null,
-   "color": "#D9B48F",
+   "color": "#7B5B3F",
    "colors": [
-    "#D9B48F",
-    "#3E2F27"
+    "#7B5B3F"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -507,6 +551,9 @@
      1.9565,
      1.5
     ]
+   },
+   "materials": {
+    "wood": "#7B5B3F"
    }
   },
   {
@@ -523,10 +570,9 @@
    "thumbUrl": "/assets/furniture/thumbs/table.png",
    "source": "preset",
    "price": null,
-   "color": "#D9B48F",
+   "color": "#CDB48F",
    "colors": [
-    "#D9B48F",
-    "#3E2F27"
+    "#CDB48F"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -546,6 +592,9 @@
      2.2954,
      1.6765
     ]
+   },
+   "materials": {
+    "wood": "#CDB48F"
    }
   },
   {
@@ -562,10 +611,9 @@
    "thumbUrl": "/assets/furniture/thumbs/table_round.png",
    "source": "preset",
    "price": null,
-   "color": "#D9B48F",
+   "color": "#8F6B4E",
    "colors": [
-    "#D9B48F",
-    "#3E2F27"
+    "#8F6B4E"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -585,6 +633,9 @@
      2.0451,
      1.125
     ]
+   },
+   "materials": {
+    "wood": "#8F6B4E"
    }
   },
   {
@@ -601,10 +652,10 @@
    "thumbUrl": "/assets/furniture/thumbs/side_table.png",
    "source": "preset",
    "price": null,
-   "color": "#D9B48F",
+   "color": "#D8CFC2",
    "colors": [
-    "#D9B48F",
-    "#3E2F27"
+    "#D8CFC2",
+    "#EDE9E3"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -624,6 +675,10 @@
      1.5608,
      2.2727
     ]
+   },
+   "materials": {
+    "wood": "#D8CFC2",
+    "_defaultMat": "#EDE9E3"
    }
   },
   {
@@ -640,10 +695,9 @@
    "thumbUrl": "/assets/furniture/thumbs/tv_stand.png",
    "source": "preset",
    "price": null,
-   "color": "#B98860",
+   "color": "#3D3A38",
    "colors": [
-    "#B98860",
-    "#2B2B30"
+    "#3D3A38"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -663,6 +717,9 @@
      1.6129,
      1.6
     ]
+   },
+   "materials": {
+    "wood": "#3D3A38"
    }
   },
   {
@@ -679,10 +736,10 @@
    "thumbUrl": "/assets/furniture/thumbs/floor_lamp.png",
    "source": "preset",
    "price": null,
-   "color": "#F1E3C6",
+   "color": "#2E2E33",
    "colors": [
-    "#F1E3C6",
-    "#2B2B30"
+    "#2E2E33",
+    "#F6E6B4"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -702,6 +759,10 @@
      1.8605,
      1.7088
     ]
+   },
+   "materials": {
+    "metal": "#2E2E33",
+    "lamp": "#F6E6B4"
    }
   },
   {
@@ -718,10 +779,10 @@
    "thumbUrl": "/assets/furniture/thumbs/plant.png",
    "source": "preset",
    "price": null,
-   "color": "#6FA36B",
+   "color": "#C4B7A6",
    "colors": [
-    "#6FA36B",
-    "#A8553C"
+    "#C4B7A6",
+    "#7A6753"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -741,6 +802,11 @@
      1.8664,
      1.3746
     ]
+   },
+   "materials": {
+    "wood": "#C4B7A6",
+    "woodDark": "#7A6753",
+    "plant": "#4F8A4B"
    }
   },
   {
@@ -757,10 +823,10 @@
    "thumbUrl": "/assets/furniture/thumbs/rug.png",
    "source": "preset",
    "price": null,
-   "color": "#C97A5B",
+   "color": "#8E3B3B",
    "colors": [
-    "#C97A5B",
-    "#EBD7C2"
+    "#8E3B3B",
+    "#6B2A2A"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -780,6 +846,10 @@
      1.0,
      2.5
     ]
+   },
+   "materials": {
+    "carpet": "#8E3B3B",
+    "carpetDarker": "#6B2A2A"
    }
   },
   {
@@ -796,10 +866,10 @@
    "thumbUrl": "/assets/furniture/thumbs/yoga_mat.png",
    "source": "preset",
    "price": null,
-   "color": "#7FA8C9",
+   "color": "#3F8F8A",
    "colors": [
-    "#7FA8C9",
-    "#5C7FA0"
+    "#3F8F8A",
+    "#2E6B67"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -819,6 +889,10 @@
      1.0,
      1.9891
     ]
+   },
+   "materials": {
+    "carpet": "#3F8F8A",
+    "carpetDarker": "#2E6B67"
    }
   },
   {
@@ -835,10 +909,10 @@
    "thumbUrl": "/assets/furniture/thumbs/bench.png",
    "source": "preset",
    "price": null,
-   "color": "#C89B6D",
+   "color": "#A57A4E",
    "colors": [
-    "#C89B6D",
-    "#5C3B2A"
+    "#A57A4E",
+    "#4A4A52"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -858,6 +932,10 @@
      0.9783,
      2.0
     ]
+   },
+   "materials": {
+    "wood": "#A57A4E",
+    "carpet": "#4A4A52"
    }
   },
   {
@@ -874,10 +952,10 @@
    "thumbUrl": "/assets/furniture/thumbs/mini_fridge.png",
    "source": "preset",
    "price": null,
-   "color": "#F1F1F1",
+   "color": "#ECEEEA",
    "colors": [
-    "#F1F1F1",
-    "#9A9A9A"
+    "#ECEEEA",
+    "#3B4247"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -897,6 +975,12 @@
      1.4161,
      1.5776
     ]
+   },
+   "materials": {
+    "metalLight": "#ECEEEA",
+    "metalDark": "#3B4247",
+    "glass": "#BFD8D2",
+    "metal": "#A7ACB1"
    }
   },
   {
@@ -913,10 +997,10 @@
    "thumbUrl": "/assets/furniture/thumbs/stool.png",
    "source": "preset",
    "price": null,
-   "color": "#C89B6D",
+   "color": "#B98F63",
    "colors": [
-    "#C89B6D",
-    "#5C3B2A"
+    "#B98F63",
+    "#B5563C"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -936,6 +1020,10 @@
      1.7241,
      1.5225
     ]
+   },
+   "materials": {
+    "wood": "#B98F63",
+    "carpet": "#B5563C"
    }
   },
   {
@@ -952,10 +1040,10 @@
    "thumbUrl": "/assets/furniture/thumbs/moving_box.png",
    "source": "preset",
    "price": null,
-   "color": "#C8A176",
+   "color": "#C9A57A",
    "colors": [
-    "#C8A176",
-    "#8A6A46"
+    "#C9A57A",
+    "#9B7A55"
    ],
    "estimated": false,
    "frontAxis": "+z",
@@ -975,6 +1063,10 @@
      1.6014,
      2.1176
     ]
+   },
+   "materials": {
+    "wood": "#C9A57A",
+    "woodDark": "#9B7A55"
    }
   }
  ]

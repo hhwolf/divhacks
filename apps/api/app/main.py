@@ -18,7 +18,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(title="Adaptive Room Planner API", version=health.VERSION)
     app.state.ctx = AppContext.build(settings)
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-    for r in (health.router, rooms.router, layouts.router, furniture.router, rent.router, agent.router, webhooks.router):
+    for r in (health.router, rooms.router, rooms.setup_router, layouts.router, furniture.router, rent.router, agent.router, webhooks.router):
         app.include_router(r)
 
     @app.get("/fixtures/listings/desk", include_in_schema=False)

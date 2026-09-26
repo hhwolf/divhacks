@@ -54,7 +54,7 @@ const lsSet = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.st
 
 export const useEditor = create<EditorState>((set, get) => ({
   embedded: false, units: ls('arp.units', 'imperial'), theme: ls('arp.theme', 'peach'), night: false, sound: false, viewMode: 'cutaway', orbit: 0,
-  wallColor: ls('arp.wallColor', '#F3DEC2'), floorStyle: ls('arp.floorStyle', 'brick'), floorColor: ls('arp.floorColor', '#B0684C'),
+  wallColor: ls('arp.wallColor', '#F3EDE4'), floorStyle: ls('arp.floorStyle', 'plank'), floorColor: ls('arp.floorColor', '#C9A57C'),
   room: null, layouts: [], activeId: null, furniture: {}, items: [], zones: [], history: [], future: [],
   selectedId: null, placing: null, dragging: null, hoverId: null,
   overlays: { walkable: false, keepClear: false, lowClearance: false }, overlaysOpen: false, ghostId: null, ghostOpen: false,

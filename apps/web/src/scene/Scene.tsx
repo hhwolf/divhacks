@@ -1,9 +1,9 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { Canvas, useThree, type ThreeEvent } from '@react-three/fiber';
-import { OrthographicCamera } from '@react-three/drei';
+import { ContactShadows, OrthographicCamera } from '@react-three/drei';
 import type { Layout, LayoutItem, RoomSkeleton } from '@arp/contracts';
-import { wallInwardNormal } from '@arp/geometry';
+import { openingSpan, wallInwardNormal } from '@arp/geometry';
 import { useEditor, violationLevel } from '../store';
 import { RoomMesh } from './Room';
 import { Item } from './Furniture';
@@ -110,6 +110,28 @@ function PlacingPreview() {
   return <Item item={it} f={f} selected={false} level={null} shake={false} bounce={false} ghost units={units} interactive={false} showPill={false} />;
 }
 
+/** Directional light positioned outside the room's first window, pointing along its inward normal (falls back to a high key light). */
+function WindowLight({ sk, night }: { sk: RoomSkeleton; night: boolean }) {
+  const w = sk.windows[0];
+  const target = useMemo(() => new THREE.Object3D(), []);
+  const cx = sk.dimensions.l / 2, cz = sk.dimensions.w / 2;
+  let pos: [number, number, number] = [cx - 6, 9, cz + 4];
+  if (w) {
+    const { a, b } = openingSpan(sk, w); const n = wallInwardNormal(sk, w.wall);
+    const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
+    pos = [mx - n[0] * 7, w.sillHeight + w.height + 4.5, mz - n[1] * 7];
+    target.position.set(mx + n[0] * 2.2, 0, mz + n[1] * 2.2);
+  } else target.position.set(cx, 0, cz);
+  return (
+    <>
+      <primitive object={target} />
+      <directionalLight position={pos} target={target} intensity={night ? 0.55 : 2.1} color={night ? '#9fb2e6' : '#ffe2b8'} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0004} shadow-normalBias={0.02}>
+        <orthographicCamera attach="shadow-camera" args={[-8, 8, 8, -8, 0.5, 40]} />
+      </directionalLight>
+    </>
+  );
+}
+
 export function RoomScene({ interactive = true, ghostLayout = null, className, itemsOverride = null, hideOverlays = false }: { interactive?: boolean; ghostLayout?: Layout | null; className?: string; itemsOverride?: LayoutItem[] | null; hideOverlays?: boolean }) {
   const room = useEditor((s) => s.room); const orbit = useEditor((s) => s.orbit); const viewMode = useEditor((s) => s.viewMode);
   const wallColor = useEditor((s) => s.wallColor); const floorStyle = useEditor((s) => s.floorStyle); const floorColor = useEditor((s) => s.floorColor); const night = useEditor((s) => s.night); const theme = useEditor((s) => s.theme);
@@ -124,11 +146,12 @@ export function RoomScene({ interactive = true, ghostLayout = null, className, i
     <Canvas className={className} shadows dpr={[1, 2]} gl={{ preserveDrawingBuffer: true, antialias: true, alpha: true }} onCreated={({ gl }) => { glRef.current = gl; gl.toneMapping = THREE.NoToneMapping; }} style={{ touchAction: 'none' }}>
       <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={1} />
       <Rig sk={sk} /><Controls />
-      <ambientLight intensity={night ? 0.55 : 1.05} color={night ? '#8fa0c8' : '#fff4e6'} />
-      <directionalLight position={[cx - 6, 9, cz + 4]} intensity={night ? 0.5 : 1.35} color={night ? '#9fb2e6' : '#ffe6c2'} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0005}>
-        <orthographicCamera attach="shadow-camera" args={[-8, 8, 8, -8, 0.5, 40]} />
-      </directionalLight>
-      <directionalLight position={[cx + 5, 6, cz - 6]} intensity={0.35} color="#ffd9b3" />
+      <ambientLight intensity={night ? 0.45 : 0.85} color={night ? '#8fa0c8' : '#f6efe6'} />
+      <hemisphereLight intensity={night ? 0.25 : 0.55} color="#fff6ea" groundColor="#8a6a52" />
+      {/* key light through the first window: warm, strong, casts the long soft shadows */}
+      <WindowLight sk={sk} night={night} />
+      <directionalLight position={[cx + 5, 7, cz + 6]} intensity={night ? 0.25 : 0.45} color={night ? '#9fb2e6' : '#ffe3c8'} />
+      <ContactShadows position={[cx, 0.02, cz]} scale={Math.max(sk.dimensions.l, sk.dimensions.w) * 1.6} blur={2.4} far={2.5} opacity={night ? 0.3 : 0.42} resolution={1024} color="#3b2418" frames={1} />
       <Suspense fallback={null}>
         <RoomMesh sk={sk} hidden={hidden} viewMode={viewMode} wallColor={wallColor} floorStyle={floorStyle} floorColor={floorColor} night={night} theme={theme} />
         {!hideOverlays && <FloorOverlays masks={masks} show={overlays} />}

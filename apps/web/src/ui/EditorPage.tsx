@@ -10,6 +10,7 @@ import { SidePanel } from './SidePanel';
 import { BottomCenter } from './BottomCenter';
 import { VariantTabs } from './VariantTabs';
 import { AnalysisTile } from './AnalysisTile';
+import { RoomNeeds } from './RoomNeeds';
 import { RequestBar } from './RequestBar';
 import { Drawers } from './Drawers';
 import { Toasts } from './Toasts';
@@ -68,7 +69,7 @@ export function EditorPage() {
       {!loading && !room && lastError && <div className="loading error">Couldn’t load this layout.<br /><small>{lastError}</small></div>}
       {ui && room && (
         <>
-          <TopLeft /><TopRight /><VariantTabs /><AnalysisTile /><Palette /><SidePanel /><BottomCenter /><RequestBar /><Drawers />
+          <TopLeft /><TopRight /><VariantTabs /><AnalysisTile /><RoomNeeds /><Palette /><SidePanel /><BottomCenter /><RequestBar /><Drawers />
         </>
       )}
       <Toasts />

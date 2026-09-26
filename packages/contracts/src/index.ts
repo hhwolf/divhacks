@@ -35,6 +35,8 @@ export interface FurnitureItem {
   estimated?: boolean;
   frontAxis?: '+z' | '-z' | '+x' | '-x';
   colors?: string[];
+  /** Per material-slot colours (Kenney slot names: wood, carpet, metal, …) for realistic, varied palettes. */
+  materials?: Record<string, string>;
 }
 
 export type Rotation = 0 | 90 | 180 | 270;
@@ -58,7 +60,12 @@ export interface Layout {
   updatedAt?: string;
 }
 
-export interface Room { id: string; userId?: string | null; name: string; skeleton: RoomSkeleton; source: 'scan' | 'manual' | 'sample'; createdAt?: string }
+export type SpaceType = 'bedroom' | 'study' | 'living' | 'workout' | 'creative' | 'shared';
+export interface RoomElement { id: string; label: string; furnitureIds?: string[]; custom?: boolean; zone?: { w: number; d: number } | null }
+export interface Room {
+  id: string; userId?: string | null; name: string; skeleton: RoomSkeleton; source: 'scan' | 'manual' | 'sample'; createdAt?: string;
+  spaceTypes?: SpaceType[] | string[]; elements?: RoomElement[]; detectedObjects?: LayoutItem[];
+}
 
 export type Intent = 'fit_item' | 'make_space' | 'keep_clear' | 'compare' | 'rent_check' | 'payment_check' | 'housing_quality' | 'clarify';
 export interface PlanConstraint { type: 'lock' | 'adjacent' | 'keep_clear' | 'clear_zone'; item?: string; feature?: 'window' | 'door' | 'outlet' | 'wall'; w_m?: number; d_m?: number; label?: string; optional?: boolean }

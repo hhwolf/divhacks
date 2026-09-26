@@ -192,3 +192,15 @@ a { color: inherit; }
 
 /* Keep the request bubble clear of the side panel's details block */
 .editor:has(.side-panel) .request-fab, .editor:has(.side-panel) .request-bar { right: calc(300 * var(--u)); }
+
+/* "This room needs" checklist (setup flow), under the analysis tile */
+.needs { position: absolute; right: calc(77 * var(--u) + env(safe-area-inset-right, 0px)); top: calc(268 * var(--u)); width: calc(224 * var(--u)); background: var(--tile); border-radius: var(--r); box-shadow: 0 calc(4 * var(--u)) 0 var(--tile-lip), 0 calc(8 * var(--u)) calc(12 * var(--u)) var(--tile-shadow); font-size: calc(12 * var(--u)); color: var(--ink); z-index: 3; overflow: hidden; }
+.editor:has(.side-panel) .needs { display: none; }
+.needs-head { width: 100%; border: 0; background: transparent; display: flex; justify-content: space-between; padding: calc(8 * var(--u)) calc(12 * var(--u)); font-weight: 800; font-size: calc(12 * var(--u)); color: var(--ink); }
+.needs ul { list-style: none; margin: 0; padding: 0 calc(8 * var(--u)) calc(8 * var(--u)); display: flex; flex-direction: column; gap: calc(3 * var(--u)); }
+.needs li { display: flex; align-items: center; gap: calc(8 * var(--u)); padding: calc(4 * var(--u)) calc(4 * var(--u)); border-radius: calc(7 * var(--u)); }
+.needs li.done { opacity: .55; } .needs li.done .needs-label { text-decoration: line-through; }
+.needs-check { width: calc(16 * var(--u)); height: calc(16 * var(--u)); border-radius: 50%; border: calc(2 * var(--u)) solid var(--ink); display: grid; place-items: center; font-size: calc(10 * var(--u)); font-weight: 900; flex: none; }
+.needs li.done .needs-check { background: var(--green); border-color: var(--green); color: #fff; }
+.needs-label { flex: 1; font-weight: 600; }
+.needs-add { border: 0; background: var(--ink); color: #fff; width: calc(22 * var(--u)); height: calc(22 * var(--u)); border-radius: calc(6 * var(--u)); display: grid; place-items: center; } .needs-add svg { width: calc(14 * var(--u)); height: calc(14 * var(--u)); }

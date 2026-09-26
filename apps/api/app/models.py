@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -75,6 +75,16 @@ class RoomSkeleton(Strict):
     outlets: list[Outlet] = []
 
 
+class RoomElement(Loose):
+    """Something the user says the space needs (bed, desk, yoga zone…); `furnitureIds` are the catalog items that satisfy it."""
+
+    id: str
+    label: str
+    furnitureIds: list[str] = []
+    custom: bool = False
+    zone: dict[str, float] | None = None  # e.g. {"w": 1.8, "d": 1.2} for clear-floor elements like a yoga zone
+
+
 class Room(Loose):
     id: str
     userId: str | None = None
@@ -82,6 +92,9 @@ class Room(Loose):
     skeleton: RoomSkeleton
     source: Literal["scan", "manual", "sample"]
     createdAt: str
+    spaceTypes: list[str] = []
+    elements: list[RoomElement] = []
+    detectedObjects: list[dict[str, Any]] = []  # RoomPlan-detected furniture kept aside when the room is created clean
 
 
 class Dims(Strict):
