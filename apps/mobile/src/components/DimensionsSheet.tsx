@@ -92,7 +92,7 @@ export function DimensionsSheet({ visible, units: initialUnits, busy, onClose, o
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
             <Button label="Cancel" variant="ghost" onPress={onClose} style={{ flex: 1 }} />
-            <Button label="Create room" onPress={submit} busy={busy} style={{ flex: 2 }} icon="home-plus" />
+            <Button label="Continue" onPress={submit} busy={busy} style={{ flex: 2 }} icon="arrow-right" />
           </View>
         </View>
       </KeyboardAvoidingView>

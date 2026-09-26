@@ -2,14 +2,16 @@ import { useStore } from './store';
 import type {
   AgentRequestResponse,
   CreateRoomResponse,
-  Dimensions,
   FurnitureItem,
   HealthResponse,
   Layout,
   Room,
   RoomDetailResponse,
+  RoomDraft,
+  RoomElement,
   RoomListEntry,
-  RoomPlanExport,
+  SetupSuggestionsResponse,
+  SpaceTypeInfo,
 } from './types';
 
 export class ApiError extends Error {
@@ -72,19 +74,29 @@ export const api = {
 
   createSampleRoom: (sample = 'nyc-bedroom') =>
     request<CreateRoomResponse>('/rooms', { method: 'POST', body: json({ sample }) }),
-  createManualRoom: (dimensions: Dimensions, name = 'My room') =>
+  /**
+   * Create the clean base room from a draft: geometry preserved, `seed: false` so detected objects are
+   * stored on the room as `detectedObjects` rather than placed in the Current Room.
+   */
+  createRoomFromDraft: (draft: RoomDraft, setup: { spaceTypes: string[]; elements: RoomElement[] }) =>
     request<CreateRoomResponse>('/rooms', {
       method: 'POST',
-      body: json({ dimensions, doors: [], windows: [], name }),
+      body: json({
+        name: draft.name,
+        ...(draft.skeleton ? { skeleton: draft.skeleton } : { dimensions: draft.dimensions, doors: draft.doors ?? [], windows: draft.windows ?? [] }),
+        objects: draft.objects,
+        seed: false,
+        spaceTypes: setup.spaceTypes,
+        elements: setup.elements,
+      }),
     }),
-  createScannedRoom: (scan: RoomPlanExport, name = 'Scanned room') =>
-    request<CreateRoomResponse>('/rooms', {
-      method: 'POST',
-      body: json({ skeleton: scan.skeleton, objects: scan.objects, name }),
-    }),
-  /** Accepts either our {skeleton, objects} export or a raw RoomPlan JSON export the API knows how to parse. */
-  createRoomFromJson: (payload: Record<string, unknown>, name = 'Scanned room') =>
-    request<CreateRoomResponse>('/rooms', { method: 'POST', body: json({ name, ...payload }) }),
+  updateRoomSetup: (roomId: string, patch: { spaceTypes?: string[]; elements?: RoomElement[] }) =>
+    request<Room>(`/rooms/${encodeURIComponent(roomId)}/setup`, { method: 'PATCH', body: json(patch) }),
+
+  /** Setup vocabulary. Both 404 on older APIs; callers fall back to `src/setupVocab.ts`. */
+  getSpaceTypes: () => request<SpaceTypeInfo[]>('/setup/space-types'),
+  getSetupSuggestions: (types: string[]) =>
+    request<SetupSuggestionsResponse>(`/setup/suggestions?types=${encodeURIComponent(types.join(','))}`),
 
   /** GET /layouts/{id} returns `{layout, furniture, validation}`; unwrap to the bare Layout. */
   getLayout: async (id: string): Promise<Layout> => {

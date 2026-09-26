@@ -19,7 +19,7 @@ import { useToast } from '../src/components/Toast';
 import { Button, Chip, Screen, Tile } from '../src/components/ui';
 import { useStore } from '../src/store';
 import { colors, radius, spacing, type } from '../src/theme';
-import type { Dimensions, RoomPlanExport } from '../src/types';
+import type { Dimensions, RoomDraft, RoomPlanExport } from '../src/types';
 import { formatArea, formatDims } from '../src/units';
 
 export default function Scan() {
@@ -35,9 +35,10 @@ function LiveScan() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const units = useStore((s) => s.units);
+  const setRoomDraft = useStore((s) => s.setRoomDraft);
   const [progress, setProgress] = useState<CaptureProgress>({ status: 'idle' });
   const [scan, setScan] = useState<RoomPlanExport | null>(null);
-  const [busy, setBusy] = useState<'stop' | 'save' | null>(null);
+  const [busy, setBusy] = useState<'stop' | null>(null);
   const mod = getRoomPlanModule();
   const status: CaptureStatus = progress.status;
 
@@ -78,17 +79,11 @@ function LiveScan() {
     }
   };
 
-  const useScan = async () => {
+  // Hand the scan to /setup (space types + elements); the clean room is created there with seed:false.
+  const useScan = () => {
     if (!scan) return;
-    setBusy('save');
-    try {
-      const res = await api.createScannedRoom(scan, 'Scanned room');
-      router.replace(`/editor/${encodeURIComponent(res.currentLayout.id)}`);
-    } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
-    } finally {
-      setBusy(null);
-    }
+    setRoomDraft({ name: 'Scanned room', source: 'scan', skeleton: scan.skeleton, objects: scan.objects });
+    router.push('/setup');
   };
 
   const chipLabel =
@@ -128,7 +123,7 @@ function LiveScan() {
           {status === 'done' && scan ? (
             <>
               <Button label="Rescan" icon="refresh" onPress={start} variant="secondary" style={{ flex: 1 }} disabled={busy !== null} />
-              <Button label="Use this scan" icon="arrow-right-bold" onPress={useScan} busy={busy === 'save'} style={{ flex: 2 }} />
+              <Button label="Use this scan" icon="arrow-right-bold" onPress={useScan} disabled={busy !== null} style={{ flex: 2 }} />
             </>
           ) : (
             <>
@@ -157,7 +152,8 @@ function Fallback() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const units = useStore((s) => s.units);
-  const [busy, setBusy] = useState<'sample' | 'manual' | 'paste' | null>(null);
+  const setRoomDraft = useStore((s) => s.setRoomDraft);
+  const [busy, setBusy] = useState<'sample' | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasted, setPasted] = useState('');
@@ -183,20 +179,13 @@ function Fallback() {
     }
   };
 
-  const createManual = async (dims: Dimensions, name: string) => {
-    setBusy('manual');
-    try {
-      const res = await api.createManualRoom(dims, name);
-      setSheetOpen(false);
-      openEditor(res.currentLayout.id);
-    } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
-    } finally {
-      setBusy(null);
-    }
+  const createManual = (dims: Dimensions, name: string) => {
+    setSheetOpen(false);
+    setRoomDraft({ name, source: 'manual', dimensions: dims, objects: [] });
+    router.push('/setup');
   };
 
-  const submitPasted = async () => {
+  const submitPasted = () => {
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(pasted) as Record<string, unknown>;
@@ -205,18 +194,13 @@ function Fallback() {
       toast('That is not valid JSON. Paste a RoomPlan export or our {skeleton, objects} JSON.', { tone: 'danger', ms: 4000 });
       return;
     }
-    setBusy('paste');
-    try {
-      const name = typeof parsed.name === 'string' ? parsed.name : 'Scanned room';
-      // Only the fields POST /rooms understands; `meta` from exportSkeleton() is debug-only.
-      const { meta: _meta, name: _name, ...payload } = parsed;
-      const res = await api.createRoomFromJson(payload, name);
-      openEditor(res.currentLayout.id);
-    } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
-    } finally {
-      setBusy(null);
+    const draft = draftFromJson(parsed);
+    if (!draft) {
+      toast('That JSON has no "skeleton" or "dimensions", so there is no room to set up.', { tone: 'danger', ms: 4000 });
+      return;
     }
+    setRoomDraft(draft);
+    router.push('/setup');
   };
 
   return (
@@ -248,7 +232,7 @@ function Fallback() {
           {pasteOpen ? (
             <Tile style={{ marginTop: spacing.lg }}>
               <Text style={[type.small, { marginBottom: spacing.sm }]}>
-                Paste a RoomPlan export (walls / doors / windows / objects) or our skeleton JSON. It is sent to POST /rooms unchanged.
+                Paste our {'{'}skeleton, objects{'}'} export (or {'{'}dimensions{'}'}). You will pick the space type next; the geometry is sent to POST /rooms unchanged.
               </Text>
               <TextInput
                 multiline
@@ -260,15 +244,32 @@ function Fallback() {
                 autoCorrect={false}
                 style={styles.textarea}
               />
-              <Button label="Create room from JSON" icon="upload" onPress={submitPasted} busy={busy === 'paste'} disabled={!pasted.trim()} style={{ marginTop: spacing.sm }} />
+              <Button label="Set up room from JSON" icon="upload" onPress={submitPasted} disabled={!pasted.trim()} style={{ marginTop: spacing.sm }} />
             </Tile>
           ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <DimensionsSheet visible={sheetOpen} units={units} busy={busy === 'manual'} onClose={() => setSheetOpen(false)} onSubmit={createManual} />
+      <DimensionsSheet visible={sheetOpen} units={units} onClose={() => setSheetOpen(false)} onSubmit={createManual} />
     </Screen>
   );
+}
+
+/** Pull the fields POST /rooms understands out of pasted JSON; `meta` from exportSkeleton() is debug-only. */
+function draftFromJson(parsed: Record<string, unknown>): RoomDraft | null {
+  const skeleton = parsed.skeleton as RoomDraft['skeleton'] | undefined;
+  const dimensions = parsed.dimensions as RoomDraft['dimensions'] | undefined;
+  if (!skeleton && !dimensions) return null;
+  const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
+  return {
+    name: typeof parsed.name === 'string' && parsed.name.trim() ? parsed.name : 'Scanned room',
+    source: skeleton ? 'scan' : 'manual',
+    skeleton,
+    dimensions: skeleton ? undefined : dimensions,
+    doors: arr(parsed.doors),
+    windows: arr(parsed.windows),
+    objects: arr(parsed.objects),
+  };
 }
 
 const styles = StyleSheet.create({

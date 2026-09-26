@@ -58,7 +58,22 @@ export interface Layout {
   updatedAt?: string;
 }
 
-export interface Room { id: string; userId?: string | null; name: string; skeleton: RoomSkeleton; source: 'scan' | 'manual' | 'sample'; createdAt?: string }
+export type SpaceType = 'bedroom' | 'study' | 'living' | 'workout' | 'creative' | 'shared';
+/** Something the user says the space needs (bed, desk, yoga zone…); `furnitureIds` are the catalog items that satisfy it. */
+export interface RoomElement { id: string; label: string; furnitureIds: string[]; custom?: boolean; zone?: { w: number; d: number } | null }
+export interface SpaceTypeInfo { id: SpaceType | string; label: string; icon: string }
+export interface Room {
+  id: string;
+  userId?: string | null;
+  name: string;
+  skeleton: RoomSkeleton;
+  source: 'scan' | 'manual' | 'sample';
+  createdAt?: string;
+  spaceTypes?: string[];
+  elements?: RoomElement[];
+  /** RoomPlan-detected furniture kept aside when the room was created clean (`seed: false`). */
+  detectedObjects?: LayoutItem[];
+}
 
 export type Intent = 'fit_item' | 'make_space' | 'keep_clear' | 'compare' | 'clarify';
 export interface PlanConstraint { type: 'lock' | 'adjacent' | 'keep_clear' | 'clear_zone'; item?: string; feature?: 'window' | 'door' | 'outlet' | 'wall'; w_m?: number; d_m?: number; label?: string; optional?: boolean }
@@ -71,6 +86,7 @@ export type Units = 'imperial' | 'metric';
 export interface RoomListEntry extends Room { layoutCount?: number }
 export interface CreateRoomResponse { room: Room; currentLayout: Layout; layouts: Layout[] }
 export interface RoomDetailResponse { room: Room; layouts: Layout[] }
+export interface SetupSuggestionsResponse { suggested: RoomElement[]; all: RoomElement[] }
 export type AgentStatus = 'ok' | 'clarify' | 'rejected';
 export interface AgentLinks { app?: string; web?: string; [k: string]: string | undefined }
 export interface AgentRequestResponse { plan: AgentPlan | null; layout: Layout | null; reply: string; status: AgentStatus; links?: AgentLinks }
@@ -92,3 +108,19 @@ export interface RoomPlanExportMeta {
   skipped?: string[];
 }
 export interface RoomPlanExport { skeleton: RoomSkeleton; objects: ScannedObject[]; meta?: RoomPlanExportMeta }
+
+// ---- Room setup flow (app/setup.tsx) ----
+/**
+ * A room the user has captured but not yet created: geometry exactly as POST /rooms accepts it
+ * (a RoomPlan `skeleton` for scans, plain `dimensions` for manual entry) plus any detected objects.
+ * Held in the zustand store between the scan/dimensions step and the setup screen.
+ */
+export interface RoomDraft {
+  name: string;
+  source: 'scan' | 'manual';
+  skeleton?: RoomSkeleton;
+  dimensions?: Dimensions;
+  doors?: Door[];
+  windows?: Window[];
+  objects: ScannedObject[];
+}
