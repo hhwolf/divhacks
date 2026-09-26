@@ -93,11 +93,11 @@ Lines that moved: F3 (clean clone → `make setup` 8 s → `make test` green: 3 
 
 Update (iter-4b): after moving `apps/mobile` to Expo SDK 54, the dev client **builds on this Mac with Xcode 16.0** — simulator and unsigned arm64 device (`xcodebuild … -sdk iphoneos CODE_SIGNING_ALLOWED=NO` → BUILD SUCCEEDED, `RoomPlanModule.swift`/`RoomPlanView.swift`/`SkeletonExporter.swift` compiled, `ExpoRoomPlan` in `Podfile.lock`), and the dev client runs on the simulator (`docs/screenshots/iter-4/mobile-devclient-home.png`, `mobile-devclient-editor.png` via `roomplanner://layout/<id>`). **TestFlight:** EAS production build 89e6ddb2 (SDK 54, build 8) uploaded to App Store Connect app 6816528380 on Sep 26 2026 (`eas submit`, submission d7231956). Still open: a real LiDAR scan saved to `fixtures/rooms/`, an on-device recording, and real-mode keys.
 
-## Iteration 5 — setup flow + material realism (in progress)
+## Iteration 5 — setup flow + material realism
 
 - API: `/setup/space-types`, `/setup/suggestions`, `POST /rooms seed:false`, `PATCH /rooms/{id}/setup` — `tests/test_setup.py` (3 tests; 69 pytest total).
 - Web: per-slot material palettes + physical parameters, window key light, contact shadows, neutral defaults; "This room needs" checklist (`docs/screenshots/iter-5/`).
-- Mobile: post-scan setup screens (space types → elements → clean room) — in progress.
+- Mobile: post-scan setup screens (space types → elements → clean room), wired to scan / dimensions / paste-JSON entry points, editable from Variants — `docs/screenshots/iter-5/mobile-setup-1.png`, `mobile-setup-2.png`.
 - Judge-facing effect: rooms read as lived-in apartments (mixed fabric/wood/paint/metal) instead of uniform tan; users now build the Current Room from a clean scan guided by what the space needs.
 
 ## Iteration log
