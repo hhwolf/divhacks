@@ -16,7 +16,7 @@ function shade(hex: string, amt: number): string {
 /** Floor material texture, one tile = 1 m. */
 export function floorTexture(style: FloorStyle, base: string): THREE.Texture {
   return canvasTex(`floor:${style}:${base}`, 512, (ctx, s) => {
-    ctx.fillStyle = shade(base, -0.12); ctx.fillRect(0, 0, s, s); // grout
+    ctx.fillStyle = shade(base, -0.09); ctx.fillRect(0, 0, s, s); // grout
     const tones = [base, shade(base, 0.04), shade(base, -0.04), shade(base, 0.08)];
     const pick = (i: number) => tones[Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1 > 0.5 ? (i % 3) : ((i + 1) % 4)];
     if (style === 'brick') {

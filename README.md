@@ -55,11 +55,29 @@ ngrok http 8000           # public URL for the webhook
 
 ## Demo script (3:00)
 
-_See the "Demo script" section below (filled in at the demo-ready checkpoint)._
+Setup before walking up: `make api`, `make web`, phone on the same Wi-Fi with the dev client open, `ngrok http 8000` if Photon is live. Fallback: everything below also runs in mock mode with `scripts/simulate_photon.py` instead of a real iMessage, and `make demo` replays the whole thing headlessly.
+
+| Time | On screen | Spoken line |
+|---|---|---|
+| 0:00 | Photo of a desk on a stoop | "I bought a desk on Marketplace that didn't fit beside my window. NYC rooms are 100 square feet; you get one shot at carrying furniture up three flights." |
+| 0:20 | Phone: RoomPlan scan (live, or the pre-recorded clip in `docs/demo/`) → room appears in the editor as **Current Room** | "One scan, and the room is a digital twin. Walls, door, window, and the furniture I already own." |
+| 0:50 | Editor: drag the dresser, rotate it with R, tap the bed → lock | "It plays like a cozy game. The bed is locked: it never moves, whatever I ask for." |
+| 1:05 | Drag the dresser into the door swing → red, analysis tile counts the conflict → drag back | "Fit validation runs on every drag: bounds, overlaps, the 90 cm you need in front of a door, a 75 cm edge to get into bed." |
+| 1:20 | Phone: iMessage the Marketplace link + "Will this fit beside my window without moving my bed?" | "I don't open an app to ask. I text the room." |
+| 1:40 | Reply arrives with a link; **Marketplace Desk** tab animates in; desk sits beside the window, bed untouched | "Gemini read the listing and turned the question into constraints. Backboard remembered the bed rule. Plain Python placed it and the same validator signed off: 2 inches to spare." |
+| 2:05 | Second text: "make space for yoga, keep my dresser" → **Yoga corner** variant with the blue zone | "Every answer is a named variant. The Current Room is never overwritten." |
+| 2:25 | 🌲 ghost compare, then the compare view: open floor 62 → 55 %, "Added Desk" | "Two layouts side by side, what moved, how much floor I keep. I can buy with confidence." |
+| 2:45 | Menu → health chip shows live/mock per service | "Real room, casual input, game-like editing, saved variants. Same solver later checks a 1.5 m wheelchair turning radius or stages an apartment listing." |
 
 ## Devpost blurb
 
-_Filled in at the demo-ready checkpoint._
+**Adaptive Room Planner — Where did my space go?** (Live Better)
+
+Renters in 100–150 sq ft NYC rooms buy secondhand and guess. We scan the room once with RoomPlan, rebuild the furniture you already own in a cozy isometric editor, and then let you *text* the room: send a Facebook Marketplace link over iMessage and ask "will this fit beside my window without moving my bed?". Gemini turns the listing and the question into structured constraints, Backboard remembers your non-negotiables ("never move the bed"), a Python placement solver finds a spot on a 10 cm grid, and a shared TypeScript/Python fit validator checks bounds, overlaps, door swing clearance, access edges and walkable paths before anything is saved. Every answer becomes a named layout variant next to your untouched Current Room, with open-floor %, conflicts and walkability side by side in a compare view. MongoDB Atlas stores rooms, furniture and variants; everything degrades to an offline mock mode so the demo never depends on Wi-Fi.
+
+Sponsors used: **Photon** (iMessage in/out), **Gemini API** (structured output + listing/photo extraction), **Backboard** (preference memory), **MongoDB Atlas** (storage).
+
+Try it: web editor (Vercel URL in the submission) · source: this repo · `make demo` replays the 3-minute script headlessly.
 
 ## Future applications
 

@@ -5,7 +5,7 @@ import { api } from '../lib/api';
 
 const WALLS = ['#F3DEC2', '#F7F2EA', '#5A845E', '#8FBDB0', '#D9A56E', '#C9B7E8', '#F2C7C0', '#B8CDE0', '#6B6E80', '#3E4A48'];
 const FLOORS: { style: 'brick' | 'herringbone' | 'plank'; color: string; label: string }[] = [
-  { style: 'brick', color: '#A85B43', label: 'Terracotta brick' }, { style: 'herringbone', color: '#BA7A57', label: 'Herringbone oak' }, { style: 'plank', color: '#8E5A3C', label: 'Walnut plank' }, { style: 'plank', color: '#D6B48A', label: 'Pale plank' }, { style: 'brick', color: '#7F7F86', label: 'Concrete' },
+  { style: 'brick', color: '#B0684C', label: 'Terracotta brick' }, { style: 'herringbone', color: '#BA7A57', label: 'Herringbone oak' }, { style: 'plank', color: '#8E5A3C', label: 'Walnut plank' }, { style: 'plank', color: '#D6B48A', label: 'Pale plank' }, { style: 'brick', color: '#7F7F86', label: 'Concrete' },
 ];
 export function Drawers() {
   const drawer = useEditor((s) => s.drawer); const set = useEditor;

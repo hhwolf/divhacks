@@ -47,3 +47,12 @@ Every ambiguity resolved while building, newest at the bottom. Decisions from EX
 - **Real-pointer evidence for A3** lives in `scripts/e2e_editor.py` (Playwright + Chromium against the running API/web): palette tap → floor drop, 10 cm snap, mouse drag, R, L, collision red + blocked save, ⌘Z, Delete, persistence, variant fork surviving reload. Unit-level evidence is `apps/web/src/store.test.ts`.
 - **Mongo evidence without a local mongod** uses `pymongo_inmemory`, which downloads a mongod binary on first run (~440 MB, cached inside `.venv`). `apps/api/tests/test_mongo_store.py` skips with the reason if that download is impossible.
 - **Fixture preview route** `/preview/:sample` renders a sample room with no API (read-only) for design work and offline screenshots.
+
+## Iteration 2 — UI clone
+
+- **Measured, not eyeballed.** Element boxes were segmented from ref2/ref3 by colour (`scipy.ndimage.label`) and sizes expressed at 1920 wide, scaled with `--u = 100vmin / 1080`. Colours are pixel averages over button bodies / tile faces, not the prompt's estimates.
+- **Side panel = ref3's grid.** The ✕ sits where ref3 puts it (first cell), then rotate/lock/duplicate/delete, then 19 swatches per page (38 total, 2 pages) so the panel is exactly 8 rows like the palette.
+- **Pill keeps the item name.** ref3's pill shows only two colour dots; the prompt asks for dots + name, so the name stays (dots sized like the reference).
+- **Top-right view/paint toggles render "dim"** when inactive because ref2 draws them lighter than the help button.
+- **Sound defaults on in a browser, off in the WebView** (autoplay policy: the first thunk plays after the first drop gesture).
+- **Thumbnails are framed by projected iso extent** (`h·cos35° + (w+d)/2·sin35°` vs `(w+d)·cos45°`) so a moving box and a bed fill the tile equally.

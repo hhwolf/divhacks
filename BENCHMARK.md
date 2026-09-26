@@ -51,7 +51,35 @@ Changes vs iter-0 (only lines that moved):
 
 Bugs found by the new evidence and fixed: floor picking never fired (invisible mesh), grab-by-top made items jump ~1 m, undo after a drag restored the wrong snapshot, plan view rendered as a diamond, overlay texture mirrored in z, palette only showed items already in the layout, compare view hid imported items.
 
+## Iteration 2 — UI clone — 75 / 100
+
+**B. UI fidelity (25) — graded from `docs/screenshots/iter-2/compare-*.png` (reference crop | ours) and the full frames.** Geometry was measured from ref2 (buttons 49 px at pitch 58 from (79,77); tiles 48 px, 3 × 8 at pitch 58/58.7 from y = 280; pager 38 px at y = 755; top-right divider at x = 1774; corner marks 42 px inset 28) and ref3 (swatches 3 columns at pitch 62, right margin ≈ 90, ✕ as the first cell), and colours were sampled (`#4E3D38` button body over the peach, tile `#F4F7FA`, background `#B57C56` → `#9E6B4A`, floor `#98543E`–`#B0684C`).
+
+| B line | Pts | Score | Evidence / gap |
+|---|---|---|---|
+| background + corner marks | 2 | 2 | `compare-background-corner.png` — radial peach, hill silhouettes, knotted L marks |
+| room island + slab + cutaway walls + windows | 3 | 2 | `compare-room-island.png` — same construction (rounded slab island, two back walls, off-white trim, glowing grid window); ref room is larger and glazed wall-to-wall |
+| floor material | 1 | 1 | `compare-floor.png` — terracotta brick, lighter grout |
+| top-left cluster | 2 | 2 | `compare-top-left-cluster.png` — size, pitch, rim, disabled undo |
+| top-right cluster | 2 | 2 | `compare-top-right-cluster.png` — dim toggles, divider, ? |
+| left palette grid + pagination | 3 | 3 | `compare-left-palette.png` — 3 × 8, cursor tool first, 3D tiles, pager |
+| category / search behaviour | 1 | 1 | `compare-category-search.png` + `web-02-palette.png` — 🔍 toggles the search field, category tabs above the grid |
+| right swatch panel | 3 | 3 | `compare-right-swatch-panel.png` — ✕ first cell, white-bordered swatches, pager, details block |
+| selection diamond + pill | 2 | 2 | `compare-selection-diamond-pill.png` — white footprint outline + corner ticks, pill with two colour dots + name + arrow |
+| bottom-center cluster | 2 | 1 | `compare-bottom-center.png` — geometry matches; tree and speaker glyphs are approximations |
+| variant tabs / analysis tile / request bar | 2 | 2 | `web-06-variant-tabs.png`, `web-08-request-reply.png` — same tile language, 49 px tab height |
+| landscape iPhone proportions | 2 | 2 | `phone-03-selected-side-panel.png` (2556 × 1179) — all clusters scale with `vmin`, no overlaps |
+| **B total** | **25** | **23** | |
+
+Other lines that moved: D3 README demo script 0 → **2** (timestamps + spoken lines, Devpost blurb). **Total 75 / 100** (A 29 · B 23 · C 8 · D 10 · E 9 · F 9 — see iter-0/1 tables for unchanged lines).
+
+Controls verified working in this iteration (every visible control): menu drawer, snapshot download, undo, view cycle (cutaway → half → plan), paint drawer (wall + floor), help, palette tiles/paging/search/categories, side panel (rotate, lock, duplicate, delete, 38 swatches over 2 pages), bottom cluster (overlays popover with 3 toggles, ghost popover, night, sound), variant tabs (switch, +, context menu), analysis tile expand, request bar (send, paste link, photo).
+
 ## Iteration log
+
+### iter-2 — 75/100
+- Measured ref2/ref3 geometry + colours applied to every §7 element; side panel restructured to ref3's 3 × 8 grid with ✕ first; button inner rim, dim toggles, knotted corner marks, thumbnail framing by projected extent; README demo script + Devpost blurb.
+- Still open: C5 device fps, D2 phone recording, E4 Expo Go launch, F3 clean-clone check, deploy.
 
 ### iter-1 — 62/100
 - Real-pointer e2e (14 checks), Mongo evidence via pymongo_inmemory (58 pytest), drag offset + single-step undo, floor raycast rewrite, plan view + overlay orientation fixes, compare shows both layouts' furniture, catalog loads into the palette, fixture preview route.

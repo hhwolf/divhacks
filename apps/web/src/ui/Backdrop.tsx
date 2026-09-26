@@ -8,7 +8,7 @@ export function Backdrop() {
           {Array.from({ length: 30 }, (_, i) => { const x = 40 + i * 64 + ((i * 37) % 23); const h = 40 + ((i * 53) % 70); return <path key={i} d={`M${x} 420 l14 ${-h} l14 ${h} z`} opacity={0.9} />; })}
         </g>
       </svg>
-      <span className="corner tl" /><span className="corner tr" /><span className="corner bl" /><span className="corner br" />
+      <span className="corner tl"><i /></span><span className="corner tr"><i /></span><span className="corner bl"><i /></span><span className="corner br"><i /></span>
     </div>
   );
 }

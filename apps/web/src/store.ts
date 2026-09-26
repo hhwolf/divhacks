@@ -54,7 +54,7 @@ const lsSet = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.st
 
 export const useEditor = create<EditorState>((set, get) => ({
   embedded: false, units: ls('arp.units', 'imperial'), theme: ls('arp.theme', 'peach'), night: false, sound: false, viewMode: 'cutaway', orbit: 0,
-  wallColor: ls('arp.wallColor', '#F3DEC2'), floorStyle: ls('arp.floorStyle', 'brick'), floorColor: ls('arp.floorColor', '#A85B43'),
+  wallColor: ls('arp.wallColor', '#F3DEC2'), floorStyle: ls('arp.floorStyle', 'brick'), floorColor: ls('arp.floorColor', '#B0684C'),
   room: null, layouts: [], activeId: null, furniture: {}, items: [], zones: [], history: [], future: [],
   selectedId: null, placing: null, dragging: null, hoverId: null,
   overlays: { walkable: false, keepClear: false, lowClearance: false }, overlaysOpen: false, ghostId: null, ghostOpen: false,
@@ -63,7 +63,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   palettePage: 0, category: 'All', search: null, sidePage: 0, toasts: [], shake: null, bounce: null, loading: false,
 
   init({ units, embedded }) {
-    set({ embedded: embedded ?? isEmbedded(), units: units ?? get().units, sound: !(embedded ?? isEmbedded()) && ls('arp.sound', false) });
+    set({ embedded: embedded ?? isEmbedded(), units: units ?? get().units, sound: !(embedded ?? isEmbedded()) && ls('arp.sound', true) });
   },
   async loadLayout(id) {
     set({ loading: true, lastError: null });

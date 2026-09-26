@@ -9,7 +9,8 @@ export function ThumbPage() {
   const { furnitureId } = useParams(); const [f, setF] = useState<FurnitureItem | null>(null);
   useEffect(() => { fetch('/assets/furniture/manifest.json').then((r) => r.json()).then((m) => setF(m.items.find((x: FurnitureItem) => x.id === furnitureId) ?? null)); }, [furnitureId]);
   if (!f) return null;
-  const d = Math.max(f.dims.w, f.dims.d, f.dims.h) * 0.85;
+  // frame by the iso-projected extent: vertical ≈ h·cos35° + (w+d)/2·sin35°, horizontal ≈ (w+d)·cos45°
+  const d = Math.max(0.5 * (f.dims.h * 0.82 + ((f.dims.w + f.dims.d) / 2) * 0.57), ((f.dims.w + f.dims.d) * 0.707) / 2) * 1.12;
   return (
     <div style={{ width: 256, height: 256 }} data-ready="1">
       <Canvas gl={{ alpha: true, preserveDrawingBuffer: true, antialias: true }} style={{ background: 'transparent' }}>

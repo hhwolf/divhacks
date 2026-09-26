@@ -5,8 +5,8 @@ import { doorHinge, openingSpan, roomBounds, wallDir, wallInwardNormal, wallLeng
 import { floorTexture } from './textures';
 import type { FloorStyle, ViewMode } from '../store';
 
-const SLAB = 0.42, WALL_T = 0.14, TRIM = 0.12;
-export const COLORS = { slab: '#8D4F38', slabTeal: '#5B4339', trim: '#EFE8DE', frame: '#F4EEE6', pane: '#E9C27A', paneNight: '#F3D28A', door: '#C99A6B' };
+const SLAB = 0.5, WALL_T = 0.14, TRIM = 0.12;
+export const COLORS = { slab: '#8A4E37', slabTeal: '#5B4339', trim: '#EFE8DE', frame: '#F4EEE6', pane: '#E8BE82', paneNight: '#F3D28A', door: '#C99A6B' };
 
 function roundedPolygonShape(poly: [number, number][], grow: number, radius: number): THREE.Shape {
   // grow polygon outward (assumes convex-ish rectangle-like rooms), then round corners
@@ -29,7 +29,7 @@ export function RoomMesh({ sk, hidden, viewMode, wallColor, floorStyle, floorCol
 }) {
   const b = roomBounds(sk);
   const slabGeo = useMemo(() => {
-    const shape = roundedPolygonShape(sk.floorPolygon, WALL_T + 0.06, 0.28);
+    const shape = roundedPolygonShape(sk.floorPolygon, WALL_T + 0.08, 0.34);
     const g = new THREE.ExtrudeGeometry(shape, { depth: SLAB, bevelEnabled: false });
     g.rotateX(Math.PI / 2); g.translate(0, 0.0, 0); return g;
   }, [sk]);
