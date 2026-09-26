@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 UVICORN := .venv/bin/uvicorn
 
-.PHONY: setup api web mobile test bench demo e2e thumbs screenshots photon
+.PHONY: setup api web mobile test bench demo e2e thumbs screenshots photon fps record
 
 setup: .venv/.ok node_modules/.ok
 
@@ -43,3 +43,9 @@ e2e: setup
 
 photon: setup
 	$(PY) scripts/simulate_photon.py
+
+fps: setup
+	$(PY) scripts/measure_fps.py
+
+record: setup
+	$(PY) scripts/record_demo.py

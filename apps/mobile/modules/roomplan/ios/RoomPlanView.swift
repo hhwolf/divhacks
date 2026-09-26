@@ -1,4 +1,6 @@
-// Expo view hosting Apple's RoomCaptureView. Emits `onCaptureStatus` { status, message? } to JS.
+// Expo view hosting Apple's RoomCaptureView. Emits `onCaptureStatus` to JS:
+//   { status: 'idle' | 'scanning' | 'processing' | 'done' | 'error', message?, walls?, doors?, windows?, objects? }
+// On devices without RoomPlan support the view stays an empty black box (the JS side never mounts it there anyway).
 
 import ExpoModulesCore
 #if canImport(RoomPlan)
@@ -7,10 +9,10 @@ import RoomPlan
 
 final class RoomPlanView: ExpoView {
   let onCaptureStatus = EventDispatcher()
+  private(set) var isSessionRunning = false
 
   #if canImport(RoomPlan)
   private var captureView: UIView?
-  private var isSessionRunning = false
   #endif
 
   required init(appContext: AppContext? = nil) {
@@ -52,7 +54,7 @@ final class RoomPlanView: ExpoView {
       config.isCoachingEnabled = true
       view.captureSession.run(configuration: config)
       isSessionRunning = true
-      onCaptureStatus(["status": "scanning"])
+      onCaptureStatus(["status": "scanning", "walls": 0, "doors": 0, "windows": 0, "objects": 0])
     }
     #endif
   }
@@ -62,7 +64,7 @@ final class RoomPlanView: ExpoView {
     if #available(iOS 16.0, *), let view = captureView as? RoomCaptureView, isSessionRunning {
       view.captureSession.stop()
       isSessionRunning = false
-      onCaptureStatus(["status": "processing"])
+      onCaptureStatus(["status": "processing", "message": "Building the room model…"])
     }
     #endif
   }
@@ -71,27 +73,56 @@ final class RoomPlanView: ExpoView {
 #if canImport(RoomPlan)
 @available(iOS 16.0, *)
 extension RoomPlanView: RoomCaptureSessionDelegate, RoomCaptureViewDelegate {
-  // Let RoomCaptureView run its own post-processing so it can hand us the final CapturedRoom.
+  // MARK: RoomCaptureViewDelegate — let RoomCaptureView post-process so it hands us the final CapturedRoom.
+
   func captureView(shouldPresent roomDataForProcessing: CapturedRoomData, error: Error?) -> Bool {
     return true
   }
 
   func captureView(didPresent processedResult: CapturedRoom, error: Error?) {
+    RoomPlanCoordinator.shared.finishCapture(processedResult, error: error)
     if let error = error {
       onCaptureStatus(["status": "error", "message": error.localizedDescription])
       return
     }
-    RoomPlanCoordinator.shared.setCapturedRoom(processedResult)
-    onCaptureStatus(["status": "done"])
+    onCaptureStatus(counts(processedResult, status: "done"))
+  }
+
+  // MARK: RoomCaptureSessionDelegate — live progress while scanning.
+
+  func captureSession(_ session: RoomCaptureSession, didUpdate room: CapturedRoom) {
+    guard isSessionRunning else { return }
+    onCaptureStatus(counts(room, status: "scanning"))
+  }
+
+  func captureSession(_ session: RoomCaptureSession, didProvide instruction: RoomCaptureSession.Instruction) {
+    guard isSessionRunning else { return }
+    let text: String
+    switch instruction {
+    case .moveCloseToWall: text = "Move closer to the wall"
+    case .moveAwayFromWall: text = "Move away from the wall"
+    case .slowDown: text = "Slow down"
+    case .turnOnLight: text = "Turn on more light"
+    case .normal: text = "Keep scanning"
+    case .lowTexture: text = "Point at more detail"
+    @unknown default: text = "Keep scanning"
+    }
+    onCaptureStatus(["status": "scanning", "message": text])
   }
 
   func captureSession(_ session: RoomCaptureSession, didEndWith data: CapturedRoomData, error: Error?) {
     if let error = error {
+      // Post-processing will not run; settle the pending stop() so JS is not left hanging.
+      RoomPlanCoordinator.shared.finishCapture(nil, error: error)
       onCaptureStatus(["status": "error", "message": error.localizedDescription])
     }
   }
 
-  // NSCoding conformance required by RoomCaptureViewDelegate.
-  func encode(with coder: NSCoder) {}
+  private func counts(_ room: CapturedRoom, status: String) -> [String: Any] {
+    return [
+      "status": status,
+      "walls": room.walls.count, "doors": room.doors.count, "windows": room.windows.count, "objects": room.objects.count,
+    ]
+  }
 }
 #endif

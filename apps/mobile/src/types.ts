@@ -76,6 +76,19 @@ export interface AgentLinks { app?: string; web?: string; [k: string]: string | 
 export interface AgentRequestResponse { plan: AgentPlan | null; layout: Layout | null; reply: string; status: AgentStatus; links?: AgentLinks }
 export interface HealthResponse { mode: 'mock' | 'live' | string; integrations: Record<string, 'live' | 'mock' | boolean | string> }
 
-// ---- RoomPlan native module export ----
-export interface ScannedObject { category: string; dims: Dims; center: { x: number; z: number }; yaw: number; furnitureKey?: string | null }
-export interface RoomPlanExport { skeleton: RoomSkeleton; objects: ScannedObject[] }
+// ---- RoomPlan native module export (modules/roomplan/ios/SkeletonExporter.swift) ----
+/** Seed item for the Current Room layout; exactly what POST /rooms expects in `objects`. */
+export type ScannedObject = Omit<LayoutItem, 'id' | 'color'>;
+/** Debug record of every RoomPlan object, including skipped kitchen/bath fixtures (`furnitureId` null). */
+export interface DetectedObject { category: string; furnitureId: string | null; x: number; z: number; dims: Dims; yaw: number }
+export interface RoomPlanExportMeta {
+  source: 'roomplan';
+  convention?: string;
+  reason?: string;
+  wallCount: number;
+  doorCount?: number;
+  windowCount?: number;
+  detected?: DetectedObject[];
+  skipped?: string[];
+}
+export interface RoomPlanExport { skeleton: RoomSkeleton; objects: ScannedObject[]; meta?: RoomPlanExportMeta }
