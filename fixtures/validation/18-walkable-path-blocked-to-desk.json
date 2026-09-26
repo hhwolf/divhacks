@@ -1,0 +1,225 @@
+{
+ "name": "18-walkable-path-blocked-to-desk",
+ "description": "Desk walled off in the NE corner by a wardrobe and dresser",
+ "expectRules": [
+  "walkable_path"
+ ],
+ "skeleton": {
+  "dimensions": {
+   "l": 3.4,
+   "w": 3,
+   "h": 2.7
+  },
+  "walls": [
+   {
+    "x1": 0,
+    "z1": 0,
+    "x2": 3.4,
+    "z2": 0,
+    "height": 2.7
+   },
+   {
+    "x1": 3.4,
+    "z1": 0,
+    "x2": 3.4,
+    "z2": 3,
+    "height": 2.7
+   },
+   {
+    "x1": 3.4,
+    "z1": 3,
+    "x2": 0,
+    "z2": 3,
+    "height": 2.7
+   },
+   {
+    "x1": 0,
+    "z1": 3,
+    "x2": 0,
+    "z2": 0,
+    "height": 2.7
+   }
+  ],
+  "doors": [
+   {
+    "wall": 2,
+    "offset": 0.3,
+    "width": 0.9,
+    "height": 2,
+    "swing": "in",
+    "hinge": "right"
+   }
+  ],
+  "windows": [
+   {
+    "wall": 0,
+    "offset": 1,
+    "width": 1.2,
+    "sillHeight": 0.9,
+    "height": 1.3
+   }
+  ],
+  "outlets": [
+   {
+    "wall": 0,
+    "offset": 2.9
+   },
+   {
+    "wall": 3,
+    "offset": 2.4
+   }
+  ],
+  "floorPolygon": [
+   [
+    0,
+    0
+   ],
+   [
+    3.4,
+    0
+   ],
+   [
+    3.4,
+    3
+   ],
+   [
+    0,
+    3
+   ]
+  ]
+ },
+ "furniture": {
+  "bed_double": {
+   "id": "bed_double",
+   "name": "Double bed",
+   "kind": "bed",
+   "dims": {
+    "w": 1.4,
+    "d": 1.9,
+    "h": 0.55
+   }
+  },
+  "desk": {
+   "id": "desk",
+   "name": "Desk",
+   "kind": "desk",
+   "dims": {
+    "w": 1.2,
+    "d": 0.6,
+    "h": 0.75
+   }
+  },
+  "wardrobe": {
+   "id": "wardrobe",
+   "name": "Wardrobe",
+   "kind": "wardrobe",
+   "dims": {
+    "w": 1,
+    "d": 0.6,
+    "h": 2
+   }
+  },
+  "tv_stand": {
+   "id": "tv_stand",
+   "name": "TV stand",
+   "kind": "storage",
+   "dims": {
+    "w": 1.2,
+    "d": 0.4,
+    "h": 0.5
+   }
+  }
+ },
+ "layout": {
+  "items": [
+   {
+    "id": "bed_1",
+    "furnitureId": "bed_double",
+    "x": 0.7,
+    "z": 0.95,
+    "rotation": 0,
+    "locked": true
+   },
+   {
+    "id": "desk_1",
+    "furnitureId": "desk",
+    "x": 2.8,
+    "z": 0.3,
+    "rotation": 0,
+    "locked": false
+   },
+   {
+    "id": "wardrobe_1",
+    "furnitureId": "wardrobe",
+    "x": 1.9,
+    "z": 0.5,
+    "rotation": 90,
+    "locked": false
+   },
+   {
+    "id": "tv_1",
+    "furnitureId": "tv_stand",
+    "x": 2.8,
+    "z": 0.8,
+    "rotation": 0,
+    "locked": false
+   }
+  ],
+  "zones": []
+ },
+ "baseLayout": null,
+ "expected": {
+  "violations": [
+   {
+    "rule": "window_keep_clear",
+    "items": [
+     "wardrobe_1"
+    ],
+    "message": "Wardrobe is taller than the window sill and blocks the window"
+   },
+   {
+    "rule": "access_edge",
+    "items": [
+     "bed_1"
+    ],
+    "message": "Double bed has no free long edge (75 cm)"
+   },
+   {
+    "rule": "access_edge",
+    "items": [
+     "desk_1"
+    ],
+    "message": "Desk has no free long edge (75 cm)"
+   },
+   {
+    "rule": "access_edge",
+    "items": [
+     "wardrobe_1"
+    ],
+    "message": "Wardrobe needs 75 cm clear in front"
+   },
+   {
+    "rule": "walkable_path",
+    "items": [
+     "desk_1"
+    ],
+    "message": "Path blocked to desk"
+   }
+  ],
+  "metrics": {
+   "openFloor": 56.3,
+   "conflicts": 1,
+   "walkability": "Blocked",
+   "reachableStorage": 50,
+   "largestFreeRect": {
+    "x": 1.4,
+    "z": 1,
+    "w": 2,
+    "d": 2,
+    "areaM2": 4,
+    "fits": "a queen bed"
+   }
+  },
+  "blocked": false
+ }
+}

@@ -1,0 +1,44 @@
+{
+ "ok": true,
+ "totalMs": 10580,
+ "steps": [
+  {
+   "step": "API health",
+   "ms": 176
+  },
+  {
+   "step": "Load sample room",
+   "ms": 755
+  },
+  {
+   "step": "Simulated Photon message \u2192 variant",
+   "ms": 1099
+  },
+  {
+   "step": "Fetch Marketplace Desk variant",
+   "ms": 89
+  },
+  {
+   "step": "Open variant in editor",
+   "ms": 2785
+  },
+  {
+   "step": "Drag desk into door swing \u2192 red",
+   "ms": 874
+  },
+  {
+   "step": "Drag back \u2192 clean",
+   "ms": 914
+  },
+  {
+   "step": "Compare view",
+   "ms": 3772
+  },
+  {
+   "step": "Compare API",
+   "ms": 116
+  }
+ ],
+ "mode": "mock",
+ "at": "2026-09-26T16:07:46"
+}

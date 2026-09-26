@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/payment-quote.schema.json",
+  "title": "PaymentQuote",
+  "type": "object",
+  "required": ["id", "purpose", "amount", "status", "guardrails"],
+  "additionalProperties": true,
+  "properties": {
+    "id": {"type": "string"},
+    "roomId": {"type": ["string", "null"]},
+    "assessmentId": {"type": ["string", "null"]},
+    "purpose": {"type": "string", "enum": ["rent_payment", "deposit", "application_fee", "furniture_purchase"]},
+    "amount": {"type": "number"},
+    "rentAmount": {"type": ["number", "null"]},
+    "status": {"type": "string", "enum": ["mock", "ready", "blocked", "paid_test"]},
+    "guardrails": {"type": "array", "items": {"type": "string"}},
+    "stripeCheckoutUrl": {"type": ["string", "null"]},
+    "stripeSessionId": {"type": ["string", "null"]}
+  }
+}

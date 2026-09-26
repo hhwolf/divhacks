@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/rent-assessment.schema.json",
+  "title": "RentAssessment",
+  "type": "object",
+  "required": ["id", "roomId", "profile", "spaceQuality", "estimatedFairRange", "askingRent", "deltaVsMid", "pricePerSqFt", "confidence", "explanation", "sourceBreakdown", "legalFlags", "buildingHealthSignals"],
+  "additionalProperties": true,
+  "properties": {
+    "id": {"type": "string"},
+    "roomId": {"type": "string"},
+    "layoutId": {"type": ["string", "null"]},
+    "profile": {
+      "type": "object",
+      "required": ["roomId", "askingRent"],
+      "additionalProperties": true,
+      "properties": {
+        "roomId": {"type": "string"},
+        "zip": {"type": ["string", "null"]},
+        "askingRent": {"type": "number"},
+        "depositRequested": {"type": ["number", "null"]},
+        "applicationFee": {"type": ["number", "null"]},
+        "occupancyType": {"type": "string", "enum": ["whole_apartment", "studio", "private_room", "shared_room"]},
+        "declaredIssues": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "spaceQuality": {
+      "type": "object",
+      "required": ["floorAreaSqFt", "usableAreaSqFt", "openFloorPct", "ceilingHeightFt", "windowCount", "floorMaterial", "materialConfidence", "conditionScore", "issuePenalties"],
+      "properties": {
+        "floorAreaSqFt": {"type": "number"},
+        "usableAreaSqFt": {"type": "number"},
+        "openFloorPct": {"type": "number"},
+        "ceilingHeightFt": {"type": "number"},
+        "windowCount": {"type": "integer"},
+        "floorMaterial": {"type": "string", "enum": ["hardwood", "engineered_wood", "tile", "laminate", "concrete", "carpet", "vinyl", "unknown"]},
+        "materialConfidence": {"type": "string", "enum": ["high", "medium", "low"]},
+        "conditionScore": {"type": "integer"},
+        "issuePenalties": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "estimatedFairRange": {"type": "object", "required": ["low", "mid", "high"], "properties": {"low": {"type": "integer"}, "mid": {"type": "integer"}, "high": {"type": "integer"}}},
+    "askingRent": {"type": "number"},
+    "deltaVsMid": {"type": "number"},
+    "pricePerSqFt": {"type": "number"},
+    "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+    "explanation": {"type": "array", "items": {"type": "string"}},
+    "sourceBreakdown": {"type": "array", "items": {"type": "object", "required": ["source", "label", "value"], "properties": {"source": {"type": "string"}, "label": {"type": "string"}, "value": {"type": "string"}}}},
+    "legalFlags": {"type": "array", "items": {"type": "string"}},
+    "buildingHealthSignals": {"type": "array", "items": {"type": "string"}}
+  }
+}

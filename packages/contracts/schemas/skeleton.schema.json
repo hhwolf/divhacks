@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/skeleton.schema.json",
+  "title": "RoomSkeleton",
+  "description": "Empty-room baseline. Meters. Origin at the room's min corner; x runs along wall 0, z runs toward the viewer. Walls are listed as floor segments in order; doors/windows reference a wall index and an offset along it from (x1,z1).",
+  "type": "object",
+  "required": ["walls", "doors", "windows", "floorPolygon", "dimensions"],
+  "additionalProperties": false,
+  "properties": {
+    "walls": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object", "required": ["x1", "z1", "x2", "z2", "height"], "additionalProperties": false,
+        "properties": {
+          "x1": {"type": "number"}, "z1": {"type": "number"}, "x2": {"type": "number"}, "z2": {"type": "number"},
+          "height": {"type": "number", "minimum": 1.5, "maximum": 6}
+        }
+      }
+    },
+    "doors": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["wall", "offset", "width", "swing", "hinge"], "additionalProperties": false,
+        "properties": {
+          "wall": {"type": "integer", "minimum": 0},
+          "offset": {"type": "number", "minimum": 0},
+          "width": {"type": "number", "minimum": 0.5, "maximum": 2.5},
+          "height": {"type": "number", "default": 2.0},
+          "swing": {"type": "string", "enum": ["in", "out"]},
+          "hinge": {"type": "string", "enum": ["left", "right"]}
+        }
+      }
+    },
+    "windows": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["wall", "offset", "width", "sillHeight", "height"], "additionalProperties": false,
+        "properties": {
+          "wall": {"type": "integer", "minimum": 0},
+          "offset": {"type": "number", "minimum": 0},
+          "width": {"type": "number", "minimum": 0.3},
+          "sillHeight": {"type": "number", "minimum": 0},
+          "height": {"type": "number", "minimum": 0.3}
+        }
+      }
+    },
+    "floorPolygon": {
+      "type": "array", "minItems": 3,
+      "items": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}
+    },
+    "dimensions": {
+      "type": "object", "required": ["l", "w", "h"], "additionalProperties": false,
+      "properties": {"l": {"type": "number"}, "w": {"type": "number"}, "h": {"type": "number"}}
+    },
+    "outlets": {
+      "type": "array",
+      "items": {"type": "object", "required": ["wall", "offset"], "properties": {"wall": {"type": "integer"}, "offset": {"type": "number"}}}
+    }
+  }
+}

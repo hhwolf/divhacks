@@ -1,0 +1,470 @@
+{
+ "name": "21-twenty-items-perf",
+ "description": "20 items, used by the perf bench",
+ "expectRules": [],
+ "skeleton": {
+  "dimensions": {
+   "l": 5,
+   "w": 3.6,
+   "h": 2.6
+  },
+  "walls": [
+   {
+    "x1": 0,
+    "z1": 0,
+    "x2": 5,
+    "z2": 0,
+    "height": 2.6
+   },
+   {
+    "x1": 5,
+    "z1": 0,
+    "x2": 5,
+    "z2": 3.6,
+    "height": 2.6
+   },
+   {
+    "x1": 5,
+    "z1": 3.6,
+    "x2": 0,
+    "z2": 3.6,
+    "height": 2.6
+   },
+   {
+    "x1": 0,
+    "z1": 3.6,
+    "x2": 0,
+    "z2": 0,
+    "height": 2.6
+   }
+  ],
+  "doors": [
+   {
+    "wall": 3,
+    "offset": 0.4,
+    "width": 0.9,
+    "height": 2,
+    "swing": "in",
+    "hinge": "left"
+   }
+  ],
+  "windows": [
+   {
+    "wall": 0,
+    "offset": 0.8,
+    "width": 1,
+    "sillHeight": 0.9,
+    "height": 1.3
+   },
+   {
+    "wall": 0,
+    "offset": 3.2,
+    "width": 1,
+    "sillHeight": 0.9,
+    "height": 1.3
+   }
+  ],
+  "outlets": [
+   {
+    "wall": 1,
+    "offset": 1.8
+   },
+   {
+    "wall": 2,
+    "offset": 2.5
+   }
+  ],
+  "floorPolygon": [
+   [
+    0,
+    0
+   ],
+   [
+    5,
+    0
+   ],
+   [
+    5,
+    3.6
+   ],
+   [
+    0,
+    3.6
+   ]
+  ]
+ },
+ "furniture": {
+  "bed_single": {
+   "id": "bed_single",
+   "name": "Single bed",
+   "kind": "bed",
+   "dims": {
+    "w": 0.97,
+    "d": 1.9,
+    "h": 0.55
+   }
+  },
+  "sofa": {
+   "id": "sofa",
+   "name": "Sofa",
+   "kind": "seating",
+   "dims": {
+    "w": 1.8,
+    "d": 0.9,
+    "h": 0.85
+   }
+  },
+  "coffee_table": {
+   "id": "coffee_table",
+   "name": "Coffee table",
+   "kind": "table",
+   "dims": {
+    "w": 1,
+    "d": 0.6,
+    "h": 0.45
+   }
+  },
+  "wardrobe": {
+   "id": "wardrobe",
+   "name": "Wardrobe",
+   "kind": "wardrobe",
+   "dims": {
+    "w": 1,
+    "d": 0.6,
+    "h": 2
+   }
+  },
+  "mini_fridge": {
+   "id": "mini_fridge",
+   "name": "Mini fridge",
+   "kind": "storage",
+   "dims": {
+    "w": 0.5,
+    "d": 0.5,
+    "h": 0.85
+   }
+  },
+  "table_round": {
+   "id": "table_round",
+   "name": "Round table",
+   "kind": "table",
+   "dims": {
+    "w": 0.9,
+    "d": 0.9,
+    "h": 0.75
+   }
+  },
+  "chair": {
+   "id": "chair",
+   "name": "Dining chair",
+   "kind": "seating",
+   "dims": {
+    "w": 0.45,
+    "d": 0.45,
+    "h": 0.9
+   }
+  },
+  "desk": {
+   "id": "desk",
+   "name": "Desk",
+   "kind": "desk",
+   "dims": {
+    "w": 1.2,
+    "d": 0.6,
+    "h": 0.75
+   }
+  },
+  "chair_desk": {
+   "id": "chair_desk",
+   "name": "Desk chair",
+   "kind": "seating",
+   "dims": {
+    "w": 0.55,
+    "d": 0.55,
+    "h": 0.9
+   }
+  },
+  "bookshelf": {
+   "id": "bookshelf",
+   "name": "Bookshelf",
+   "kind": "storage",
+   "dims": {
+    "w": 0.8,
+    "d": 0.3,
+    "h": 1.8
+   }
+  },
+  "plant": {
+   "id": "plant",
+   "name": "Potted plant",
+   "kind": "decor",
+   "dims": {
+    "w": 0.4,
+    "d": 0.4,
+    "h": 1
+   }
+  },
+  "floor_lamp": {
+   "id": "floor_lamp",
+   "name": "Floor lamp",
+   "kind": "decor",
+   "dims": {
+    "w": 0.3,
+    "d": 0.3,
+    "h": 1.6
+   }
+  },
+  "side_table": {
+   "id": "side_table",
+   "name": "Side table",
+   "kind": "table",
+   "dims": {
+    "w": 0.5,
+    "d": 0.5,
+    "h": 0.6
+   }
+  },
+  "stool": {
+   "id": "stool",
+   "name": "Stool",
+   "kind": "seating",
+   "dims": {
+    "w": 0.35,
+    "d": 0.35,
+    "h": 0.75
+   }
+  },
+  "moving_box": {
+   "id": "moving_box",
+   "name": "Moving box",
+   "kind": "storage",
+   "dims": {
+    "w": 0.45,
+    "d": 0.45,
+    "h": 0.45
+   }
+  },
+  "rug": {
+   "id": "rug",
+   "name": "Rug",
+   "kind": "floor",
+   "dims": {
+    "w": 1.6,
+    "d": 2.3,
+    "h": 0.01
+   }
+  },
+  "nightstand": {
+   "id": "nightstand",
+   "name": "Nightstand",
+   "kind": "storage",
+   "dims": {
+    "w": 0.45,
+    "d": 0.4,
+    "h": 0.6
+   }
+  },
+  "tv_stand": {
+   "id": "tv_stand",
+   "name": "TV stand",
+   "kind": "storage",
+   "dims": {
+    "w": 1.2,
+    "d": 0.4,
+    "h": 0.5
+   }
+  }
+ },
+ "layout": {
+  "items": [
+   {
+    "id": "a1",
+    "furnitureId": "bed_single",
+    "x": 4.5,
+    "z": 0.95,
+    "rotation": 0,
+    "locked": true
+   },
+   {
+    "id": "a2",
+    "furnitureId": "sofa",
+    "x": 2.3,
+    "z": 3.15,
+    "rotation": 180,
+    "locked": false
+   },
+   {
+    "id": "a3",
+    "furnitureId": "coffee_table",
+    "x": 2.3,
+    "z": 2.1,
+    "rotation": 0,
+    "locked": false
+   },
+   {
+    "id": "a4",
+    "furnitureId": "wardrobe",
+    "x": 4.7,
+    "z": 2.9,
+    "rotation": 270,
+    "locked": false
+   },
+   {
+    "id": "a5",
+    "furnitureId": "mini_fridge",
+    "x": 3.3,
+    "z": 0.25,
+    "rotation": 0,
+    "locked": false
+   },
+   {
+    "id": "a6",
+    "furnitureId": "table_round",
+    "x": 3.4,
+    "z": 1.5,
+    "rotation": 0,
+    "locked": false
+   },
+   {
+    "id": "a7",
+    "furnitureId": "chair",
+    "x": 2.65,
+    "z": 1.5,
+    "rotation": 90,
+    "locked": false
+   },
+   {
+    "id": "a8",
+    "furnitureId": "chair",
+    "x": 3.4,
+    "z": 2.25,
+    "rotation": 180,
+    "locked": false
+   },
+   {
+    "id": "a9",
+    "furnitureId": "desk",
+    "x": 1.2,
+    "z": 0.3,
+    "rotation": 0,
+    "locked": false
+   },
+   {
+    "id": "a10",
+    "furnitureId": "chair_desk",
+    "x": 1.2,
+    "z": 0.9,
+    "rotation": 0,
+    "locked": false
+   },
+   {
+    "id": "a11",
+    "furnitureId": "bookshelf",
+    "x": 0.15,
+    "z": 1.2,
+    "rotation": 90,
+    "locked": false
+   },
+   {
+    "id": "a12",
+    "furnitureId": "plant",
+    "x": 0.25,
+    "z": 0.25,
+    "rotation": 0,
+    "locked": false
+   },
+   {
+    "id": "a13",
+    "furnitureId": "floor_lamp",
+    "x": 3.45,
+    "z": 3.4,
+    "rotation": 0,
+    "locked": false
+   },
+   {
+    "id": "a14",
+    "furnitureId": "side_table",
+    "x": 1.15,
+    "z": 3.3,
+    "rotation": 0,
+    "locked": false
+   },
+   {
+    "id": "a15",
+    "furnitureId": "stool",
+    "x": 0.9,
+    "z": 1.8,
+    "rotation": 0,
+    "locked": false
+   },
+   {
+    "id": "a16",
+    "furnitureId": "moving_box",
+    "x": 4.75,
+    "z": 2.15,
+    "rotation": 0,
+    "locked": false
+   },
+   {
+    "id": "a17",
+    "furnitureId": "moving_box",
+    "x": 4.25,
+    "z": 2.15,
+    "rotation": 0,
+    "locked": false
+   },
+   {
+    "id": "a18",
+    "furnitureId": "rug",
+    "x": 2.3,
+    "z": 2,
+    "rotation": 90,
+    "locked": false
+   },
+   {
+    "id": "a19",
+    "furnitureId": "nightstand",
+    "x": 3.78,
+    "z": 0.2,
+    "rotation": 0,
+    "locked": false
+   },
+   {
+    "id": "a20",
+    "furnitureId": "tv_stand",
+    "x": 2.4,
+    "z": 0.2,
+    "rotation": 0,
+    "locked": false
+   }
+  ],
+  "zones": []
+ },
+ "baseLayout": null,
+ "expected": {
+  "violations": [
+   {
+    "rule": "access_edge",
+    "items": [
+     "a9"
+    ],
+    "message": "Desk has no free long edge (75 cm)"
+   }
+  ],
+  "metrics": {
+   "openFloor": 44.9,
+   "conflicts": 0,
+   "walkability": "Good",
+   "reachableStorage": 57.1,
+   "largestFreeRect": {
+    "x": 0,
+    "z": 2,
+    "w": 0.9,
+    "d": 1.6,
+    "areaM2": 1.44,
+    "fits": "a desk"
+   }
+  },
+  "blocked": false
+ }
+}

@@ -1,0 +1,223 @@
+{
+ "name": "14-window-keep-clear-bookshelf",
+ "description": "Tall bookshelf pushed against the window",
+ "expectRules": [
+  "window_keep_clear"
+ ],
+ "skeleton": {
+  "dimensions": {
+   "l": 3.4,
+   "w": 3,
+   "h": 2.7
+  },
+  "walls": [
+   {
+    "x1": 0,
+    "z1": 0,
+    "x2": 3.4,
+    "z2": 0,
+    "height": 2.7
+   },
+   {
+    "x1": 3.4,
+    "z1": 0,
+    "x2": 3.4,
+    "z2": 3,
+    "height": 2.7
+   },
+   {
+    "x1": 3.4,
+    "z1": 3,
+    "x2": 0,
+    "z2": 3,
+    "height": 2.7
+   },
+   {
+    "x1": 0,
+    "z1": 3,
+    "x2": 0,
+    "z2": 0,
+    "height": 2.7
+   }
+  ],
+  "doors": [
+   {
+    "wall": 2,
+    "offset": 0.3,
+    "width": 0.9,
+    "height": 2,
+    "swing": "in",
+    "hinge": "right"
+   }
+  ],
+  "windows": [
+   {
+    "wall": 0,
+    "offset": 1,
+    "width": 1.2,
+    "sillHeight": 0.9,
+    "height": 1.3
+   }
+  ],
+  "outlets": [
+   {
+    "wall": 0,
+    "offset": 2.9
+   },
+   {
+    "wall": 3,
+    "offset": 2.4
+   }
+  ],
+  "floorPolygon": [
+   [
+    0,
+    0
+   ],
+   [
+    3.4,
+    0
+   ],
+   [
+    3.4,
+    3
+   ],
+   [
+    0,
+    3
+   ]
+  ]
+ },
+ "furniture": {
+  "bed_double": {
+   "id": "bed_double",
+   "name": "Double bed",
+   "kind": "bed",
+   "dims": {
+    "w": 1.4,
+    "d": 1.9,
+    "h": 0.55
+   }
+  },
+  "dresser": {
+   "id": "dresser",
+   "name": "Dresser",
+   "kind": "dresser",
+   "dims": {
+    "w": 1,
+    "d": 0.5,
+    "h": 0.8
+   }
+  },
+  "bookshelf_low": {
+   "id": "bookshelf_low",
+   "name": "Low bookshelf",
+   "kind": "storage",
+   "dims": {
+    "w": 0.8,
+    "d": 0.3,
+    "h": 0.8
+   }
+  },
+  "plant": {
+   "id": "plant",
+   "name": "Potted plant",
+   "kind": "decor",
+   "dims": {
+    "w": 0.4,
+    "d": 0.4,
+    "h": 1
+   }
+  },
+  "bookshelf": {
+   "id": "bookshelf",
+   "name": "Bookshelf",
+   "kind": "storage",
+   "dims": {
+    "w": 0.8,
+    "d": 0.3,
+    "h": 1.8
+   }
+  }
+ },
+ "layout": {
+  "items": [
+   {
+    "id": "bed_double_1",
+    "furnitureId": "bed_double",
+    "x": 0.7,
+    "z": 0.95,
+    "rotation": 0,
+    "locked": true
+   },
+   {
+    "id": "dresser_3",
+    "furnitureId": "dresser",
+    "x": 3.15,
+    "z": 1.3,
+    "rotation": 270,
+    "locked": false
+   },
+   {
+    "id": "bookshelf_low_4",
+    "furnitureId": "bookshelf_low",
+    "x": 0.4,
+    "z": 2.85,
+    "rotation": 180,
+    "locked": false
+   },
+   {
+    "id": "plant_5",
+    "furnitureId": "plant",
+    "x": 0.25,
+    "z": 2.35,
+    "rotation": 0,
+    "locked": false
+   },
+   {
+    "id": "bookshelf_1",
+    "furnitureId": "bookshelf",
+    "x": 1.6,
+    "z": 0.15,
+    "rotation": 0,
+    "locked": false
+   }
+  ],
+  "zones": []
+ },
+ "baseLayout": null,
+ "expected": {
+  "violations": [
+   {
+    "rule": "overlap",
+    "items": [
+     "bed_double_1",
+     "bookshelf_1"
+    ],
+    "message": "Double bed overlaps Bookshelf"
+   },
+   {
+    "rule": "window_keep_clear",
+    "items": [
+     "bookshelf_1"
+    ],
+    "message": "Bookshelf is taller than the window sill and blocks the window"
+   }
+  ],
+  "metrics": {
+   "openFloor": 62.5,
+   "conflicts": 1,
+   "walkability": "Good",
+   "reachableStorage": 66.7,
+   "largestFreeRect": {
+    "x": 1.4,
+    "z": 0.3,
+    "w": 1.5,
+    "d": 2.7,
+    "areaM2": 4.05,
+    "fits": "a queen bed"
+   }
+  },
+  "blocked": true
+ }
+}

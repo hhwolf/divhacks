@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/layout.schema.json",
+  "title": "Layout",
+  "type": "object",
+  "required": ["id", "roomId", "name", "isCurrent", "items", "zones"],
+  "additionalProperties": true,
+  "properties": {
+    "id": {"type": "string"},
+    "roomId": {"type": "string"},
+    "name": {"type": "string", "minLength": 1, "maxLength": 60},
+    "isCurrent": {"type": "boolean"},
+    "parentLayoutId": {"type": ["string", "null"]},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["id", "furnitureId", "x", "z", "rotation", "locked"], "additionalProperties": true,
+        "properties": {
+          "id": {"type": "string", "description": "instance id, unique within the layout"},
+          "furnitureId": {"type": "string"},
+          "x": {"type": "number"}, "z": {"type": "number"},
+          "rotation": {"type": "number", "enum": [0, 90, 180, 270]},
+          "locked": {"type": "boolean"},
+          "color": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["label", "x", "z", "w", "d"], "additionalProperties": true,
+        "properties": {"label": {"type": "string"}, "x": {"type": "number"}, "z": {"type": "number"}, "w": {"type": "number"}, "d": {"type": "number"}}
+      }
+    },
+    "metrics": {
+      "type": ["object", "null"],
+      "properties": {
+        "openFloor": {"type": "number"}, "conflicts": {"type": "integer"},
+        "walkability": {"type": "string", "enum": ["Good", "Tight", "Blocked"]},
+        "reachableStorage": {"type": "number"},
+        "largestFreeRect": {"type": "object", "properties": {"x": {"type": "number"}, "z": {"type": "number"}, "w": {"type": "number"}, "d": {"type": "number"}, "areaM2": {"type": "number"}, "fits": {"type": "string"}}}
+      }
+    },
+    "createdBy": {"type": "string", "enum": ["user", "agent", "system"]},
+    "requestText": {"type": ["string", "null"]},
+    "createdAt": {"type": "string"},
+    "updatedAt": {"type": "string"}
+  }
+}

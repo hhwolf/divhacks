@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/plan.schema.json",
+  "title": "AgentPlan",
+  "description": "Gemini structured output. Zone-level only: the model never emits coordinates.",
+  "type": "object",
+  "required": ["intent", "reply"],
+  "additionalProperties": false,
+  "properties": {
+    "intent": {"type": "string", "enum": ["fit_item", "make_space", "keep_clear", "compare", "rent_check", "payment_check", "housing_quality", "clarify"]},
+    "variantName": {"type": "string"},
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["type"], "additionalProperties": false,
+        "properties": {
+          "type": {"type": "string", "enum": ["lock", "adjacent", "keep_clear", "clear_zone"]},
+          "item": {"type": "string", "description": "furniture id, instance id or plain-language item name"},
+          "feature": {"type": "string", "enum": ["window", "door", "outlet", "wall"]},
+          "w_m": {"type": "number"}, "d_m": {"type": "number"},
+          "label": {"type": "string"},
+          "optional": {"type": "boolean"}
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["type", "item"], "additionalProperties": false,
+        "properties": {
+          "type": {"type": "string", "enum": ["add", "move", "remove", "rotate"]},
+          "item": {"type": "string"},
+          "zone": {"type": "string", "description": "e.g. 'window wall, beside window', 'east wall, centered', 'near outlet', 'opposite the door', 'corner'"},
+          "rotation": {"type": "number"}
+        }
+      }
+    },
+    "reply": {"type": "string"},
+    "clarifyingQuestion": {"type": "string"},
+    "preferencesLearned": {"type": "array", "items": {"type": "string"}}
+  }
+}

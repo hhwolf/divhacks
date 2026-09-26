@@ -1,0 +1,45 @@
+{
+  "10027": {
+    "rentStabilizedBuildingSignal": true,
+    "recent311Housing": 7,
+    "openHpdViolations": 4,
+    "classCViolations": 1,
+    "rodentInspectionFailures": 1,
+    "signals": [
+      "Building-level rent-stabilization signal present; unit status is not proven.",
+      "Recent housing-related 311 complaints are above the quiet-building baseline.",
+      "Open HPD violations found in the fixture feed.",
+      "Rodent inspection history found nearby."
+    ]
+  },
+  "10025": {
+    "rentStabilizedBuildingSignal": true,
+    "recent311Housing": 3,
+    "openHpdViolations": 1,
+    "classCViolations": 0,
+    "rodentInspectionFailures": 0,
+    "signals": [
+      "Building-level rent-stabilization signal present; unit status is not proven."
+    ]
+  },
+  "11221": {
+    "rentStabilizedBuildingSignal": false,
+    "recent311Housing": 10,
+    "openHpdViolations": 9,
+    "classCViolations": 3,
+    "rodentInspectionFailures": 2,
+    "signals": [
+      "High recent housing-related 311 volume in the fixture feed.",
+      "Multiple open HPD violations found in the fixture feed.",
+      "Rodent inspection failures found nearby."
+    ]
+  },
+  "default": {
+    "rentStabilizedBuildingSignal": false,
+    "recent311Housing": 0,
+    "openHpdViolations": 0,
+    "classCViolations": 0,
+    "rodentInspectionFailures": 0,
+    "signals": []
+  }
+}

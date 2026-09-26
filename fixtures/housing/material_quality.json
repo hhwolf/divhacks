@@ -1,0 +1,10 @@
+{
+  "hardwood": {"score": 12, "confidence": "medium", "label": "hardwood floor"},
+  "engineered_wood": {"score": 8, "confidence": "medium", "label": "engineered wood floor"},
+  "tile": {"score": 9, "confidence": "medium", "label": "tile floor"},
+  "laminate": {"score": 1, "confidence": "medium", "label": "laminate floor"},
+  "vinyl": {"score": -1, "confidence": "medium", "label": "vinyl floor"},
+  "concrete": {"score": -3, "confidence": "medium", "label": "concrete floor"},
+  "carpet": {"score": -6, "confidence": "medium", "label": "carpet"},
+  "unknown": {"score": 0, "confidence": "low", "label": "unknown material"}
+}
