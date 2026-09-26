@@ -47,6 +47,7 @@ export interface EditorState {
 const snap = (v: number) => Math.round(v / GRID) * GRID;
 const clone = (s: Snapshot): Snapshot => ({ items: s.items.map((i) => ({ ...i })), zones: s.zones.map((z) => ({ ...z })) });
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
+let dragSnapshot: Snapshot | null = null; // items as they were when the current drag started (for a single undo step)
 let toastId = 0;
 const ls = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d; } catch { return d; } };
 const lsSet = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } };
@@ -130,8 +131,12 @@ export const useEditor = create<EditorState>((set, get) => ({
     nx = Math.min(Math.max(nx, b.x0 + fx / 2), b.x1 - fx / 2); nz = Math.min(Math.max(nz, b.z0 + fz / 2), b.z1 - fz / 2);
     if (Math.abs(nx - item.x) < 1e-9 && Math.abs(nz - item.z) < 1e-9 && !opts?.commit) return;
     const items = s.items.map((i) => (i.id === id ? { ...i, x: +nx.toFixed(3), z: +nz.toFixed(3) } : i));
-    if (opts?.commit) { s.setItems(items); if (get().sound) thunk(); set({ bounce: id }); setTimeout(() => set({ bounce: null }), 350); }
-    else { set({ items }); get().revalidate(); }
+    if (opts?.commit) {
+      const base = dragSnapshot ?? clone({ items: s.items, zones: s.zones }); dragSnapshot = null;
+      const moved = base.items.some((b) => { const cur = items.find((i) => i.id === b.id); return !cur || Math.abs(cur.x - b.x) > 1e-9 || Math.abs(cur.z - b.z) > 1e-9; });
+      if (moved) { set({ items, history: [...s.history.slice(-60), base], future: [] }); get().revalidate(); get().scheduleSave(); if (get().sound) thunk(); set({ bounce: id }); setTimeout(() => set({ bounce: null }), 350); }
+      else set({ items });
+    } else { set({ items }); get().revalidate(); }
   },
   rotateItem(id) {
     const s = get(); const item = s.items.find((i) => i.id === id); if (!item || item.locked) return;
@@ -149,7 +154,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   select(id) { set({ selectedId: id, sidePage: 0 }); postToHost('editor:selection', { id }); },
   startPlacing(furnitureId) { set({ placing: { furnitureId }, selectedId: null }); },
   cancelPlacing() { set({ placing: null }); },
-  setDragging(id) { set({ dragging: id }); },
+  setDragging(id) { if (id) dragSnapshot = clone({ items: get().items, zones: get().zones }); set({ dragging: id }); },
   setHover(id) { set({ hoverId: id }); },
   revalidate() {
     const s = get(); if (!s.room) return;

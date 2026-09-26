@@ -12,13 +12,18 @@ import { cameraPose, fitZoom, hiddenWalls } from './camera';
 
 function Rig({ sk }: { sk: RoomSkeleton }) {
   const orbit = useEditor((s) => s.orbit); const viewMode = useEditor((s) => s.viewMode);
-  const { camera, size } = useThree();
+  const { camera, size, gl } = useThree();
   useEffect(() => {
     const cam = camera as THREE.OrthographicCamera; const pose = cameraPose(sk, orbit, viewMode);
     cam.position.copy(pose.position); cam.up.copy(pose.up); cam.lookAt(pose.target);
     const halfH = fitZoom(sk, size.width / size.height); const aspect = size.width / size.height;
     cam.left = -halfH * aspect; cam.right = halfH * aspect; cam.top = halfH; cam.bottom = -halfH; cam.near = 0.1; cam.far = 200; cam.zoom = cam.zoom || 1; cam.updateProjectionMatrix();
-  }, [camera, sk, orbit, viewMode, size]);
+    // test hook: world floor point → CSS pixel position on the canvas
+    (window as unknown as { __arpProject?: (x: number, z: number, y?: number) => { x: number; y: number } }).__arpProject = (x, z, y = 0) => {
+      const v = new THREE.Vector3(x, y, z).project(cam); const r = gl.domElement.getBoundingClientRect();
+      return { x: r.left + ((v.x + 1) / 2) * r.width, y: r.top + ((1 - v.y) / 2) * r.height };
+    };
+  }, [camera, sk, orbit, viewMode, size, gl]);
   return null;
 }
 
@@ -42,24 +47,34 @@ function Controls() {
   return null;
 }
 
-/** Invisible floor plane that receives drags/placing. */
-function FloorPlane({ sk }: { sk: RoomSkeleton }) {
-  const s = useEditor.getState; const cx = sk.dimensions.l / 2, cz = sk.dimensions.w / 2;
-  const onMove = useCallback((e: ThreeEvent<PointerEvent>) => {
-    const st = s(); const p = e.point;
-    if (st.dragging) st.moveItem(st.dragging, p.x, p.z, { free: e.shiftKey });
-    else if (st.placing) { const id = `__placing`; void id; }
-  }, [s]);
-  const onDown = useCallback((e: ThreeEvent<PointerEvent>) => {
-    const st = s(); if (e.button !== 0) return;
-    if (st.placing) { const id = st.addItem(st.placing.furnitureId, e.point.x, e.point.z); st.cancelPlacing(); st.select(id); e.stopPropagation(); return; }
-    st.select(null);
-  }, [s]);
-  return (
-    <mesh position={[cx, 0.0, cz]} rotation={[-Math.PI / 2, 0, 0]} onPointerMove={onMove} onPointerDown={onDown} visible={false}>
-      <planeGeometry args={[60, 60]} /><meshBasicMaterial />
-    </mesh>
-  );
+let lastItemHit = 0;
+/** Floor interaction via the canvas' own pointer events: ray → y=0 plane. Handles placing drops, drags and empty-floor deselect. */
+function FloorPointer() {
+  const { gl, camera } = useThree(); const st = useEditor.getState;
+  useEffect(() => {
+    const el = gl.domElement; const ray = new THREE.Raycaster(); const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); const v = new THREE.Vector2(); const hit = new THREE.Vector3();
+    const point = (e: PointerEvent) => { const r = el.getBoundingClientRect(); v.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(v, camera); return ray.ray.intersectPlane(plane, hit) ? hit.clone() : null; };
+    // Drag offset = item centre − floor point under the pointer at grab time (top-of-item parallax). Computed on the first
+    // move after a down so it never races R3F's own pointerdown handler (which runs after this listener).
+    let downPoint: THREE.Vector3 | null = null; let offset: { x: number; z: number } | null = null;
+    const move = (e: PointerEvent) => {
+      const s = st(); if (!s.dragging) return; const p = point(e); if (!p) return;
+      if (!offset) { const it = s.items.find((i) => i.id === s.dragging); const base = downPoint ?? p; offset = it ? { x: it.x - base.x, z: it.z - base.z } : { x: 0, z: 0 }; }
+      s.moveItem(s.dragging, p.x + offset.x, p.z + offset.z, { free: e.shiftKey });
+    };
+    const down = (e: PointerEvent) => {
+      if (e.button !== 0) return; const p = point(e); if (!p) return; downPoint = p; offset = null;
+      // R3F's listener runs after this one; defer so item hits (dragging / lastItemHit) are known first.
+      setTimeout(() => {
+        const s = st(); if (s.dragging) return;
+        if (s.placing) { const id = s.addItem(s.placing.furnitureId, p.x, p.z); s.cancelPlacing(); s.select(id); return; }
+        if (performance.now() - lastItemHit > 120) s.select(null);
+      }, 0);
+    };
+    el.addEventListener('pointermove', move); el.addEventListener('pointerdown', down);
+    return () => { el.removeEventListener('pointermove', move); el.removeEventListener('pointerdown', down); };
+  }, [gl, camera, st]);
+  return null;
 }
 
 function Items({ interactive, override }: { interactive: boolean; override?: LayoutItem[] | null }) {
@@ -67,7 +82,7 @@ function Items({ interactive, override }: { interactive: boolean; override?: Lay
   const validation = useEditor((s) => s.validation); const shake = useEditor((s) => s.shake); const bounce = useEditor((s) => s.bounce); const units = useEditor((s) => s.units);
   const st = useEditor.getState;
   const onDown = useCallback((id: string) => (e: ThreeEvent<PointerEvent>) => {
-    if (e.button !== 0) return; e.stopPropagation(); const s = st(); if (s.placing) return;
+    if (e.button !== 0) return; e.stopPropagation(); lastItemHit = performance.now(); const s = st(); if (s.placing) return;
     s.select(id); const it = s.items.find((i) => i.id === id); if (it && !it.locked) s.setDragging(id);
   }, [st]);
   useEffect(() => {
@@ -122,7 +137,7 @@ export function RoomScene({ interactive = true, ghostLayout = null, className, i
         <Ghosts layout={ghostLayout} />
         <PlacingPreview />
       </Suspense>
-      {interactive && <FloorPlane sk={sk} />}
+      {interactive && <FloorPointer />}
     </Canvas>
   );
 }

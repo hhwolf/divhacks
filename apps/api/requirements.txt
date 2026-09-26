@@ -13,3 +13,6 @@ google-genai>=1.0
 backboard-sdk
 playwright>=1.47
 python-multipart>=0.0.9
+
+# dev: in-memory MongoDB for apps/api/tests/test_mongo_store.py
+pymongo-inmemory>=0.4

@@ -36,3 +36,14 @@ Every ambiguity resolved while building, newest at the bottom. Decisions from EX
 - **HTTP semantics.** `PUT` on a Current Room requires `source:"editor"` (403 otherwise), renaming it is 409, blocked layouts are 422 with the violation list, deleting a Current Room is 409.
 - **Mock listing extraction** returns the fixed desk (1.2 × 0.6 × 0.75 m, $80) regardless of page content; the OpenGraph/JSON-LD/regex parser feeds Gemini in live mode and is tested on its own. Local `fixtures/listings/*` URLs are read from disk so the demo works offline.
 - **`python-multipart`** added for the photo upload route.
+
+## Iteration 1 — core loop
+
+- **Floor picking bypasses R3F object picking.** An invisible mesh is skipped by the raycaster, and a transparent plane behind items is occluded by them, so the floor is handled on the canvas' own pointer events with a ray → `y = 0` plane intersection. R3F still handles item hover/select. The floor handler defers one tick so item hits are known first.
+- **Drag offset.** Grabbing an item by its top face projects to a floor point ~1 m behind it in the iso view; the drag keeps the item-centre-to-floor-point offset from the first move so items never jump on grab.
+- **One undo step per drag.** The history entry pushed on drop is the snapshot taken when the drag started, not the last intermediate position.
+- **Rotating may wall-snap.** `R` re-runs the snap/clamp pass, so an item within 15 cm of a wall after rotating hugs it. Accepted as consistent with "snap to walls".
+- **Redo has no button** (the reference's top-left cluster has exactly three buttons). ⌘⇧Z redoes; the help overlay documents it.
+- **Real-pointer evidence for A3** lives in `scripts/e2e_editor.py` (Playwright + Chromium against the running API/web): palette tap → floor drop, 10 cm snap, mouse drag, R, L, collision red + blocked save, ⌘Z, Delete, persistence, variant fork surviving reload. Unit-level evidence is `apps/web/src/store.test.ts`.
+- **Mongo evidence without a local mongod** uses `pymongo_inmemory`, which downloads a mongod binary on first run (~440 MB, cached inside `.venv`). `apps/api/tests/test_mongo_store.py` skips with the reason if that download is impossible.
+- **Fixture preview route** `/preview/:sample` renders a sample room with no API (read-only) for design work and offline screenshots.

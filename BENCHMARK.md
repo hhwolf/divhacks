@@ -37,7 +37,25 @@ Provisional: functional lines are scored from tests and the headless demo; UI fi
 | F4 no secrets, conventional commits | 2 | 2 | `.env` ignored; iteration commits |
 | **Total** | **100** | **58** | |
 
+## Iteration 1 — Core loop — 62 / 100
+
+Changes vs iter-0 (only lines that moved):
+
+| Line | Pts | iter-0 | iter-1 | Evidence |
+|---|---|---|---|---|
+| A3 editor interactions | 4 | 3 | **4** | `scripts/e2e_editor.py` 14/14 with real Chromium pointer input (palette tap → drop, 10 cm snap, mouse drag, R, L, red + blocked save, ⌘Z, Delete, persistence, fork survives reload); `apps/web/src/store.test.ts` 8/8 |
+| A6 variants + persistence | 3 | 2 | **3** | `tests/test_layouts.py`, `tests/test_mongo_store.py::test_api_flow_with_mongodb_uri` (fork + PUT persisted in a real in-memory mongod) |
+| A9 compare + ghost | 3 | 2 | **3** | `docs/screenshots/iter-1/web-13-compare.png` (desk visible on the right, deltas, "Added Desk"), `web-07-ghost-compare.png` |
+| E3 JSON vs Mongo | 2 | 1 | **2** | `tests/test_mongo_store.py` (3 tests; `/health` reports mongo live; no `db.json` written) |
+| **Total** | | 58 | **62** | pytest 58 passed · vitest 27 passed · demo 8.8 s · validation p95 1.65 ms |
+
+Bugs found by the new evidence and fixed: floor picking never fired (invisible mesh), grab-by-top made items jump ~1 m, undo after a drag restored the wrong snapshot, plan view rendered as a diamond, overlay texture mirrored in z, palette only showed items already in the layout, compare view hid imported items.
+
 ## Iteration log
+
+### iter-1 — 62/100
+- Real-pointer e2e (14 checks), Mongo evidence via pymongo_inmemory (58 pytest), drag offset + single-step undo, floor raycast rewrite, plan view + overlay orientation fixes, compare shows both layouts' furniture, catalog loads into the palette, fixture preview route.
+- Next: B fidelity pass (iter-2), then demo-ready checkpoint (README script, Devpost blurb, tag) in iter-3.
 
 ### iter-0 — 58/100 (provisional)
 - Monorepo, contracts (7 JSON schemas + TS types), geometry package (validation + metrics + overlays, 16 tests, p95 1.7 ms for 20 items), 14 parity fixtures, Kenney assets + manifest (25 items) + rendered thumbnails, sample rooms, FastAPI (55 tests, exact TS parity, mock Gemini/Backboard/Photon, JSON store), Vite editor (cutaway room, drag/rotate/lock, palette, side panel, variant tabs, analysis tile, request bar, overlays, ghost, compare), Expo app (all screens, bridge, RoomPlan placeholder), `make demo` green.

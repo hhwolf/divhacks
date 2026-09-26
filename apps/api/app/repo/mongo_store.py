@@ -1,7 +1,8 @@
-"""MongoDB (motor) repository; selected when MONGODB_URI is set. `_id` mirrors our `id` field."""
+"""MongoDB (motor) repository; selected when MONGODB_URI is set. `_id` mirrors our `id`; `_seq` (insert time, ns) keeps insertion order."""
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -19,6 +20,7 @@ class MongoStore(Repository):
         if doc is None:
             return None
         doc.pop("_id", None)
+        doc.pop("_seq", None)
         return doc
 
     async def get(self, collection: Collection, doc_id: str) -> Doc | None:
@@ -29,8 +31,7 @@ class MongoStore(Repository):
         return [self._clean(d) or {} for d in await cursor.to_list(length=None)]
 
     async def insert(self, collection: Collection, doc: Doc) -> Doc:
-        seq = await self._db[collection].count_documents({})
-        await self._db[collection].insert_one({**doc, "_id": doc["id"], "_seq": seq})
+        await self._db[collection].insert_one({**doc, "_id": doc["id"], "_seq": time.time_ns()})
         return dict(doc)
 
     async def update(self, collection: Collection, doc_id: str, patch: Doc) -> Doc | None:

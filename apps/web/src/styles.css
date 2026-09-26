@@ -173,3 +173,6 @@ a { color: inherit; }
 
 /* Landscape phone: same proportions via --u, tighten a few margins */
 @media (max-height: 520px) { :root { --u: calc(100vmin / 1080 * 1.35); } .variant-tabs { max-width: 46vw; } }
+
+/* Keep the request bubble clear of the side panel's details block */
+.editor:has(.side-panel) .request-fab, .editor:has(.side-panel) .request-bar { right: calc(300 * var(--u)); }
