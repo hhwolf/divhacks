@@ -4,16 +4,16 @@ You are building a hackathon project end to end, autonomously, in iterations, un
 
 ## 0. Read these first
 
-1. `.context/attachments/assets/*/Where Did My Space Go — PRD.pdf` — product requirements (13 pages).
-2. `.context/attachments/assets/*/Adaptive Room Planner — MVP spec.pdf` — build spec (10 pages). **Where the two disagree, the MVP spec wins**, except: compare view is P0; keep the PRD's `GET /layouts/{a}/compare/{b}`; keep the PRD's derived analysis numbers (open floor %, largest free rectangle, walkability, reachable storage %, conflict count).
-3. `.context/attachments/assets/*/DivHacks 2026.pdf` — six pages containing **seven reference images**. They are **already extracted to `docs/reference/`** (ref1…ref7, full resolution). Only if that folder is missing or empty, re-extract with:
+1. `docs/specs/PRD.pdf` — product requirements (13 pages).
+2. `docs/specs/MVP-spec.pdf` — build spec (10 pages). **Where the two disagree, the MVP spec wins**, except: compare view is P0; keep the PRD's `GET /layouts/{a}/compare/{b}`; keep the PRD's derived analysis numbers (open floor %, largest free rectangle, walkability, reachable storage %, conflict count).
+3. `docs/specs/DivHacks-2026-references.pdf` — six pages containing **seven reference images**. They are **already extracted to `docs/reference/`** (ref1…ref7, full resolution). Only if that folder is missing or empty, re-extract with:
 
    ```bash
    python3 -m pip install --user pypdf
    python3 - <<'EOF'
-   import glob, struct, zlib
+   import struct, zlib
    from pypdf import PdfReader
-   pdf = glob.glob('.context/attachments/assets/*/DivHacks 2026.pdf')[0]
+   pdf = 'docs/specs/DivHacks-2026-references.pdf'
    def png(w,h,n,d):
        ct={3:2,1:0,4:6}[n]; raw=b''.join(b'\x00'+d[y*w*n:(y+1)*w*n] for y in range(h))
        ch=lambda t,b: struct.pack('>I',len(b))+t+b+struct.pack('>I',zlib.crc32(t+b)&0xffffffff)
