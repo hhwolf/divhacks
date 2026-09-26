@@ -4,7 +4,15 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { EMPTY_EXPORT, getRoomPlanModule, isRoomPlanAvailable, isSupported, RoomPlanView, type CaptureStatus } from '../modules/roomplan';
+import {
+  type CaptureProgress,
+  type CaptureStatus,
+  EMPTY_EXPORT,
+  getRoomPlanModule,
+  isRoomPlanAvailable,
+  isSupported,
+  RoomPlanView,
+} from '../modules/roomplan';
 import { api } from '../src/api';
 import { DimensionsSheet } from '../src/components/DimensionsSheet';
 import { useToast } from '../src/components/Toast';
@@ -12,6 +20,7 @@ import { Button, Chip, Screen, Tile } from '../src/components/ui';
 import { useStore } from '../src/store';
 import { colors, radius, spacing, type } from '../src/theme';
 import type { Dimensions, RoomPlanExport } from '../src/types';
+import { formatArea, formatDims } from '../src/units';
 
 export default function Scan() {
   const supported = useMemo(() => isSupported(), []);
@@ -25,54 +34,115 @@ function LiveScan() {
   const router = useRouter();
   const toast = useToast();
   const insets = useSafeAreaInsets();
-  const [status, setStatus] = useState<CaptureStatus>('idle');
-  const [busy, setBusy] = useState(false);
+  const units = useStore((s) => s.units);
+  const [progress, setProgress] = useState<CaptureProgress>({ status: 'idle' });
+  const [scan, setScan] = useState<RoomPlanExport | null>(null);
+  const [busy, setBusy] = useState<'stop' | 'save' | null>(null);
   const mod = getRoomPlanModule();
+  const status: CaptureStatus = progress.status;
+
+  const onCaptureStatus = useCallback((e: { nativeEvent: CaptureProgress }) => {
+    // Keep the last known counts when an instruction-only event arrives.
+    setProgress((prev) => ({ ...prev, ...e.nativeEvent, message: e.nativeEvent.message ?? (e.nativeEvent.status === prev.status ? prev.message : undefined) }));
+  }, []);
 
   const start = async () => {
     try {
+      setScan(null);
       await mod?.startCapture();
-      setStatus('scanning');
+      setProgress({ status: 'scanning', walls: 0, doors: 0, windows: 0, objects: 0 });
     } catch (e) {
+      setProgress({ status: 'error', message: (e as Error).message });
       toast(`Could not start capture: ${(e as Error).message}`, { tone: 'danger' });
     }
   };
 
-  const stopAndSave = async () => {
+  const stop = async () => {
     if (!mod) return;
-    setBusy(true);
+    setBusy('stop');
     try {
-      await mod.stopCapture();
-      setStatus('processing');
-      const scan: RoomPlanExport = (await mod.exportSkeleton()) ?? EMPTY_EXPORT;
-      if (!scan.skeleton?.walls?.length) {
-        setStatus('idle');
-        toast('The scan did not produce any walls yet. Try walking the room slowly.', { tone: 'danger', ms: 4000 });
+      await mod.stopCapture(); // resolves once RoomPlan has processed the final CapturedRoom
+      const result: RoomPlanExport = (await mod.exportSkeleton()) ?? EMPTY_EXPORT;
+      if (!result.skeleton?.walls?.length) {
+        setProgress({ status: 'idle', message: result.meta?.reason });
+        toast('The scan did not produce a closed room yet. Try walking the room slowly.', { tone: 'danger', ms: 4000 });
         return;
       }
-      const res = await api.createScannedRoom(scan, 'Scanned room');
-      setStatus('done');
-      router.replace(`/editor/${encodeURIComponent(res.currentLayout.id)}`);
+      setScan(result);
+      setProgress((p) => ({ ...p, status: 'done', message: undefined }));
     } catch (e) {
-      setStatus('error');
+      setProgress({ status: 'error', message: (e as Error).message });
       toast((e as Error).message, { tone: 'danger', ms: 4500 });
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   };
 
+  const useScan = async () => {
+    if (!scan) return;
+    setBusy('save');
+    try {
+      const res = await api.createScannedRoom(scan, 'Scanned room');
+      router.replace(`/editor/${encodeURIComponent(res.currentLayout.id)}`);
+    } catch (e) {
+      toast((e as Error).message, { tone: 'danger', ms: 4500 });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const chipLabel =
+    status === 'idle'
+      ? 'Ready — point at a wall and press Start'
+      : status === 'scanning'
+        ? progress.message ?? 'Scanning… walk the room slowly'
+        : status === 'processing'
+          ? progress.message ?? 'Processing…'
+          : status === 'done'
+            ? 'Scan complete'
+            : progress.message ?? 'Scan failed';
+  const counts = `${progress.walls ?? 0} walls · ${progress.doors ?? 0} doors · ${progress.windows ?? 0} windows · ${progress.objects ?? 0} objects`;
+  const dims = scan?.skeleton.dimensions;
+
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
-      <RoomPlanView style={{ flex: 1 }} onCaptureStatus={(e) => setStatus(e.nativeEvent.status)} />
+      <RoomPlanView style={{ flex: 1 }} onCaptureStatus={onCaptureStatus} />
       <View style={[styles.scanBar, { paddingBottom: insets.bottom + spacing.md }]}>
-        <Chip
-          icon={status === 'scanning' ? 'record-circle' : 'cube-scan'}
-          label={status === 'idle' ? 'Ready' : status === 'scanning' ? 'Scanning… walk the room slowly' : status === 'processing' ? 'Processing' : status}
-          tone={status === 'scanning' ? 'danger' : 'tile'}
-        />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }}>
+          <Chip
+            icon={status === 'scanning' ? 'record-circle' : status === 'done' ? 'check-circle' : status === 'error' ? 'alert-circle' : 'cube-scan'}
+            label={chipLabel}
+            tone={status === 'scanning' ? 'danger' : status === 'done' ? 'accent' : 'tile'}
+          />
+          {status !== 'idle' ? <Text style={styles.counts}>{counts}</Text> : null}
+        </View>
+
+        {scan && dims ? (
+          <Text style={styles.summary}>
+            {formatDims(dims, units)} · {formatArea(dims.l, dims.w, units)} · {scan.objects.length} item{scan.objects.length === 1 ? '' : 's'} recognised
+            {scan.meta?.skipped?.length ? ` · skipped ${scan.meta.skipped.join(', ')}` : ''}
+          </Text>
+        ) : null}
+
         <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
-          <Button label="Start" icon="play" onPress={start} disabled={status === 'scanning' || busy} style={{ flex: 1 }} variant="secondary" />
-          <Button label="Stop & save" icon="stop" onPress={stopAndSave} disabled={status !== 'scanning'} busy={busy} style={{ flex: 1 }} />
+          {status === 'done' && scan ? (
+            <>
+              <Button label="Rescan" icon="refresh" onPress={start} variant="secondary" style={{ flex: 1 }} disabled={busy !== null} />
+              <Button label="Use this scan" icon="arrow-right-bold" onPress={useScan} busy={busy === 'save'} style={{ flex: 2 }} />
+            </>
+          ) : (
+            <>
+              <Button
+                label="Start"
+                icon="play"
+                onPress={start}
+                disabled={status === 'scanning' || status === 'processing' || busy !== null}
+                style={{ flex: 1 }}
+                variant="secondary"
+              />
+              <Button label="Stop" icon="stop" onPress={stop} disabled={status !== 'scanning'} busy={busy === 'stop'} style={{ flex: 1 }} />
+            </>
+          )}
         </View>
       </View>
     </View>
@@ -138,7 +208,9 @@ function Fallback() {
     setBusy('paste');
     try {
       const name = typeof parsed.name === 'string' ? parsed.name : 'Scanned room';
-      const res = await api.createRoomFromJson(parsed, name);
+      // Only the fields POST /rooms understands; `meta` from exportSkeleton() is debug-only.
+      const { meta: _meta, name: _name, ...payload } = parsed;
+      const res = await api.createRoomFromJson(payload, name);
       openEditor(res.currentLayout.id);
     } catch (e) {
       toast((e as Error).message, { tone: 'danger', ms: 4500 });
@@ -223,4 +295,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
   },
+  counts: { color: colors.tile, fontSize: 13, fontWeight: '600' },
+  summary: { color: colors.tile, fontSize: 13, marginTop: spacing.sm },
 });
