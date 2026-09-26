@@ -24,7 +24,10 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -33,7 +36,15 @@
     "plugins": [
       "expo-router",
       "expo-dev-client",
-      "expo-sharing",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "16.0"
+          }
+        }
+      ],
+      "./plugins/withXcode16Podfile",
       [
         "expo-image-picker",
         {
@@ -55,6 +66,13 @@
           "backgroundColor": "#D9A56E"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "725f30bd-e93d-44fd-84f3-b8abeaa9d02e"
+      }
+    },
+    "owner": "hhe26"
   }
 }
