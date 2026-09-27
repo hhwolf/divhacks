@@ -66,7 +66,7 @@ function LiveScan() {
       const err = (e ?? {}) as Error & { code?: string };
       const denied = err.code === 'CameraPermissionDenied' || /camera access/i.test(err.message ?? '');
       setCameraDenied(denied);
-      setProgress({ status: 'error', message: denied ? 'Camera access is off for Room Planner.' : err.message ?? String(e) });
+      setProgress({ status: 'error', message: denied ? 'Camera access is off for FitCheck.' : err.message ?? String(e) });
       if (!denied) toast(`Could not start capture: ${err.message ?? String(e)}`, { tone: 'danger' });
     }
   };

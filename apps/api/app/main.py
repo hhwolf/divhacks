@@ -1,4 +1,4 @@
-"""Adaptive Room Planner API. Runs fully offline in mock mode; see app/config.py for the env vars that enable live services."""
+"""FitCheck API. Runs fully offline in mock mode; see app/config.py for the env vars that enable live services."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         raise ValueError("Only Stripe test secret keys are accepted; live payments are disabled")
     if any(o.strip() == "*" for o in settings.allowed_origins.split(",")):
         raise ValueError("ALLOWED_ORIGINS must list explicit web origins")
-    app = FastAPI(title="Adaptive Room Planner API", version=health.VERSION)
+    app = FastAPI(title="FitCheck API", version=health.VERSION)
     app.state.ctx = AppContext.build(settings)
     app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in settings.allowed_origins.split(",") if o.strip()], allow_methods=["*"], allow_headers=["*"])
     for r in (health.router, rooms.router, rooms.setup_router, layouts.router, furniture.router, rent.router, payments.router, evidence.router, agent.router, webhooks.router):

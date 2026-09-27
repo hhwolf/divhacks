@@ -99,7 +99,7 @@ export default function Home() {
         <View style={[styles.hero, { minHeight: height - insets.bottom, paddingTop: insets.top + spacing.md }]}>
           <View style={styles.brandRow}>
             <View style={styles.mark}><MaterialCommunityIcons name="leaf" size={18} color={colors.white} /></View>
-            <Text style={styles.brand}>Room Planner</Text>
+            <Text style={styles.brand}>FitCheck</Text>
             <View style={{ flex: 1 }} />
             <IconButton icon="cog-outline" label="Settings" onPress={() => router.push('/settings')} />
           </View>

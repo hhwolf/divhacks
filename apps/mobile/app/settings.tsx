@@ -111,7 +111,7 @@ export default function Settings() {
           <Tile>
             <Text style={[type.h2, { marginBottom: 6 }]}>Live Better, in 100–150 sq ft</Text>
             <Text style={[type.body, { lineHeight: 22 }]}>
-              Adaptive Room Planner is for renters in small NYC rooms. Scan the room once with LiDAR (or type its dimensions), keep a
+              FitCheck is for renters in small NYC rooms. Scan the room once with LiDAR (or type its dimensions), keep a
               locked “Current Room” that only you edit, text furniture links or photos over iMessage when you want to test a new item,
               and use the in-app assistant for room changes like reading corners, yoga space, and desk placement near the window. Every
               answer is a new, named variant you can compare side by side; the planner never moves what you have locked.

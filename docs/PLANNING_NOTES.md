@@ -1,8 +1,8 @@
-# Plan: Execution prompt for "Adaptive Room Planner" (DivHacks 2026, Live Better track)
+# Plan: Execution prompt for "FitCheck" (DivHacks 2026, Live Better track)
 
 ## Context
 
-Henry's team is building **Adaptive Room Planner** ("Where Did My Space Go?") at DivHacks 2026 (Columbia, Sep 26–27 2026, submissions due **Sep 27 10:30 AM ET**). Track: **Live Better** — "strictly personal utility: the grind of daily NYC life, optimized… apartment hacks." Judging rubric (from the DivHacks 2026 Devpost): Concept 30%, Functionality 30% ("how well does the demo run?"), Wow Factor 20%, UX/Design 10%, Value to Community 10%. Sponsor challenges relevant to this build: **Photon** (iMessage, $400 + credits), **Backboard** (memory), **Gemini API**, **Supabase**.
+Henry's team is building **FitCheck** ("Where Did My Space Go?") at DivHacks 2026 (Columbia, Sep 26–27 2026, submissions due **Sep 27 10:30 AM ET**). Track: **Live Better** — "strictly personal utility: the grind of daily NYC life, optimized… apartment hacks." Judging rubric (from the DivHacks 2026 Devpost): Concept 30%, Functionality 30% ("how well does the demo run?"), Wow Factor 20%, UX/Design 10%, Value to Community 10%. Sponsor challenges relevant to this build: **Photon** (iMessage, $400 + credits), **Backboard** (memory), **Gemini API**, **Supabase**.
 
 The repo `hhwolf/divhacks` is **empty** (no commits locally or on origin). Three attachments exist under `.context/attachments/assets/`: the PRD (13 pp), the MVP spec (10 pp), and "DivHacks 2026.pdf" (6 pp) whose only content is 7 reference images (page 1 also repeats the PRD summary; page 6 is the heading "UI/UX").
 

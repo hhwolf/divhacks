@@ -1,4 +1,4 @@
-# Build "Adaptive Room Planner" — DivHacks 2026, Live Better track
+# Build "FitCheck" — DivHacks 2026, Live Better track
 
 You are building a hackathon project end to end, autonomously, in iterations, until a 100-point benchmark scores ≥95 (target 100). Do not stop to ask questions; when something is ambiguous, pick the option that best serves the 3-minute demo, write the assumption into `DECISIONS.md`, and continue. Commit at the end of every iteration.
 
