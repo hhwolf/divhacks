@@ -25,6 +25,10 @@ def main():
     with urllib.request.urlopen(req, timeout=30) as f:
         room = json.load(f)
 
+    req = urllib.request.Request(a.api + '/rooms', method='POST', data=json.dumps({'skeleton':room['room']['skeleton'], 'seed':False}).encode(), headers={'Content-Type':'application/json','X-Demo-Session':session})
+    with urllib.request.urlopen(req, timeout=30) as f:
+        empty_room = json.load(f)
+
     def on_screen(locator, w, h, minimum=0):
         box = locator.bounding_box()
         assert box and box['x'] >= -1 and box['y'] >= -1, box
@@ -78,6 +82,13 @@ def main():
                 pg.get_by_role('button',name='Overlays',exact=True).click()
                 on_screen(pg.locator('[data-testid=overlay-popover]'),w,h)
                 pg.get_by_role('button',name='Overlays',exact=True).click()
+                pg.goto(a.web + '/layout/' + empty_room['currentLayout']['id'] + '?embedded=1', wait_until='networkidle')
+                on_screen(pg.locator('.furnish-card'),w,h)
+                close=pg.get_by_role('button',name='Close furnishing ideas')
+                on_screen(close,w,h,44)
+                close.click()
+                expect(pg.locator('.furnish-card')).to_be_hidden()
+                pg.screenshot(path=str(out / f'empty-scanned-room-{engine.name}-{w}.png'))
                 print(f'PASS {engine.name} editor {w}x{h}: controls, inventory, scroll, categories, search, goals, green background', flush=True)
                 pg.close()
             browser.close()
