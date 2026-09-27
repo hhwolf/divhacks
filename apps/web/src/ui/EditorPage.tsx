@@ -24,6 +24,7 @@ export function EditorPage() {
   const { id, sample } = useParams();
   const params = useMemo(() => new URLSearchParams(location.search), []);
   const s = useEditor;
+  const embedded = useEditor((x) => x.embedded);
   const loading = useEditor((x) => x.loading); const room = useEditor((x) => x.room); const theme = useEditor((x) => x.theme); const night = useEditor((x) => x.night);
   const ghostId = useEditor((x) => x.ghostId); const layouts = useEditor((x) => x.layouts); const lastError = useEditor((x) => x.lastError);
   const ui = params.get('ui') !== '0';
@@ -64,7 +65,7 @@ export function EditorPage() {
 
   const ghost = ghostId ? layouts.find((l) => l.id === ghostId) ?? null : null;
   return (
-    <div className={`editor theme-${theme} ${night ? 'night' : ''} ${ui ? '' : 'no-ui'}`}>
+    <div className={`editor theme-${theme} ${night ? 'night' : ''} ${embedded ? 'embedded' : ''} ${ui ? '' : 'no-ui'}`}>
       <Backdrop />
       {room && <RoomScene ghostLayout={ghost} className="canvas" />}
       {loading && <div className="loading"><div className="spinner" />Loading room…</div>}
