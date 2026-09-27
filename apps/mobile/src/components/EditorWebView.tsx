@@ -294,8 +294,8 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp, fpsProbe }:
 
 const styles = StyleSheet.create({
   // Matches the editor page's own background so the safe-area strips blend in.
-  root: { flex: 1, backgroundColor: '#D6D1C9' },
-  web: { flex: 1, backgroundColor: '#D6D1C9' },
+  root: { flex: 1, backgroundColor: '#84AA9D' },
+  web: { flex: 1, backgroundColor: '#84AA9D' },
   center: { position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: 'rgba(243,244,239,0.92)' },
   loadingText: { color: colors.ink, marginTop: 10, fontWeight: '600' },
   errorTitle: { color: colors.ink, fontSize: 18, fontWeight: '800', marginBottom: 6 },
@@ -304,8 +304,8 @@ const styles = StyleSheet.create({
   pillText: { color: colors.tile, fontWeight: '700' },
   back: {
     position: 'absolute',
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.pill,

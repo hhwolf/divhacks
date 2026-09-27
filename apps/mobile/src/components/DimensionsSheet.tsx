@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, spacing, type } from '../theme';
 import type { Dimensions, Units } from '../types';
@@ -76,7 +76,7 @@ export function DimensionsSheet({ visible, units: initialUnits, busy, onClose, o
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.backdrop}>
         <Pressable style={{ flex: 1 }} onPress={onClose} accessibilityLabel="Close" />
-        <View style={styles.sheet}>
+        <ScrollView style={styles.sheet} contentContainerStyle={styles.sheetContent} keyboardShouldPersistTaps="handled">
           <View style={styles.handle} />
           <View style={styles.headerRow}>
             <Text style={type.h2}>Enter dimensions</Text>
@@ -94,7 +94,7 @@ export function DimensionsSheet({ visible, units: initialUnits, busy, onClose, o
             <Button label="Cancel" variant="ghost" onPress={onClose} style={{ flex: 1 }} />
             <Button label="Continue" onPress={submit} busy={busy} style={{ flex: 2 }} icon="arrow-right" />
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -104,14 +104,13 @@ const round = (v: number) => Math.round(v * 100) / 100;
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(37,52,32,0.4)', justifyContent: 'flex-end' },
-  sheet: {
+  sheet: { maxHeight: '90%', flexGrow: 0,
     backgroundColor: colors.tile,
     borderTopLeftRadius: radius.lg + 4,
     borderTopRightRadius: radius.lg + 4,
-    padding: spacing.lg,
-    paddingBottom: spacing.xl + 12,
   },
+  sheetContent: { padding: spacing.lg, paddingBottom: spacing.xl + 12 },
   handle: { alignSelf: 'center', width: 44, height: 5, borderRadius: 3, backgroundColor: colors.tileMuted, marginBottom: spacing.md },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
+  headerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   error: { color: colors.danger, fontSize: 13, marginBottom: spacing.sm },
 });

@@ -5,7 +5,7 @@ import React, { useRef, useState } from 'react';
 import { ActivityIndicator, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { api } from '../src/api';
+import { sampleRoomDraft } from '../src/newRoom';
 import { useToast } from '../src/components/Toast';
 import { useStore } from '../src/store';
 import { colors, radius, spacing } from '../src/theme';
@@ -41,10 +41,10 @@ export default function Welcome() {
   const trySample = async () => {
     setBusy(true);
     try {
-      const res = await api.createSampleRoom('l-shaped');
+      useStore.getState().setRoomDraft(sampleRoomDraft());
       setOnboarded(true);
       router.replace('/');
-      router.push(`/editor/${encodeURIComponent(res.currentLayout.id)}`);
+      router.push('/setup');
     } catch (e) {
       toast((e as Error | null)?.message ?? 'Unable to load the sample room', { tone: 'danger', ms: 4500 });
     } finally {

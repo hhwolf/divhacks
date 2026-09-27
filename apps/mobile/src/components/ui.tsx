@@ -84,6 +84,7 @@ export function Button({
       onPress={onPress}
       disabled={busy || disabled}
       accessibilityRole="button"
+      accessibilityLabel={label}
       style={({ pressed }) => [
         styles.button,
         { backgroundColor: bg },
@@ -129,7 +130,7 @@ export function Chip({
   );
   if (!onPress) return <View style={[styles.chip, { backgroundColor: bg }, style]}>{inner}</View>;
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.chip, { backgroundColor: bg }, pressed && styles.pressed, style]}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} style={({ pressed }) => [styles.chip, { backgroundColor: bg, minHeight: 44, justifyContent: 'center' }, pressed && styles.pressed, style]}>
       {inner}
     </Pressable>
   );
@@ -144,6 +145,7 @@ export function Field(props: TextInputProps & { label?: string }) {
         placeholderTextColor="#9AA392"
         autoCapitalize="none"
         autoCorrect={false}
+        accessibilityLabel={label}
         {...rest}
         style={[styles.input, style]}
       />
@@ -195,13 +197,14 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.75, transform: [{ scale: 0.99 }] },
   button: {
     minHeight: 48,
+    paddingVertical: 12,
     paddingHorizontal: spacing.lg,
     borderRadius: radius.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonLabel: { fontSize: 15, fontWeight: '700' },
+  buttonLabel: { fontSize: 15, fontWeight: '700', flexShrink: 1, textAlign: 'center' },
   chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill },
   fieldLabel: { ...type.small, fontWeight: '600', marginBottom: 4 },
   input: {

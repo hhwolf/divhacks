@@ -84,9 +84,9 @@ export const api = {
       method: 'POST',
       body: json({
         name: draft.name,
-        ...(draft.skeleton ? { skeleton: draft.skeleton } : { dimensions: draft.dimensions, doors: draft.doors ?? [], windows: draft.windows ?? [] }),
+        ...(draft.sample ? { sample: draft.sample } : draft.skeleton ? { skeleton: draft.skeleton } : { dimensions: draft.dimensions, doors: draft.doors ?? [], windows: draft.windows ?? [] }),
         objects: draft.objects,
-        seed: false,
+        seed: draft.source === 'sample',
         spaceTypes: setup.spaceTypes,
         elements: setup.elements,
       }),
