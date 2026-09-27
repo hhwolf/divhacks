@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "units": "meters",
+  "GRID_M": 0.1,
+  "DOOR_CLEAR_M": 0.9,
+  "ACCESS_EDGE_M": 0.75,
+  "STORAGE_FRONT_M": 0.75,
+  "DEFAULT_YOGA_ZONE_M": [1.8, 1.2],
+  "ACCESS_FREE_RATIO": 0.7,
+  "WINDOW_BAND_M": 0.6,
+  "CORRIDOR_CELLS": 2,
+  "rules": [
+    {"id": "bounds", "check": "Every footprint inside the floor polygon", "severity": "hard", "blocksSave": true},
+    {"id": "overlap", "check": "No two solid footprints intersect (rugs and mats are ignored)", "severity": "hard", "blocksSave": true},
+    {"id": "locked", "check": "Locked items are never moved by the agent or solver", "severity": "hard", "blocksSave": false},
+    {"id": "door_clearance", "check": "Door swing arc + DOOR_CLEAR_M in front of each door stays empty", "severity": "conflict", "blocksSave": false},
+    {"id": "access_edge", "check": "Beds and desks keep one ACCESS_EDGE_M free long edge; storage keeps STORAGE_FRONT_M in front", "severity": "warning", "blocksSave": false},
+    {"id": "window_keep_clear", "check": "Items taller than the sill stay out of the WINDOW_BAND_M band", "severity": "warning", "blocksSave": false},
+    {"id": "clear_zone", "check": "A requested clear zone exists as one free rectangle", "severity": "warning", "blocksSave": false},
+    {"id": "walkable_path", "check": "Flood fill over free cells connects the door to every bed and desk", "severity": "warning", "blocksSave": false}
+  ]
+}

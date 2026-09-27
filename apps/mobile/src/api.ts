@@ -14,9 +14,12 @@ import type {
 
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  /** The server's `detail` (e.g. `{message, conversionReport}` for a scan that could not be converted). */
+  detail: unknown;
+  constructor(status: number, message: string, detail?: unknown) {
     super(message);
     this.status = status;
+    this.detail = detail;
   }
 }
 
@@ -54,7 +57,8 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
         : typeof data === 'string' && data
           ? data
           : res.statusText;
-    throw new ApiError(res.status, `${res.status}: ${detail}`);
+    const raw = typeof data === 'object' && data !== null && 'detail' in data ? (data as { detail: unknown }).detail : undefined;
+    throw new ApiError(res.status, `${res.status}: ${detail}`, raw);
   }
   return data as T;
 }
@@ -82,6 +86,14 @@ export const api = {
       method: 'POST',
       body: json({ skeleton: scan.skeleton, objects: scan.objects, name }),
     }),
+  /** Uploads the RoomPlan parametric USDZ (a file:// URI from exportUsdz()); the API stores it in Blob and converts it. */
+  createRoomFromUsdz: (uri: string, name = 'Scanned room') => {
+    const form = new FormData();
+    // React Native's FormData accepts {uri,name,type} for file parts.
+    form.append('usdz', { uri, name: 'Room.usdz', type: 'model/vnd.usdz+zip' } as unknown as Blob);
+    form.append('name', name);
+    return request<CreateRoomResponse>('/rooms', { method: 'POST', body: form });
+  },
   /** Accepts either our {skeleton, objects} export or a raw RoomPlan JSON export the API knows how to parse. */
   createRoomFromJson: (payload: Record<string, unknown>, name = 'Scanned room') =>
     request<CreateRoomResponse>('/rooms', { method: 'POST', body: json({ name, ...payload }) }),

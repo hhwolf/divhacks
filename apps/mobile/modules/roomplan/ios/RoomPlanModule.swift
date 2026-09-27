@@ -6,7 +6,9 @@
 //   startCapture(): Promise<void>       runs the session inside the mounted <RoomPlanView>
 //   stopCapture(): Promise<void>        stops the session and RESOLVES ONLY after RoomPlan hands back the final
 //                                       CapturedRoom (or fails / times out), so exportSkeleton() right after is safe
-//   exportSkeleton(): Promise<Export>   SkeletonExporter.export(lastRoom) — see SkeletonExporter.swift
+//   exportUsdz(): Promise<String?>      writes lastRoom as a parametric USDZ (capturedRoom.export(to:exportOptions: .parametric))
+//                                       to a temp file and returns its file:// URI; this is what the app uploads to POST /rooms
+//   exportSkeleton(): Promise<Export>   SkeletonExporter.export(lastRoom), used for the on-device preview (and as a fallback upload)
 //   <RoomPlanView onCaptureStatus>      { status, message?, walls?, doors?, windows?, objects? }
 
 import ExpoModulesCore
@@ -41,6 +43,15 @@ public class RoomPlanModule: Module {
       #endif
       promise.reject(RoomPlanUnavailableException())
     }.runOnQueue(.main)
+
+    AsyncFunction("exportUsdz") { () throws -> String? in
+      #if canImport(RoomPlan)
+      if #available(iOS 16.0, *) {
+        return try RoomPlanCoordinator.shared.exportUsdz()
+      }
+      #endif
+      return nil
+    }
 
     AsyncFunction("exportSkeleton") { () -> [String: Any] in
       #if canImport(RoomPlan)
@@ -146,6 +157,15 @@ internal final class RoomPlanCoordinator: NSObject {
     } else {
       promise.resolve()
     }
+  }
+
+  /// The raw scan the backend converts (it owns USDZ -> JSON). Parametric: every wall, door, window and object is a simple box.
+  @available(iOS 16.0, *)
+  func exportUsdz() throws -> String? {
+    guard let room = lastRoom else { return nil }
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent("room-\(UUID().uuidString).usdz")
+    try room.export(to: url, exportOptions: .parametric)
+    return url.absoluteString
   }
 
   @available(iOS 16.0, *)

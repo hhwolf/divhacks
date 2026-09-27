@@ -79,3 +79,63 @@ Every ambiguity resolved while building, newest at the bottom. Decisions from EX
 - The “Material Science project” dataset was not present in the repo, so the implementation looks for fixture-backed material quality and falls back to a transparent floor-material rubric (`fixtures/housing/material_quality.json`).
 - Facebook Marketplace remains user-provided link/photo/manual import only. We do not scrape Marketplace at scale or depend on an unofficial API.
 - Stripe is mock/test-first. The app never stores card/bank data, does not implement escrow, and blocks deposits above one month rent and application fees above $20 before returning a checkout URL.
+
+## Backend v2 (main backend spec: USDZ ingest, Base Layout, no Photon)
+
+- **Additive to the existing wire shapes.** The web editor, TS validator, parity fixtures and mobile app all speak the existing skeleton (`walls[{x1,z1,x2,z2}]`, doors/windows by `{wall, offset}`), `layout.items[].id`, flat `zones{x,z,w,d}` and `metrics.openFloor`. The v2 names are added alongside, not swapped in: walls get `id`/`thickness`, doors/windows get `id`/`wallId`/`center`, the skeleton gets `ceilingHeight`, layouts get `kind` (base|current|variant, `isCurrent` kept as a mirror) and `version`, zones get `type`, metrics get `openFloorPct` + `warnings[]`. Contracts (`packages/contracts`) updated the same way; `tests/test_contracts.py` validates real API responses against them.
+- **Base Layout.** Every room is created with a read-only `base` ("Original Room") and a `current` ("Current Room", parent = base) written in one batch. Base: PUT/PATCH/DELETE/promote → 403. Current: DELETE → 409, rename → 409, PUT still requires `source:"editor"` (the agent never writes it). Rooms created before this have no base; `restore` answers 409 for them.
+- **Promote** renames the promoted variant to "Current Room" (keeps the old name in `promotedFromName`) and the old current to "Previous Room, Sep 26" (deduped); nothing is overwritten. **Restore** `empty` means no items at all (scanned fixtures included).
+- **Versions.** `PUT` with a stale `version` → 409; the write itself is a compare-and-set on the version (`Repository.update_if`), so two concurrent saves can't both win. `version` is optional on PUT because the current web/mobile clients don't send it yet.
+- **USDZ ingest.** Local box per element = each leaf gprim's own untransformed extent mapped into the element's frame, not `ComputeUntransformedBound(element)`: that call merges children as world-aligned boxes and is loose when the geometry sits under a child transform (RoomPlan puts each wall's scaled box one level below the wall Xform). Classification regex accepts `Wall`, `Wall0`, `Wall_0`, `Wall0_mesh`, `Wall_<hex uuid>` and rejects `Wall_grp`/`Walls`; nested duplicates (same category under a classified ancestor) are dropped; a door nested under its wall is kept. Unauthored `metersPerUnit` is treated as 1.0 (USD's fallback is 0.01, which would shrink a RoomPlan scan 100×). Z-up stages map (x, y, z) → (x, z, −y).
+- **Normalization.** Longest wall on +x at the min-z (north) side; walls within 1 cm of the longest tie (rectangular rooms have two), broken by "hosts a window", then "no door", so float noise never flips the room. Walls listed clockwise on screen starting with the longest; floor polygon min corner at the origin, clockwise, starting at the vertex nearest the origin. Invariance is tested across yaw, offset, cm/mm units, Z-up, missing metersPerUnit and a missing Floor prim.
+- **Openings** (`Opening*`) are doors with `opening: true` and `swing: "out"`: the 0.9 m clearance applies, the swing arc doesn't, and the TS validator needs no change. USDZ has no swing data: doors default to `in`/`left` as the spec says.
+- **Scanned objects** become per-room catalog docs (`source: scan`, `roomId`, `scanCategory`, `presetId`) with the preset GLB scaled to the scanned dims; they are kept out of `GET /furniture` (they belong to the room). Bed → double if the short side ≥ 1.2 m; Table → desk if the short side ≤ 0.7 m; Storage → dresser if ≤ 1.2 m tall else bookshelf. Fixtures are `category: other`, `kind: decor` (solid, no access rule), locked; the refrigerator borrows the mini-fridge GLB, the rest have no GLB. Items overshooting a wall by ≤ 10 cm are nudged inside (RoomPlan boxes poke through walls).
+- **Agent Stage 1** schema is the Pydantic `GeminiPlan` (no coordinate field anywhere). Besides the spec's fields it has `question` (clarify), `ranking` (rank_variants) and `preferences` (Backboard write-back). `feature` also allows `outlet` because the sample rooms have outlets.
+- **Solver.** Targets: an imported item is added; otherwise an existing unlocked item of that type is moved; otherwise a new item is created from Gemini's dims (stored as a `manual` catalog item) or the matching preset. Candidates: wall-flush (back to the wall; beds also side-on) + open floor, all four rotations, 10 cm grid; `adjacent` = footprint within 0.3 m of the feature and not in front of a window; `keep_clear` = outside the window band / door keep-clear. Ranking follows the spec (no new conflict > constraints > fewer new warnings > closeness), which can pick a desk perpendicular to the wall over a flush one that would add an access-edge warning. "Hard rules pass" means *no new* error-severity violation versus the source layout, so a scanned room that already has a conflict can still get variants.
+- **Locks** = layout `locked` ∪ plan `lock` constraints ∪ Backboard memories matching "never move the X" (parsed deterministically). "never move my X" in a request is written back to Backboard even if Gemini didn't list it.
+- **make_space**: the largest free rectangle *outside the door swing + clearance* first; otherwise the requested zone is slid over the grid (both orientations, summed-area table for walls/door/fixed items) and cleared with the fewest moves (≤ 2) of unlocked items to free wall spots, least displacement first. Rejection says "largest free zone found: W x D m". **keep_clear** with nothing blocking returns `ok` with no new variant.
+- **rank_variants** uses Gemini's ranking when it names real layout ids, else a deterministic score (has a desk, conflicts, walkability, open floor).
+- **Agent errors.** Unknown room/layout → 404, layout from another room → 422, blocked listing link → 422 with the screenshot hint. The response keeps `layout`/`reply`/`links` for the clients and adds `layoutId`, `ranking`. `agent_requests` stores the v2 fields (`sourceLayoutId`, `resultLayoutId`, `requestText`, `attachments`, `geminiPlan` per attempt, `solverAttempts`, `validation`, `latencyMs`). `baseLayoutId`/`imageUrl` are still accepted as aliases of `layoutId`/`photo`.
+- **Photon removed from this service** (router, adapter, simulator, tests); `make demo` now calls `/agent/request`. **Blob-as-database removed**: MongoDB is required in live mode, Blob only stores files. Local mode stores files in `.data/blob/`, served at `/blob/`.
+- **Secrets** via pydantic-settings as `SecretStr` (never in reprs, logs or responses; tested). Only the eight spec keys are secrets. `MOCK_MODE` (default true) is the one operational switch: live mode requires Gemini, Backboard, Mongo and Blob keys or the app refuses to start; Mongo/Blob follow their key in either mode. Gemini model, Mongo db name, Backboard URL, CORS origins, demo user and limits are constants in `app/config.py`. CORS allows `FRONTEND_ORIGINS` only; LAN/localhost dev origins are added in mock mode.
+- **Stripe is never called** (`STRIPE_*` loaded only); payment quotes are always `mock`. The rent/payment endpoints stay because the web Rent tab uses them.
+- **Deploy.** `apps/api/Dockerfile` (python:3.11-slim, built from the repo root so it can copy `assets/` and `fixtures/`), pinned to `linux/amd64` because usd-core ships no Linux arm64 wheels (on py3.11 it resolves to usd-core 25.11). Runs as a non-root user. `.do/app.yaml` for App Platform with the `/health` check. Runtime vs dev requirements split (`requirements.txt` / `requirements-dev.txt`).
+- **Layout of the code** keeps the existing modules (`solver/validate.py` is the spec's `services/validation.py`, `integrations/` holds Gemini/Backboard, `repo/` is `db.py`); new modules go where the spec names them: `app/services/{usdz_convert,blob,ingest,rooms}.py`, `apps/api/scripts/inspect_usdz.py`, `apps/api/seed_presets.py`, `apps/api/rules.json`.
+
+## Backend v3 (team decisions after v2; spec: docs/BACKEND_SPEC.md)
+
+- **Gemini is the orchestrator.** Stage 1 picks the intent, i.e. the tool: placement (fit_item / make_space / keep_clear), ranking,
+  `rent_check`, `payment_check` or `clarify`, and extracts its inputs (`rent`, `payment` objects in `GeminiPlan`). The keyword
+  pre-router for rent/payment is gone; the mock planner keeps the same keywords so offline demos behave the same. Stage 4 has Gemini
+  word the result from the solver's facts (`Narration` schema); `narrate.merge` keeps only well-formed parts and the deterministic
+  draft covers the rest, so the wording can never claim a placement the solver didn't make.
+- **The Interior Designer is the `interior-designer` skill.** Its voice, word swaps and space-planning numbers live in
+  `apps/api/app/agent/designer.md`, prefixed to every Gemini call. Its output format is adopted: up to 3 options, each a saved variant
+  with `explanation`, `tradeoff`, `moved`, `validation`, plus `recommended`, `roomSummary`, one-sentence `reply`. Coordinates still
+  come only from the solver.
+- **Options are different ideas**: >= 1 m apart, or the recommended spot turned 90° (side-on vs flush is a real choice). A spot that
+  ignores `adjacent` may fill a slot only if it is against a wall with no new warnings, and it says what it gave up. make_space options
+  are different spots (>= 1 m apart), never the same spot again with extra moves.
+- **Desk placement.** The solver requires the front band of front-use pieces (desk chair side 0.75 m, drawers 0.75 m) to be free; the
+  validator only asks a desk for *a* free long edge, which let a desk face the wall with 10 cm for the chair. Out-of-room cells count as
+  blocked. Designer tie-breakers: keep the largest open rectangle, avoid a desk chair with its back to the door. On the sample bedroom
+  this gives "side-on beside the window" (recommended) and "under the window" (glare + back to the door, said in its tradeoff).
+- **Walkable path is a warning** (spec table), in TS and Python; parity fixtures regenerated. It still sets walkability "Blocked",
+  shows in `metrics.warnings`, and the solver avoids new warnings.
+- **One rules file**: moved to `packages/contracts/rules.json`; `packages/geometry` imports it, the API loads and serves it.
+- **Photon is a deliverer**: `POST /agent/request` needs no ids (latest-used room, its Current Room), `channel: "imessage"`; the Photon
+  agent texts back `reply` + `links[1]`. With no room yet it gets a `clarify` asking them to scan first.
+- **Rent and payments are in the spec**; Stripe stays uncalled. Payment replies quote the guardrail that decided it.
+- **Rejections are honest**: an alternative wall is suggested only if the item's free run along it is long enough; otherwise "it
+  doesn't fit along any other wall either" / "too long for every wall; the longest free stretch is X m".
+- **Scan quirks**: chairs tucked under a table/desk are slid straight out until they clear it; remaining hard problems in the Base
+  Layout are listed in `conversion.warnings` so the editor can point at them. RoomPlan's object front axis (+z) is still unverified
+  until a real export is in `fixtures/rooms/real_scan.usdz`.
+- **Web**: saves send `version`; a 409 reloads the latest version and keeps the local edit as a redo; the Base Layout ("Original Room")
+  is read-only in the editor (edits refused with a hint to duplicate, lock glyph on its tab). **iOS**: `exportUsdz()` writes the
+  parametric USDZ and the scan screen uploads it as multipart; older dev clients fall back to the JSON export; a 422 conversion
+  failure switches to the sample / manual / paste options.
+- **Vercel API retired** (`api/index.py`, root `vercel.json` / `requirements.txt` / `.vercelignore`, deploy and env-sync scripts). The web
+  editor still deploys to Vercel as a static site. `apps/mobile/eas.json` and `scripts/testflight.sh` still name the old API URL until the
+  DigitalOcean URL exists.
+- **Verification**: `make verify` (`apps/api/scripts/verify_requirements.py`) runs every spec requirement against the sample data.

@@ -9,10 +9,9 @@ DivHacks 2026 · **Live Better** track. Scan your NYC room once, text furniture 
 | | URL |
 |---|---|
 | Web editor | https://adaptive-room-planner.vercel.app — "Load sample room", then drag, ask, compare |
-| API + OpenAPI docs | https://adaptive-room-planner-api.vercel.app/docs · `GET /health` shows live vs mock per service |
-| Photon webhook (real mode) | `POST https://adaptive-room-planner-api.vercel.app/webhooks/photon` |
+| API + OpenAPI docs | DigitalOcean App Platform (`.do/app.yaml`), `/docs` · `GET /health` shows live vs mock per service. The old Vercel API is retired. |
 
-Redeploy: `scripts/deploy_api.sh` then `scripts/deploy_web.sh https://adaptive-room-planner-api.vercel.app` (Vercel CLI, logged in, team `ast18`). The deployed API persists to a Vercel Blob store shared by all instances; `scripts/sync_env_to_vercel.sh` pushes real-mode keys (Gemini, Backboard, Photon, Atlas) from `.env` and redeploys.
+Web: `scripts/deploy_web.sh <api-url>` (Vercel CLI, team `ast18`). API: a Docker image on DigitalOcean App Platform, see [Backend](#backend-api) below (the serverless Vercel API was retired: usd-core does not fit in a function).
 
 ## One-command setup
 
@@ -23,28 +22,29 @@ make api            # FastAPI on :8000  (docs at http://localhost:8000/docs)
 make web            # Vite editor on :5173
 ```
 
-Everything runs in **mock mode with zero env vars and no network**: the JSON store lives in `.data/`, Gemini/Backboard/Photon return deterministic fixtures. Copy `.env.example` to `.env` and add keys to switch each service to its real implementation independently (`GET /health` shows live vs mock per service).
+Everything runs in **mock mode with zero env vars and no network**: the JSON store lives in `.data/`, files in `.data/blob/`, and Gemini/Backboard return deterministic fixtures. Copy `.env.example` to `.env` and set `MOCK_MODE=false` plus the four required keys to run live (`GET /health` shows live vs mock per service).
 
 ```bash
 make test           # pnpm typecheck + lint + vitest, then pytest (incl. TS/Python parity on fixtures/validation)
 make bench          # validation p95, room-load, import and agent timings → .data/bench.json
 make demo           # headless 3-minute demo via Playwright + API (must never fail)
 make e2e            # 14 real-pointer editor checks in Chromium (needs api + web running)
-make photon         # post fixtures/photon/*.json to the local webhook and print the replies
+make docker-api     # build + run the API image (amd64) with .env
+make seed           # upload preset GLBs to Vercel Blob and seed them into Atlas (live keys)
 make fps            # drag frame rate in a headed Chromium at iPhone-landscape proportions → .data/fps.json
 make record         # re-record docs/demo/run.mp4 (browser recording of the demo at phone proportions)
 make thumbs         # re-render palette thumbnails from the GLBs
 make screenshots    # docs/screenshots/iter-N (needs api + web running)
 ```
 
-Storage picks itself: `MONGODB_URI` → MongoDB Atlas; else `BLOB_READ_WRITE_TOKEN` → Vercel Blob snapshots (what the deployed API uses so every serverless instance sees the same rooms); else a JSON file in `.data/`. `GET /health` reports which one is active.
+Storage picks itself: `MONGODB_URI` → MongoDB Atlas (required in live mode); else a JSON file in `.data/`. `BLOB_READ_WRITE_TOKEN` → Vercel Blob for files (raw USDZ scans, photos, preset GLBs); else `.data/blob/`, served at `/blob/`. `GET /health` reports both.
 
 ## Repository layout
 
 | Path | What |
 |---|---|
 | `apps/web` | Vite + React + react-three-fiber editor. Routes `/`, `/layout/:id`, `/compare/:a/:b`, `/snapshot/:id`, `/thumb/:id` |
-| `apps/api` | FastAPI: rooms, layouts, furniture import, agent pipeline, placement solver, Photon webhook |
+| `apps/api` | FastAPI: RoomPlan USDZ ingest, rooms, layouts (base / current / variants), furniture import, agent pipeline, placement solver |
 | `apps/mobile` | Expo app (expo-router): Home, Scan (RoomPlan module), Editor (WebView bridge), Ask, Variants, Settings |
 | `packages/geometry` | TypeScript fit validation + metrics (source of truth; Python port in `apps/api/app/solver`) |
 | `packages/contracts` | JSON Schemas + TS types for skeleton, layout, furniture, plan, bridge, Photon |
@@ -66,7 +66,7 @@ POST /payments/checkout
 POST /webhooks/stripe
 ```
 
-Payment guardrails block security deposits above one month of rent and application fees above $20. Stripe stays in mock mode unless `MOCK_MODE=false`, `STRIPE_SECRET_KEY` is present, and `STRIPE_PRICE_MODE=test`; real landlord/seller payouts remain disabled unless `STRIPE_CONNECT_ENABLED=true`. No escrow or stored card data is implemented.
+Payment guardrails block security deposits above one month of rent and application fees above $20. Payments are a non-goal: `STRIPE_*` keys are loaded but Stripe is never called, so quotes are always mock. No escrow or stored card data is implemented.
 
 The agent can answer rent/payment prompts such as “I pay $1600 for this room in 10027. Is that fair?”, “Can I safely send a $500 deposit?”, and “This application fee is $75.” Furniture-planning prompts still use the original Gemini/solver pipeline.
 
@@ -79,17 +79,32 @@ The agent can answer rent/payment prompts such as “I pay $1600 for this room i
 
 The editor screen locks to landscape and embeds the web editor through a typed `postMessage` bridge (`packages/contracts/schemas/bridge.schema.json`).
 
-## Photon (iMessage) in real mode
+## Backend (API)
+
+One FastAPI service (`apps/api`) for the iOS scanner and the web editor; iMessage (Photon) runs outside it. Spec: [docs/BACKEND_SPEC.md](docs/BACKEND_SPEC.md);
+decisions in [DECISIONS.md](DECISIONS.md) ("Backend v2", "Backend v3").
+
+- **Ingest**: `POST /rooms` takes the RoomPlan `.usdz` (`capturedRoom.export(to:exportOptions: .parametric)`) as multipart field `usdz`. The raw file goes to Blob first, then `usd-core` converts it to the canonical skeleton + a read-only **Base Layout** + the **Current Room** (a fork of Base). A failed conversion is a 422 with a `conversionReport`; re-run it later with `{"usdzUrl": ...}`. Also accepts `sample`, manual `dimensions`, or the legacy `skeleton` JSON. Inspect a real export with `.venv/bin/python apps/api/scripts/inspect_usdz.py <file.usdz> --convert` and save one as `fixtures/rooms/real_scan.usdz` (the converter test picks it up).
+- **Layouts**: `PUT /layouts/{id}` re-checks the hard rules (422 with violations `byItem`) and uses optimistic `version`s (409 when stale); Base is read-only (403). `PATCH` renames, `POST /layouts/{id}/fork`, `POST /layouts/{id}/promote` (the old Current Room stays as "Previous Room, <date>"), `POST /rooms/{id}/restore {target: base|empty}`, `DELETE /rooms/{id}` cascades.
+- **Agent (Interior Designer)**: `POST /agent/request {text, roomId?, layoutId?, furnitureId?, link?, photo?}`. Gemini orchestrates: it picks the tool (fit, make space, keep clear, rank, rent check, payment check, clarify) and words the answer in the voice of the `interior-designer` skill (`apps/api/app/agent/designer.md`). The Python solver places (Gemini never outputs coordinates) and returns up to 3 genuinely different options, each saved as a named variant with an explanation and an honest tradeoff; locks from the layout, the plan and Backboard memory always hold.
+- **Photon (iMessage)**: the Photon agent is a deliverer. It forwards the text / listing link / photo URL to `POST /agent/request` with no ids (the texter's latest room is used) and sends back `reply` + `links[1]`.
+- **Verify**: `make verify` checks every requirement in [docs/BACKEND_SPEC.md](docs/BACKEND_SPEC.md) against the sample rooms and synthetic RoomPlan scans.
+- **Validation constants**: `GET /validation/rules` serves `apps/api/rules.json`; Python loads it and a test fails if `packages/geometry/src/constants.ts` drifts.
+
+Deploy (DigitalOcean App Platform, spec in `.do/app.yaml`):
 
 ```bash
-ngrok http 8000           # public URL for the webhook
-# in the Photon dashboard: webhook → https://<ngrok>/webhooks/photon ; put the signing secret in PHOTON_WEBHOOK_SECRET
-.venv/bin/python scripts/simulate_photon.py     # posts fixtures/photon/*.json to the local webhook (works in mock mode too)
+doctl apps create --spec .do/app.yaml      # builds apps/api/Dockerfile (python:3.11-slim + usd-core), health check GET /health
+# set GEMINI_API_KEY, BACKBOARD_API_KEY, MONGODB_URI, BLOB_READ_WRITE_TOKEN as encrypted env vars in the app settings
+# Atlas → Network Access → allow 0.0.0.0/0 (App Platform egress); then point api.<name>.tech at the app (CNAME)
 ```
+
+The image runs with `MOCK_MODE=false` and refuses to start if a required key is missing. CORS allows only the origins in
+`FRONTEND_ORIGINS` (`apps/api/app/config.py`); add `https://<name>.tech` there once the domain exists.
 
 ## Demo script (3:00)
 
-Setup before walking up: `make api`, `make web`, phone on the same Wi-Fi with the dev client open, `ngrok http 8000` if Photon is live. Fallback: everything below also runs in mock mode with `scripts/simulate_photon.py` instead of a real iMessage, and `make demo` replays the whole thing headlessly.
+Setup before walking up: `make api`, `make web`, phone on the same Wi-Fi with the dev client open. Fallback: everything below also runs in mock mode (the request bar calls `POST /agent/request` directly), and `make demo` replays the whole thing headlessly.
 
 | Time | On screen | Spoken line |
 |---|---|---|
@@ -113,7 +128,7 @@ Renters in 100–150 sq ft NYC rooms buy secondhand and guess. We scan the room 
 
 Sponsors used: **Photon** (iMessage in/out), **Gemini API** (structured output + listing/photo extraction), **Backboard** (preference memory), **MongoDB Atlas** (storage).
 
-Try it: https://adaptive-room-planner.vercel.app · API docs: https://adaptive-room-planner-api.vercel.app/docs · source: this repo · `make demo` replays the 3-minute script headlessly.
+Try it: https://adaptive-room-planner.vercel.app · API docs: `<api-host>/docs` · source: this repo · `make demo` replays the 3-minute script headlessly.
 
 ## Future applications
 

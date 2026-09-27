@@ -1,12 +1,14 @@
-"""Classifies an inbound request: link -> import first; image -> photo import; then it becomes a layout request."""
+"""Turns an inbound request into (text, furnitureId): a link is imported first, a photo is imported via Gemini vision."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import base64
+import binascii
+from dataclasses import dataclass, field
+from typing import Any
 
 from app.deps import AppContext
 from app.imports import URL_RE, fetch_bytes, import_from_link, import_from_photo
-from app.integrations.photon import Attachment
 
 DEFAULT_FIT_QUESTION = "Will this fit in my room?"
 
@@ -15,18 +17,37 @@ DEFAULT_FIT_QUESTION = "Will this fit in my room?"
 class RoutedRequest:
     text: str
     furniture_id: str | None
+    attachments: list[dict[str, Any]] = field(default_factory=list)  # what was imported, for the agent_requests log
 
 
-async def route(ctx: AppContext, user_id: str, text: str, attachments: list[Attachment] | None = None, furniture_id: str | None = None) -> RoutedRequest:
+def _decode_data_uri(uri: str) -> tuple[bytes, str]:
+    header, _, payload = uri.partition(",")
+    mime = header[5:].split(";")[0] or "image/jpeg"
+    try:
+        return base64.b64decode(payload, validate=True), mime
+    except binascii.Error as exc:
+        raise ValueError("photo is not valid base64") from exc
+
+
+async def route(ctx: AppContext, user_id: str, text: str, *, link: str | None = None, photo: str | None = None, furniture_id: str | None = None) -> RoutedRequest:
+    """`link` (or a URL inside the text) and `photo` (an https URL or a data: URI) become catalog items before planning."""
+    attachments: list[dict[str, Any]] = []
     urls = URL_RE.findall(text or "")
-    if urls and furniture_id is None:
-        item = await import_from_link(ctx.repo, ctx.gemini, urls[0], user_id)
+    link = link or (urls[0] if urls else None)
+    if urls:
+        text = URL_RE.sub("", text).strip()
+    if link and furniture_id is None:
+        item = await import_from_link(ctx.repo, ctx.gemini, link, user_id)
         furniture_id = item.id
-        text = URL_RE.sub("", text).strip() or DEFAULT_FIT_QUESTION
-    image = next((a for a in attachments or [] if a.url and ((a.mime_type or "").startswith("image/") or a.url.lower().endswith((".jpg", ".jpeg", ".png", ".heic")))), None)
-    if image and furniture_id is None and image.url:
-        data, mime = await fetch_bytes(image.url)
-        item = await import_from_photo(ctx.repo, ctx.gemini, data, image.mime_type or mime, user_id, source_url=image.url)
+        attachments.append({"type": "link", "url": link, "furnitureId": item.id})
+    if photo and furniture_id is None:
+        if photo.startswith("data:"):
+            data, mime = _decode_data_uri(photo)
+            source_url = None
+        else:
+            data, mime = await fetch_bytes(photo)
+            source_url = photo
+        item = await import_from_photo(ctx.repo, ctx.gemini, ctx.blob, data, mime if mime.startswith("image/") else "image/jpeg", user_id, source_url=source_url)
         furniture_id = item.id
-        text = text.strip() or DEFAULT_FIT_QUESTION
-    return RoutedRequest(text=text, furniture_id=furniture_id)
+        attachments.append({"type": "photo", "url": item.photoUrl, "furnitureId": item.id})
+    return RoutedRequest(text=text.strip() or DEFAULT_FIT_QUESTION, furniture_id=furniture_id, attachments=attachments)

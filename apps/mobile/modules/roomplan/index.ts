@@ -17,7 +17,12 @@ export interface RoomPlanNativeModule {
    * (or rejects on failure / 30 s timeout), so `exportSkeleton()` can be called right after.
    */
   stopCapture(): Promise<void>;
-  /** Projects the last CapturedRoom into our skeleton JSON + seeded `objects`. Empty skeleton if nothing captured. */
+  /**
+   * Writes the last CapturedRoom as a parametric USDZ to a temp file and returns its `file://` URI (null if nothing was captured).
+   * This is what gets uploaded: the backend owns the USDZ -> room JSON conversion. Missing on dev clients built before it existed.
+   */
+  exportUsdz?(): Promise<string | null>;
+  /** Projects the last CapturedRoom into our skeleton JSON + seeded `objects` (on-device preview; fallback upload). */
   exportSkeleton(): Promise<RoomPlanExport>;
 }
 

@@ -1,13 +1,11 @@
 {
   "intent": "fit_item",
-  "variantName": "Marketplace Desk",
+  "item": {"type": "desk", "name": "Desk", "w_m": 1.2, "d_m": 0.6, "h_m": 0.75, "price_usd": 80},
   "constraints": [
-    {"type": "lock", "item": "bed_double"},
-    {"type": "adjacent", "item": "desk_mkt", "feature": "window"}
+    {"type": "lock", "item": "bed"},
+    {"type": "adjacent", "item": "desk", "feature": "window"}
   ],
-  "actions": [
-    {"type": "add", "item": "desk_mkt", "zone": "window wall, beside window"}
-  ],
-  "reply": "It fits on the window wall beside the window; the bed didn't move.",
-  "preferencesLearned": ["never move the bed"]
+  "variantName": "Marketplace Desk",
+  "explanation": "It fits on the window wall beside the window; the bed stays where it is.",
+  "preferences": ["never move the bed"]
 }

@@ -1,0 +1,9 @@
+{
+  "intent": "keep_clear",
+  "constraints": [
+    {"type": "keep_clear", "item": "desk", "feature": "window"}
+  ],
+  "variantName": "Window clear",
+  "explanation": "Moved the desk so nothing stands in front of the window.",
+  "preferences": ["keep the window clear"]
+}

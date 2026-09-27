@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://roomplanner.dev/schemas/skeleton.schema.json",
   "title": "RoomSkeleton",
-  "description": "Empty-room baseline. Meters. Origin at the room's min corner; x runs along wall 0, z runs toward the viewer. Walls are listed as floor segments in order; doors/windows reference a wall index and an offset along it from (x1,z1).",
+  "description": "Empty-room baseline. Meters. Origin at the room's min corner; x runs along wall 0, z runs toward the viewer. Walls are listed as floor segments in order; doors/windows reference a wall index and an offset along it from (x1,z1). Immutable after ingest; id/wallId/center/thickness/ceilingHeight are filled by the API.",
   "type": "object",
   "required": ["walls", "doors", "windows", "floorPolygon", "dimensions"],
   "additionalProperties": false,
@@ -13,7 +13,8 @@
         "type": "object", "required": ["x1", "z1", "x2", "z2", "height"], "additionalProperties": false,
         "properties": {
           "x1": {"type": "number"}, "z1": {"type": "number"}, "x2": {"type": "number"}, "z2": {"type": "number"},
-          "height": {"type": "number", "minimum": 1.5, "maximum": 6}
+          "height": {"type": "number", "minimum": 1.5, "maximum": 6},
+          "id": {"type": "string"}, "thickness": {"type": "number", "minimum": 0}
         }
       }
     },
@@ -27,7 +28,10 @@
           "width": {"type": "number", "minimum": 0.5, "maximum": 2.5},
           "height": {"type": "number", "default": 2.0},
           "swing": {"type": "string", "enum": ["in", "out"]},
-          "hinge": {"type": "string", "enum": ["left", "right"]}
+          "hinge": {"type": "string", "enum": ["left", "right"]},
+          "id": {"type": "string"}, "wallId": {"type": "string"},
+          "center": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+          "opening": {"type": "boolean", "description": "RoomPlan Opening: keeps the clearance, no swing arc"}
         }
       }
     },
@@ -40,7 +44,9 @@
           "offset": {"type": "number", "minimum": 0},
           "width": {"type": "number", "minimum": 0.3},
           "sillHeight": {"type": "number", "minimum": 0},
-          "height": {"type": "number", "minimum": 0.3}
+          "height": {"type": "number", "minimum": 0.3},
+          "id": {"type": "string"}, "wallId": {"type": "string"},
+          "center": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}
         }
       }
     },
@@ -55,6 +61,7 @@
     "outlets": {
       "type": "array",
       "items": {"type": "object", "required": ["wall", "offset"], "properties": {"wall": {"type": "integer"}, "offset": {"type": "number"}}}
-    }
+    },
+    "ceilingHeight": {"type": "number"}
   }
 }

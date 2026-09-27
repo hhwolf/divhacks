@@ -1,107 +1,130 @@
-"""Settings from environment. Everything runs in mock mode with no variables set; `.env` at the repo root is loaded if present."""
+"""Settings. Secrets come from the environment (or `.env` at the repo root) through pydantic-settings; everything that is not a
+secret is a constant in this module or in rules.json.
+
+The only secrets are the eight keys on `Settings`. They are `SecretStr`, so they never appear in reprs or logs, and no route returns
+them. `MOCK_MODE` (default true) is the one operational switch: mock mode runs fully offline with deterministic fixtures and needs no
+keys; with `MOCK_MODE=false` the four required keys must be present or startup fails (the Docker image sets `MOCK_MODE=false`).
+"""
 
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
+from pydantic import PrivateAttr, SecretStr, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-load_dotenv(REPO_ROOT / ".env")
+SERVICE_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(REPO_ROOT / ".env")  # into os.environ (never overriding it), so tests can still delenv() a developer's keys
 
-_TRUE = {"1", "true", "yes", "on"}
+# ---- non-secret config -------------------------------------------------------------------------------------------------
+VERSION = "0.2.0"
+GEMINI_MODEL = "gemini-2.5-flash"
+MONGODB_DB = "roomplanner"
+BACKBOARD_BASE_URL = "https://app.backboard.io/api"
+# CORS allows only the frontend origin(s). Add "https://<name>.tech" here once the domain is registered; the first entry is also
+# the base of the web links returned by the agent.
+FRONTEND_ORIGINS: tuple[str, ...] = ("https://adaptive-room-planner.vercel.app",)
+DEV_WEB_URL = "http://localhost:5173"
+DEV_ORIGIN_REGEX = r"^https?://(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+)(:\d+)?$"  # mock mode only
+DEMO_USER_ID = "demo"
+DEMO_USER_NAME = "Demo renter"
+BLOB_ACCESS = "public"  # must match the Vercel Blob store's access mode
+LINK_IMPORT_TIMEOUT_S = 10.0
+MAX_USDZ_BYTES = 60 * 1024 * 1024
+MAX_PHOTO_BYTES = 15 * 1024 * 1024
+RECENT_REQUESTS_IN_CONTEXT = 3
+
+REQUIRED_SECRETS = ("GEMINI_API_KEY", "BACKBOARD_API_KEY", "MONGODB_URI", "BLOB_READ_WRITE_TOKEN")
 
 
-def _env(name: str, default: str = "") -> str:
-    return os.environ.get(name, default).strip()
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(extra="ignore", case_sensitive=False)
 
+    mock_mode: bool = True
+    # required when MOCK_MODE=false
+    gemini_api_key: SecretStr | None = None
+    backboard_api_key: SecretStr | None = None
+    mongodb_uri: SecretStr | None = None
+    blob_read_write_token: SecretStr | None = None
+    # loaded, never called by this service
+    stripe_secret_key: SecretStr | None = None
+    stripe_webhook_secret: SecretStr | None = None
+    spectrum_project_id: SecretStr | None = None
+    spectrum_project_secret: SecretStr | None = None
+    # local JSON store / local blob folder (dev and tests only)
+    arp_data_dir: Path | None = None
 
-@dataclass(frozen=True)
-class Settings:
-    mock_mode: bool
-    mongodb_uri: str
-    mongodb_db: str
-    blob_token: str
-    gemini_api_key: str
-    gemini_model: str
-    backboard_api_key: str
-    backboard_base_url: str
-    photon_api_key: str
-    photon_webhook_secret: str
-    photon_base_url: str
-    photon_from: str
-    stripe_secret_key: str
-    stripe_webhook_secret: str
-    stripe_price_mode: str
-    stripe_connect_enabled: bool
-    demo_phone: str
-    public_web_url: str
-    public_api_url: str
-    data_dir: Path
+    _data_dir: Path = PrivateAttr()
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def _blank_is_unset(cls, v: object, info) -> object:  # type: ignore[no-untyped-def]
+        """`KEY=` in .env means unset, not an empty secret."""
+        if isinstance(v, str) and not v.strip():
+            return True if info.field_name == "mock_mode" else None
+        return v
+
+    def model_post_init(self, _ctx: object) -> None:
+        self._data_dir = _writable_data_dir(self.arp_data_dir)
 
     @classmethod
     def from_env(cls) -> Settings:
-        return cls(
-            mock_mode=_env("MOCK_MODE", "true").lower() in _TRUE,
-            mongodb_uri=_env("MONGODB_URI"),
-            mongodb_db=_env("MONGODB_DB", "roomplanner"),
-            blob_token=_env("BLOB_READ_WRITE_TOKEN"),
-            gemini_api_key=_env("GEMINI_API_KEY"),
-            gemini_model=_env("GEMINI_MODEL", "gemini-2.5-flash"),
-            backboard_api_key=_env("BACKBOARD_API_KEY"),
-            backboard_base_url=_env("BACKBOARD_BASE_URL", "https://app.backboard.io/api"),
-            photon_api_key=_env("PHOTON_API_KEY"),
-            photon_webhook_secret=_env("PHOTON_WEBHOOK_SECRET"),
-            photon_base_url=_env("PHOTON_BASE_URL", "https://spectrum.photon.codes"),
-            photon_from=_env("PHOTON_FROM"),
-            stripe_secret_key=_env("STRIPE_SECRET_KEY"),
-            stripe_webhook_secret=_env("STRIPE_WEBHOOK_SECRET"),
-            stripe_price_mode=_env("STRIPE_PRICE_MODE", "mock"),
-            stripe_connect_enabled=_env("STRIPE_CONNECT_ENABLED", "false").lower() in _TRUE,
-            demo_phone=_env("DEMO_PHONE", "+15555550100"),
-            public_web_url=_env("PUBLIC_WEB_URL", "http://localhost:5173"),
-            public_api_url=_env("PUBLIC_API_URL", "http://localhost:8000"),
-            data_dir=_writable_data_dir(),
-        )
+        return cls()
 
-    def live(self, key: str) -> bool:
-        """A service is live when MOCK_MODE is off and its credential is present."""
-        return not self.mock_mode and bool(key)
+    @staticmethod
+    def reveal(secret: SecretStr | None) -> str:
+        return secret.get_secret_value() if secret else ""
+
+    def missing_required(self) -> list[str]:
+        """Names (never values) of required secrets that are absent. Empty in mock mode."""
+        if self.mock_mode:
+            return []
+        return [name for name in REQUIRED_SECRETS if not self.reveal(getattr(self, name.lower()))]
+
+    @property
+    def data_dir(self) -> Path:
+        return self._data_dir
 
     @property
     def gemini_live(self) -> bool:
-        return self.live(self.gemini_api_key)
+        return not self.mock_mode and self.gemini_api_key is not None
 
     @property
     def backboard_live(self) -> bool:
-        return self.live(self.backboard_api_key)
-
-    @property
-    def photon_live(self) -> bool:
-        return self.live(self.photon_api_key)
-
-    @property
-    def stripe_live(self) -> bool:
-        return self.live(self.stripe_secret_key) and self.stripe_price_mode != "mock"
+        return not self.mock_mode and self.backboard_api_key is not None
 
     @property
     def mongo_live(self) -> bool:
-        return bool(self.mongodb_uri)
+        """Storage follows the key in either mode, so tests can run the API on a real mongod."""
+        return self.mongodb_uri is not None
+
+    @property
+    def blob_live(self) -> bool:
+        return self.blob_read_write_token is not None
 
     @property
     def store_kind(self) -> str:
-        """'live' (Mongo) | 'blob' (Vercel Blob, shared across serverless instances) | 'json' (local file)."""
-        return "live" if self.mongo_live else "blob" if self.blob_token else "json"
+        return "live" if self.mongo_live else "json"
+
+    @property
+    def public_web_url(self) -> str:
+        return DEV_WEB_URL if self.mock_mode else FRONTEND_ORIGINS[0]
+
+    @property
+    def cors(self) -> dict[str, object]:
+        """Kwargs for CORSMiddleware: the frontend origin(s) only; LAN/localhost dev servers are added in mock mode."""
+        return {"allow_origins": list(FRONTEND_ORIGINS), "allow_origin_regex": DEV_ORIGIN_REGEX if self.mock_mode else None}
 
 
-def _writable_data_dir() -> Path:
-    """`ARP_DATA_DIR`, else `<repo>/.data`; falls back to /tmp on read-only filesystems (Vercel/Lambda)."""
-    candidate = Path(_env("ARP_DATA_DIR") or REPO_ROOT / ".data")
+def _writable_data_dir(explicit: Path | None) -> Path:
+    """`ARP_DATA_DIR`, else `<repo>/.data`; falls back to /tmp on read-only filesystems (containers, serverless)."""
+    candidate = explicit or REPO_ROOT / ".data"
     try:
         candidate.mkdir(parents=True, exist_ok=True)
-        probe = candidate / ".write-test"
+        probe = candidate / f".write-test-{os.getpid()}"
         probe.write_text("ok")
         probe.unlink()
         return candidate

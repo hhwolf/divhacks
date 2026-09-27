@@ -1,6 +1,6 @@
 """`make demo`: the full 3-minute script, headless, via Playwright + API. Exits non-zero on any failure.
 
-Steps: load sample → Current Room from fixture → lock bed → simulated Photon message with the listing → Marketplace Desk
+Steps: load sample → Current Room from fixture → lock bed → agent request with the listing link → Marketplace Desk
 variant → drag desk into the door swing → red → drag back → compare. Writes docs/demo/demo-run.json with timings.
 """
 from __future__ import annotations
@@ -25,11 +25,10 @@ def main() -> int:
     r = step(log, "Load sample room", lambda: api(a.api, "POST", "/rooms", {"sample": "nyc-bedroom"}))
     room = r["room"]; cur = r.get("currentLayout") or next(l for l in r["layouts"] if l["isCurrent"])
     assert any(i["furnitureId"] == "bed_double" and i["locked"] for i in cur["items"]), "bed must be seeded locked"
-    # Photon round trip with the listing link + question
-    payload = json.loads((ROOT / "fixtures/photon/text-question.json").read_text())
-    payload["message"]["text"] = payload["message"]["text"].replace("http://localhost:8000", a.api)
-    ph = step(log, "Simulated Photon message → variant", lambda: api(a.api, "POST", "/webhooks/photon", payload))
-    assert ph.get("layoutId"), f"webhook did not create a variant: {ph}"
+    # Interior Designer request with the listing link + question (Photon/iMessage is handled outside this API)
+    question = f"Will this fit beside my window without moving my bed? {a.api}/fixtures/listings/desk"
+    ph = step(log, "Agent request → variant", lambda: api(a.api, "POST", "/agent/request", {"roomId": room["id"], "layoutId": cur["id"], "text": question}))
+    assert ph.get("layoutId"), f"agent did not create a variant: {ph}"
     variant = step(log, "Fetch Marketplace Desk variant", lambda: api(a.api, "GET", f"/layouts/{ph['layoutId']}"))
     lay = variant["layout"]; assert lay["name"].startswith("Marketplace Desk"), lay["name"]; assert not lay["isCurrent"]
     bed = next(i for i in lay["items"] if i["furnitureId"] == "bed_double"); bed0 = next(i for i in cur["items"] if i["furnitureId"] == "bed_double")

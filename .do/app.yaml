@@ -1,0 +1,45 @@
+# DigitalOcean App Platform spec for the API.
+#   doctl apps create --spec .do/app.yaml          # first time
+#   doctl apps update <app-id> --spec .do/app.yaml # later
+# Then set the four SECRET values in the dashboard (Settings -> api -> Environment Variables); they are never committed.
+# MongoDB Atlas network access must allow App Platform egress (0.0.0.0/0 is acceptable for the hackathon).
+name: adaptive-room-planner-api
+region: nyc
+services:
+  - name: api
+    github:
+      repo: hhwolf/divhacks
+      branch: main
+      deploy_on_push: true
+    source_dir: /
+    dockerfile_path: apps/api/Dockerfile
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 20
+      period_seconds: 15
+      timeout_seconds: 5
+      failure_threshold: 3
+    envs:
+      - key: MOCK_MODE
+        value: "false"
+        scope: RUN_TIME
+      - key: GEMINI_API_KEY
+        type: SECRET
+        scope: RUN_TIME
+      - key: BACKBOARD_API_KEY
+        type: SECRET
+        scope: RUN_TIME
+      - key: MONGODB_URI
+        type: SECRET
+        scope: RUN_TIME
+      - key: BLOB_READ_WRITE_TOKEN
+        type: SECRET
+        scope: RUN_TIME
+# Custom domain: once <name>.tech is registered, add it here (App Platform then shows the CNAME target for api.<name>.tech),
+# and add "https://<name>.tech" to FRONTEND_ORIGINS in apps/api/app/config.py so CORS allows the frontend.
+# domains:
+#   - domain: api.<name>.tech
+#     type: PRIMARY

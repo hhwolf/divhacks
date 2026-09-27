@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import type { FurnitureItem, Layout, LayoutItem, Room, Rotation, Units, ValidationResult, Zone } from '@arp/contracts';
+import type { FurnitureItem, Layout, LayoutItem, LayoutKind, Room, Rotation, Units, ValidationResult, Zone } from '@arp/contracts';
 import { GRID, footprint, memoizedValidate, overlayMasks, roomBounds, type OverlayMasks } from '@arp/geometry';
-import { api, unwrapLayout } from './lib/api';
+import { ApiError, api, unwrapLayout } from './lib/api';
 import { isEmbedded, postToHost } from './lib/bridge';
 import { thunk } from './lib/sound';
 
@@ -16,6 +16,8 @@ export interface EditorState {
   embedded: boolean; units: Units; theme: Theme; night: boolean; sound: boolean; viewMode: ViewMode; orbit: 0 | 1 | 2 | 3;
   wallColor: string; floorStyle: FloorStyle; floorColor: string;
   room: Room | null; layouts: Layout[]; activeId: string | null; furniture: Record<string, FurnitureItem>;
+  /** the active layout's server version (sent on save; a stale one is a 409) and kind (the Base Layout is read-only) */
+  activeVersion: number | null; activeKind: LayoutKind | null;
   items: LayoutItem[]; zones: Zone[]; history: Snapshot[]; future: Snapshot[];
   selectedId: string | null; placing: { furnitureId: string } | null; dragging: string | null; hoverId: string | null;
   overlays: { walkable: boolean; keepClear: boolean; lowClearance: boolean }; overlaysOpen: boolean; ghostId: string | null; ghostOpen: boolean;
@@ -45,6 +47,13 @@ export interface EditorState {
 }
 
 const snap = (v: number) => Math.round(v / GRID) * GRID;
+let lastBaseToast = 0;
+/** The Base Layout ("Original Room") is read-only: edits are refused with a hint to duplicate it. */
+function baseLocked(s: EditorState): boolean {
+  if (s.activeKind !== 'base') return false;
+  if (Date.now() - lastBaseToast > 2500) { lastBaseToast = Date.now(); s.toast('The Original Room is read-only. Duplicate it (right-click its tab) to make changes.'); }
+  return true;
+}
 const clone = (s: Snapshot): Snapshot => ({ items: s.items.map((i) => ({ ...i })), zones: s.zones.map((z) => ({ ...z })) });
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let dragSnapshot: Snapshot | null = null; // items as they were when the current drag started (for a single undo step)
@@ -55,7 +64,7 @@ const lsSet = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.st
 export const useEditor = create<EditorState>((set, get) => ({
   embedded: false, units: ls('arp.units', 'imperial'), theme: ls('arp.theme', 'peach'), night: false, sound: false, viewMode: 'cutaway', orbit: 0,
   wallColor: ls('arp.wallColor', '#F3DEC2'), floorStyle: ls('arp.floorStyle', 'brick'), floorColor: ls('arp.floorColor', '#B0684C'),
-  room: null, layouts: [], activeId: null, furniture: {}, items: [], zones: [], history: [], future: [],
+  room: null, layouts: [], activeId: null, furniture: {}, activeVersion: null, activeKind: null, items: [], zones: [], history: [], future: [],
   selectedId: null, placing: null, dragging: null, hoverId: null,
   overlays: { walkable: false, keepClear: false, lowClearance: false }, overlaysOpen: false, ghostId: null, ghostOpen: false,
   validation: null, masks: null, saveState: 'saved', lastError: null,
@@ -73,7 +82,8 @@ export const useEditor = create<EditorState>((set, get) => ({
       const room = res.room ?? (await api.room(layout.roomId)).room;
       const catalogItems = Array.isArray(catalog) ? catalog : catalog.items;
       const furniture = { ...get().furniture, ...Object.fromEntries(catalogItems.map((f) => [f.id, f])), ...(res.furniture ?? {}) };
-      set({ room, activeId: layout.id, items: layout.items.map((i) => ({ ...i })), zones: (layout.zones ?? []).map((z) => ({ ...z })), furniture, history: [], future: [], selectedId: null, placing: null, saveState: 'saved', loading: false });
+      const kind = layout.kind ?? (layout.isCurrent ? 'current' : 'variant');
+      set({ room, activeId: layout.id, activeVersion: layout.version ?? null, activeKind: kind, items: layout.items.map((i) => ({ ...i })), zones: (layout.zones ?? []).map((z) => ({ ...z })), furniture, history: [], future: [], selectedId: null, placing: null, saveState: kind === 'base' ? 'readonly' : 'saved', loading: false });
       get().revalidate();
       void get().loadRoomLayouts(layout.roomId);
     } catch (e) { set({ loading: false, lastError: (e as Error).message }); get().toast(`Couldn't load layout: ${(e as Error).message}`, 'error'); }
@@ -101,13 +111,13 @@ export const useEditor = create<EditorState>((set, get) => ({
     postToHost('editor:navigate', { route: `/layout/${id}`, replace: true });
   },
   setItems(items, zones, pushHistory = true) {
-    const s = get();
+    const s = get(); if (baseLocked(s)) return;
     set({ items, zones: zones ?? s.zones, history: pushHistory ? [...s.history.slice(-60), clone({ items: s.items, zones: s.zones })] : s.history, future: pushHistory ? [] : s.future });
     get().revalidate(); get().scheduleSave();
   },
   addItem(furnitureId, x, z) {
     const s = get(); const f = s.furniture[furnitureId]; const room = s.room;
-    if (!f || !room) return '';
+    if (!f || !room || baseLocked(s)) return '';
     const b = roomBounds(room.skeleton);
     const n = s.items.filter((i) => i.furnitureId === furnitureId).length + 1;
     let id = `${furnitureId}_${n}`; while (s.items.some((i) => i.id === id)) id = `${id}b`;
@@ -118,7 +128,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     return id;
   },
   moveItem(id, x, z, opts) {
-    const s = get(); const item = s.items.find((i) => i.id === id); const f = item && s.furniture[item.furnitureId]; const room = s.room;
+    const s = get(); if (baseLocked(s)) return; const item = s.items.find((i) => i.id === id); const f = item && s.furniture[item.furnitureId]; const room = s.room;
     if (!item || !f || !room || item.locked) return;
     const b = roomBounds(room.skeleton); const { fx, fz } = footprint(f.dims, item.rotation);
     let nx = opts?.free ? x : snap(x), nz = opts?.free ? z : snap(z);
@@ -150,10 +160,10 @@ export const useEditor = create<EditorState>((set, get) => ({
   removeItem(id) { const s = get(); const item = s.items.find((i) => i.id === id); if (!item || item.locked) { get().toast('Unlock it first'); return; } s.setItems(s.items.filter((i) => i.id !== id)); set({ selectedId: null }); },
   duplicateItem(id) { const s = get(); const item = s.items.find((i) => i.id === id); if (!item) return; const nid = s.addItem(item.furnitureId, item.x + 0.3, item.z + 0.3); if (nid) s.setItems(get().items.map((i) => (i.id === nid ? { ...i, rotation: item.rotation, color: item.color } : i)), undefined, false); },
   recolor(id, color) { const s = get(); s.setItems(s.items.map((i) => (i.id === id ? { ...i, color } : i))); },
-  undo() { const s = get(); const prev = s.history[s.history.length - 1]; if (!prev) return; set({ history: s.history.slice(0, -1), future: [clone({ items: s.items, zones: s.zones }), ...s.future], items: prev.items, zones: prev.zones }); get().revalidate(); get().scheduleSave(); },
-  redo() { const s = get(); const next = s.future[0]; if (!next) return; set({ future: s.future.slice(1), history: [...s.history, clone({ items: s.items, zones: s.zones })], items: next.items, zones: next.zones }); get().revalidate(); get().scheduleSave(); },
+  undo() { const s = get(); if (baseLocked(s)) return; const prev = s.history[s.history.length - 1]; if (!prev) return; set({ history: s.history.slice(0, -1), future: [clone({ items: s.items, zones: s.zones }), ...s.future], items: prev.items, zones: prev.zones }); get().revalidate(); get().scheduleSave(); },
+  redo() { const s = get(); if (baseLocked(s)) return; const next = s.future[0]; if (!next) return; set({ future: s.future.slice(1), history: [...s.history, clone({ items: s.items, zones: s.zones })], items: next.items, zones: next.zones }); get().revalidate(); get().scheduleSave(); },
   select(id) { set({ selectedId: id, sidePage: 0 }); postToHost('editor:selection', { id }); },
-  startPlacing(furnitureId) { set({ placing: { furnitureId }, selectedId: null }); },
+  startPlacing(furnitureId) { if (baseLocked(get())) return; set({ placing: { furnitureId }, selectedId: null }); },
   cancelPlacing() { set({ placing: null }); },
   setDragging(id) { if (id) dragSnapshot = clone({ items: get().items, zones: get().zones }); set({ dragging: id }); },
   setHover(id) { set({ hoverId: id }); },
@@ -171,22 +181,33 @@ export const useEditor = create<EditorState>((set, get) => ({
     postToHost('editor:metrics', validation.metrics);
   },
   scheduleSave() {
-    const s = get(); if (!s.activeId || s.activeId === 'fixture') return;
+    const s = get(); if (!s.activeId || s.activeId === 'fixture' || s.activeKind === 'base') return;
     if (s.validation?.blocked) { set({ saveState: 'blocked' }); return; }
     set({ saveState: 'dirty' });
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(() => void get().saveNow(), 600);
   },
   async saveNow() {
-    const s = get(); if (!s.activeId) return;
+    const s = get(); if (!s.activeId || s.activeKind === 'base') return;
     if (s.validation?.blocked) { set({ saveState: 'blocked' }); return; }
     set({ saveState: 'saving' });
     try {
-      const res = await api.saveLayout(s.activeId, { items: s.items, zones: s.zones, source: 'editor' });
+      const res = await api.saveLayout(s.activeId, { items: s.items, zones: s.zones, source: 'editor', ...(s.activeVersion != null ? { version: s.activeVersion } : {}) });
       const layout = unwrapLayout(res);
-      set({ saveState: 'saved', layouts: get().layouts.map((l) => (l.id === layout.id ? layout : l)) });
+      set({ saveState: 'saved', activeVersion: layout.version ?? null, layouts: get().layouts.map((l) => (l.id === layout.id ? layout : l)) });
       postToHost('editor:layoutChanged', { layoutId: layout.id, metrics: layout.metrics ?? get().validation?.metrics });
-    } catch (e) { set({ saveState: 'error', lastError: (e as Error).message }); }
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 409) {
+        // Someone else saved this layout first (another device, a tab). The spec says refetch, no merging: load the latest
+        // version and keep the local edit one redo away, so nothing is silently lost.
+        const mine = clone({ items: s.items, zones: s.zones });
+        await get().loadLayout(s.activeId);
+        set({ future: [mine] });
+        get().toast('This layout was changed elsewhere, so I loaded the latest version. Redo (⌘⇧Z) puts your change back.', 'error');
+        return;
+      }
+      set({ saveState: 'error', lastError: (e as Error).message });
+    }
   },
   setUnits(units) { set({ units }); lsSet('arp.units', units); },
   setTheme(theme) { set({ theme }); lsSet('arp.theme', theme); },
@@ -219,12 +240,12 @@ export const useEditor = create<EditorState>((set, get) => ({
     } catch (e) { get().toast(`Couldn't create variant: ${(e as Error).message}`, 'error'); return null; }
   },
   async renameVariant(id, name) {
-    const s = get(); const l = s.layouts.find((x) => x.id === id); if (!l || l.isCurrent) { get().toast('Current Room can’t be renamed'); return; }
+    const s = get(); const l = s.layouts.find((x) => x.id === id); if (!l || l.isCurrent || l.kind === 'base') { get().toast(`${l?.kind === 'base' ? 'The Original Room' : 'Current Room'} can’t be renamed`); return; }
     try { const res = unwrapLayout(await api.saveLayout(id, { name, source: 'editor' })); set({ layouts: s.layouts.map((x) => (x.id === id ? { ...x, name: res.name } : x)) }); }
     catch (e) { get().toast(`Rename failed: ${(e as Error).message}`, 'error'); }
   },
   async deleteVariant(id) {
-    const s = get(); const l = s.layouts.find((x) => x.id === id); if (!l || l.isCurrent) { get().toast('Current Room can’t be deleted'); return; }
+    const s = get(); const l = s.layouts.find((x) => x.id === id); if (!l || l.isCurrent || l.kind === 'base') { get().toast(`${l?.kind === 'base' ? 'The Original Room' : 'Current Room'} can’t be deleted`); return; }
     try {
       await api.deleteLayout(id);
       const layouts = s.layouts.filter((x) => x.id !== id); set({ layouts });

@@ -1,4 +1,5 @@
-"""Furniture import helpers shared by the /furniture routes and the agent router: fetch a listing, parse it, ask Gemini, store."""
+"""Furniture import helpers shared by the /furniture routes and the agent router: fetch a listing, parse it, ask Gemini, store.
+Photos are uploaded to Blob before Gemini vision sees them."""
 
 from __future__ import annotations
 
@@ -17,6 +18,7 @@ from app.catalog import FIXTURES_DIR, PRESETS
 from app.integrations.gemini import GeminiAdapter
 from app.models import FurnitureItem, FurnitureKind, FurnitureSource
 from app.repo.base import Repository
+from app.services.blob import BlobStorage
 
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "0.0.0.0", "testserver"}
 URL_RE = re.compile(r"https?://[^\s<>\"']+")
@@ -31,6 +33,15 @@ KIND_WORDS: list[tuple[str, FurnitureKind]] = [
     ("chair", "seating"), ("sofa", "seating"), ("couch", "seating"), ("stool", "seating"), ("bench", "seating"),
     ("table", "table"), ("rug", "floor"), ("mat", "floor"), ("lamp", "decor"), ("plant", "decor"),
 ]
+BLOCKED_HINT = "The listing couldn't be read (it may need a login). Upload a screenshot or enter the dimensions instead."
+PHOTO_EXT = {"image/jpeg": "jpg", "image/png": "png", "image/heic": "heic", "image/webp": "webp"}
+_LOGIN_WALL = re.compile(r"log ?in|sign ?in|checkpoint", re.I)
+
+
+class ListingBlocked(Exception):
+    """The page could not be fetched or is a login wall; the client should fall back to a photo or manual dims."""
+
+
 CATEGORY_KIND: dict[str, FurnitureKind] = {"bed": "bed", "desk": "desk", "seating": "seating", "storage": "storage", "table": "table", "decor": "decor"}
 
 
@@ -49,10 +60,15 @@ async def fetch_bytes(url: str) -> tuple[bytes, str]:
     if local is not None:
         mime = "text/html" if local.suffix == ".html" else "image/jpeg" if local.suffix in (".jpg", ".jpeg") else "application/octet-stream"
         return local.read_bytes(), mime
-    async with httpx.AsyncClient(timeout=10, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 AdaptiveRoomPlanner/0.1"}) as client:
-        resp = await client.get(url)
-        resp.raise_for_status()
-        return resp.content, resp.headers.get("content-type", "").split(";")[0]
+    try:
+        async with httpx.AsyncClient(timeout=8, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 AdaptiveRoomPlanner/0.2"}) as client:
+            resp = await client.get(url)
+            resp.raise_for_status()
+    except httpx.HTTPError as exc:  # unreachable, timeout, 401/403/429 ...
+        raise ListingBlocked(str(exc)) from exc
+    if _LOGIN_WALL.search(urlparse(str(resp.url)).path):
+        raise ListingBlocked(f"redirected to a login page: {resp.url}")
+    return resp.content, resp.headers.get("content-type", "").split(";")[0]
 
 
 def parse_dims(text: str) -> dict[str, float] | None:
@@ -132,6 +148,8 @@ def build_item(listing: dict[str, Any], *, user_id: str, source: FurnitureSource
 async def import_from_link(repo: Repository, gemini: GeminiAdapter, url: str, user_id: str) -> FurnitureItem:
     raw, _ = await fetch_bytes(url)
     meta = parse_listing(raw.decode("utf-8", errors="replace"))
+    if not meta.get("dims") and not meta.get("jsonld") and _LOGIN_WALL.search(meta.get("title") or ""):
+        raise ListingBlocked(f"login wall: {meta.get('title')}")
     listing = await gemini.extract_listing(meta.pop("text"), meta)
     if listing.get("price") is None:
         listing["price"] = meta.get("price")
@@ -140,9 +158,12 @@ async def import_from_link(repo: Repository, gemini: GeminiAdapter, url: str, us
     return item
 
 
-async def import_from_photo(repo: Repository, gemini: GeminiAdapter, data: bytes, mime: str, user_id: str, source_url: str | None = None) -> FurnitureItem:
+async def import_from_photo(
+    repo: Repository, gemini: GeminiAdapter, blob: BlobStorage, data: bytes, mime: str, user_id: str, source_url: str | None = None
+) -> FurnitureItem:
+    photo_url = await blob.put(f"photos/{uuid.uuid4().hex}.{PHOTO_EXT.get(mime, 'jpg')}", data, mime)
     listing = await gemini.estimate_from_photo(data, mime)
     listing["estimated"] = True
-    item = build_item(listing, user_id=user_id, source="photo", source_url=source_url)
+    item = build_item(listing, user_id=user_id, source="photo", source_url=source_url).model_copy(update={"photoUrl": photo_url})
     await repo.insert("furniture", {**item.model_dump(), "createdAt": datetime.now(UTC).isoformat()})
     return item

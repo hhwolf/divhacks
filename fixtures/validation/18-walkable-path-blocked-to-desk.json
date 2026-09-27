@@ -208,7 +208,7 @@
   ],
   "metrics": {
    "openFloor": 56.3,
-   "conflicts": 1,
+   "conflicts": 0,
    "walkability": "Blocked",
    "reachableStorage": 50,
    "largestFreeRect": {

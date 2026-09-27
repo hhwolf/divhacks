@@ -13,7 +13,7 @@ import {
   isSupported,
   RoomPlanView,
 } from '../modules/roomplan';
-import { api } from '../src/api';
+import { ApiError, api } from '../src/api';
 import { DimensionsSheet } from '../src/components/DimensionsSheet';
 import { useToast } from '../src/components/Toast';
 import { Button, Chip, Screen, Tile } from '../src/components/ui';
@@ -37,6 +37,8 @@ function LiveScan() {
   const units = useStore((s) => s.units);
   const [progress, setProgress] = useState<CaptureProgress>({ status: 'idle' });
   const [scan, setScan] = useState<RoomPlanExport | null>(null);
+  const [usdzUri, setUsdzUri] = useState<string | null>(null); // the raw scan we upload; the API converts it
+  const [failed, setFailed] = useState<string | null>(null); // the API could not convert the scan: offer the other ways in
   const [busy, setBusy] = useState<'stop' | 'save' | null>(null);
   const mod = getRoomPlanModule();
   const status: CaptureStatus = progress.status;
@@ -49,6 +51,7 @@ function LiveScan() {
   const start = async () => {
     try {
       setScan(null);
+      setUsdzUri(null);
       await mod?.startCapture();
       setProgress({ status: 'scanning', walls: 0, doors: 0, windows: 0, objects: 0 });
     } catch (e) {
@@ -62,7 +65,8 @@ function LiveScan() {
     setBusy('stop');
     try {
       await mod.stopCapture(); // resolves once RoomPlan has processed the final CapturedRoom
-      const result: RoomPlanExport = (await mod.exportSkeleton()) ?? EMPTY_EXPORT;
+      const result: RoomPlanExport = (await mod.exportSkeleton()) ?? EMPTY_EXPORT; // on-device preview (and fallback upload)
+      setUsdzUri(mod.exportUsdz ? await mod.exportUsdz().catch(() => null) : null);
       if (!result.skeleton?.walls?.length) {
         setProgress({ status: 'idle', message: result.meta?.reason });
         toast('The scan did not produce a closed room yet. Try walking the room slowly.', { tone: 'danger', ms: 4000 });
@@ -82,9 +86,15 @@ function LiveScan() {
     if (!scan) return;
     setBusy('save');
     try {
-      const res = await api.createScannedRoom(scan, 'Scanned room');
+      // Upload the RoomPlan USDZ as-is (the backend owns the conversion); dev clients built before exportUsdz send the JSON.
+      const res = usdzUri ? await api.createRoomFromUsdz(usdzUri, 'Scanned room') : await api.createScannedRoom(scan, 'Scanned room');
       router.replace(`/editor/${encodeURIComponent(res.currentLayout.id)}`);
     } catch (e) {
+      const detail = e instanceof ApiError && e.status === 422 ? (e.detail as { message?: string; conversionReport?: unknown } | undefined) : undefined;
+      if (detail?.conversionReport) {
+        setFailed(detail.message ?? 'The scan could not be converted.'); // the raw scan is kept on the server for a later re-run
+        return;
+      }
       toast((e as Error).message, { tone: 'danger', ms: 4500 });
     } finally {
       setBusy(null);
@@ -101,6 +111,8 @@ function LiveScan() {
           : status === 'done'
             ? 'Scan complete'
             : progress.message ?? 'Scan failed';
+  if (failed) return <Fallback conversionError={failed} />;
+
   const counts = `${progress.walls ?? 0} walls · ${progress.doors ?? 0} doors · ${progress.windows ?? 0} windows · ${progress.objects ?? 0} objects`;
   const dims = scan?.skeleton.dimensions;
 
@@ -152,7 +164,8 @@ function LiveScan() {
 // ---------------------------------------------------------------------------------------------
 // Fallback (Expo Go, Simulator, non-LiDAR device, Android).
 // ---------------------------------------------------------------------------------------------
-function Fallback() {
+/** `conversionError`: the scan was uploaded but the API could not convert it (it keeps the raw file for a later re-run). */
+function Fallback({ conversionError }: { conversionError?: string } = {}) {
   const router = useRouter();
   const toast = useToast();
   const insets = useSafeAreaInsets();
@@ -162,7 +175,9 @@ function Fallback() {
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasted, setPasted] = useState('');
 
-  const reason = isRoomPlanAvailable()
+  const reason = conversionError
+    ? conversionError
+    : isRoomPlanAvailable()
     ? 'This device has no LiDAR sensor, so RoomPlan cannot run here.'
     : 'You are running in Expo Go or the Simulator, where the RoomPlan native module is not linked.';
 
@@ -227,11 +242,15 @@ function Fallback() {
             <View style={styles.heroIcon}>
               <MaterialCommunityIcons name="cube-scan" size={40} color={colors.tile} />
             </View>
-            <Text style={[type.h2, { textAlign: 'center' }]}>RoomPlan needs a LiDAR iPhone and the dev-client build</Text>
+            <Text style={[type.h2, { textAlign: 'center' }]}>{conversionError ? 'We couldn’t turn that scan into a room' : 'RoomPlan needs a LiDAR iPhone and the dev-client build'}</Text>
             <Text style={[type.body, { textAlign: 'center', color: colors.inkSoft }]}>{reason}</Text>
-            <Text style={[type.small, { textAlign: 'center' }]}>
-              Run <Text style={styles.mono}>npx expo run:ios --device</Text> on an iPhone Pro to scan for real. Meanwhile, pick another way in:
-            </Text>
+            {conversionError ? (
+              <Text style={[type.small, { textAlign: 'center' }]}>Your scan is saved, so we can try it again later. For now, pick another way in:</Text>
+            ) : (
+              <Text style={[type.small, { textAlign: 'center' }]}>
+                Run <Text style={styles.mono}>npx expo run:ios --device</Text> on an iPhone Pro to scan for real. Meanwhile, pick another way in:
+              </Text>
+            )}
           </Tile>
 
           <View style={{ gap: spacing.sm, marginTop: spacing.lg }}>

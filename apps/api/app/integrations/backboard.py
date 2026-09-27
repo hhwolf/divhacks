@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from app.config import Settings
+from app.config import BACKBOARD_BASE_URL, Settings
 from app.repo.base import Repository
 
 log = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class BackboardAdapter:
         if self.live:
             from backboard import BackboardClient
 
-            self._client = BackboardClient(api_key=settings.backboard_api_key, base_url=settings.backboard_base_url)
+            self._client = BackboardClient(api_key=Settings.reveal(settings.backboard_api_key), base_url=BACKBOARD_BASE_URL)
 
     async def _assistant_id(self, user_id: str) -> str:
         user = await self._repo.get("users", user_id) or {}
@@ -61,6 +61,7 @@ class BackboardAdapter:
         try:
             assistant_id = await self._assistant_id(user_id)
             for m in memories:
-                await self._client.add_memory(assistant_id, m, metadata={"source": "adaptive-room-planner"})
-        except Exception as exc:
+                kind = "non_negotiable" if m.lower().startswith(("never ", "always ", "keep ")) else "preference"
+                await self._client.add_memory(assistant_id, m, metadata={"source": "adaptive-room-planner", "type": kind})
+        except Exception as exc:  # Backboard down: keep going without memory, but say so in the logs
             log.warning("backboard add_memory failed: %s", exc)

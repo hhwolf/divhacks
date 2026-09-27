@@ -2,41 +2,62 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://roomplanner.dev/schemas/plan.schema.json",
   "title": "AgentPlan",
-  "description": "Gemini structured output. Zone-level only: the model never emits coordinates.",
+  "description": "Stage 1 (Gemini, the orchestrator) output: the intent (which tool) and its inputs, never coordinates. `placement`, `moves` and `zones` are written by the Python solver in the plan returned to clients. Mirrors app.models.GeminiPlan / PlanOut.",
   "type": "object",
-  "required": ["intent", "reply"],
+  "required": ["intent", "explanation"],
   "additionalProperties": false,
   "properties": {
-    "intent": {"type": "string", "enum": ["fit_item", "make_space", "keep_clear", "compare", "rent_check", "payment_check", "housing_quality", "clarify"]},
-    "variantName": {"type": "string"},
+    "intent": {"type": "string", "enum": ["fit_item", "make_space", "keep_clear", "rank_variants", "rent_check", "payment_check", "clarify"]},
+    "item": {
+      "type": ["object", "null"], "required": ["type"], "additionalProperties": false,
+      "properties": {
+        "type": {"type": "string"}, "name": {"type": ["string", "null"]},
+        "w_m": {"type": ["number", "null"]}, "d_m": {"type": ["number", "null"]}, "h_m": {"type": ["number", "null"]}, "price_usd": {"type": ["number", "null"]}
+      }
+    },
     "constraints": {
       "type": "array",
       "items": {
         "type": "object", "required": ["type"], "additionalProperties": false,
         "properties": {
           "type": {"type": "string", "enum": ["lock", "adjacent", "keep_clear", "clear_zone"]},
-          "item": {"type": "string", "description": "furniture id, instance id or plain-language item name"},
-          "feature": {"type": "string", "enum": ["window", "door", "outlet", "wall"]},
-          "w_m": {"type": "number"}, "d_m": {"type": "number"},
-          "label": {"type": "string"},
-          "optional": {"type": "boolean"}
+          "item": {"type": ["string", "null"], "description": "plain-language item ('bed', 'desk') or an instance id"},
+          "feature": {"type": ["string", "null"], "enum": ["window", "door", "wall", "outlet", null]},
+          "w_m": {"type": ["number", "null"]}, "d_m": {"type": ["number", "null"]},
+          "label": {"type": ["string", "null"]}
         }
       }
     },
-    "actions": {
+    "variantName": {"type": ["string", "null"]},
+    "explanation": {"type": "string"},
+    "question": {"type": ["string", "null"], "description": "clarify: the one question"},
+    "ranking": {
       "type": "array",
-      "items": {
-        "type": "object", "required": ["type", "item"], "additionalProperties": false,
-        "properties": {
-          "type": {"type": "string", "enum": ["add", "move", "remove", "rotate"]},
-          "item": {"type": "string"},
-          "zone": {"type": "string", "description": "e.g. 'window wall, beside window', 'east wall, centered', 'near outlet', 'opposite the door', 'corner'"},
-          "rotation": {"type": "number"}
-        }
+      "items": {"type": "object", "required": ["layoutId", "rank", "reason"], "properties": {"layoutId": {"type": "string"}, "rank": {"type": "integer"}, "reason": {"type": "string"}}}
+    },
+    "preferences": {"type": "array", "items": {"type": "string"}, "description": "durable facts to write back to Backboard"},
+    "rent": {
+      "type": ["object", "null"], "description": "rent_check inputs (the app does the math)",
+      "properties": {
+        "askingRent": {"type": ["number", "null"]}, "zip": {"type": ["string", "null"]}, "occupancyType": {"type": ["string", "null"]},
+        "issues": {"type": "array", "items": {"type": "string"}}, "depositRequested": {"type": ["number", "null"]}, "applicationFee": {"type": ["number", "null"]}
       }
     },
-    "reply": {"type": "string"},
-    "clarifyingQuestion": {"type": "string"},
-    "preferencesLearned": {"type": "array", "items": {"type": "string"}}
+    "payment": {
+      "type": ["object", "null"], "required": ["purpose"], "description": "payment_check inputs (the app applies NYC guardrails)",
+      "properties": {"purpose": {"type": "string", "enum": ["rent_payment", "deposit", "application_fee", "furniture_purchase"]}, "amount": {"type": ["number", "null"]}}
+    },
+    "placement": {"oneOf": [{"$ref": "#/$defs/placement"}, {"type": "null"}], "description": "solver only"},
+    "moves": {"type": "array", "items": {"$ref": "#/$defs/placement"}, "description": "solver only"},
+    "zones": {"type": "array", "items": {"type": "object", "required": ["label", "x", "z", "w", "d"]}, "description": "solver only"}
+  },
+  "$defs": {
+    "placement": {
+      "type": "object", "required": ["item", "name", "furnitureId", "x", "z", "rotation"],
+      "properties": {
+        "item": {"type": "string"}, "name": {"type": "string"}, "furnitureId": {"type": "string"},
+        "x": {"type": "number"}, "z": {"type": "number"}, "rotation": {"enum": [0, 90, 180, 270]}
+      }
+    }
   }
 }

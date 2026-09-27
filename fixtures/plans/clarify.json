@@ -1,5 +1,6 @@
 {
   "intent": "clarify",
-  "reply": "I want to get this right. Which piece should I move or add, and where would you like it (near the window, by the door, or against a wall)?",
-  "clarifyingQuestion": "Which piece should I move or add, and where would you like it?"
+  "constraints": [],
+  "explanation": "I want to get this right.",
+  "question": "Which piece should I move or add, and where would you like it (near the window, by the door, or against a wall)?"
 }

@@ -14,7 +14,7 @@ const room: Room = { id: 'r1', name: bedroom.name, skeleton: bedroom.skeleton, s
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ layout: { id: 'l1', roomId: 'r1', name: 'Current Room', isCurrent: true, items: useEditor.getState().items, zones: [] } }), { status: 200 })));
   useEditor.setState({
-    room, furniture, activeId: 'l1', layouts: [], history: [], future: [], selectedId: null, placing: null, zones: [], validation: null, saveState: 'saved',
+    room, furniture, activeId: 'l1', activeVersion: 1, activeKind: 'current', layouts: [], history: [], future: [], selectedId: null, placing: null, zones: [], validation: null, saveState: 'saved',
     items: bedroom.objects.map((o: { furnitureId: string; x: number; z: number; rotation: 0 | 90 | 180 | 270; locked: boolean }, i: number) => ({ id: `${o.furnitureId}_${i + 1}`, ...o })),
   });
   useEditor.getState().revalidate();
@@ -82,5 +82,42 @@ describe('editor store', () => {
     useEditor.getState().duplicateItem(id);
     const copies = useEditor.getState().items.filter((i) => i.furnitureId === 'chair');
     expect(copies.length).toBe(2); expect(copies[1].rotation).toBe(90);
+  });
+
+  it('the Base Layout is read-only: edits are refused and nothing is saved', () => {
+    useEditor.setState({ activeKind: 'base', saveState: 'readonly' });
+    const before = useEditor.getState().items;
+    expect(useEditor.getState().addItem('desk')).toBe('');
+    useEditor.getState().moveItem('dresser_3', 2.0, 2.0, { commit: true });
+    useEditor.getState().removeItem('plant_5');
+    expect(useEditor.getState().items).toEqual(before);
+    expect(useEditor.getState().saveState).toBe('readonly');
+    expect(useEditor.getState().toasts.some((t) => t.text.includes('read-only'))).toBe(true);
+  });
+  it('saves send the layout version and take the new one back', async () => {
+    const calls: { body: string }[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, init: RequestInit) => {
+      calls.push({ body: String(init.body) });
+      return new Response(JSON.stringify({ layout: { id: 'l1', roomId: 'r1', name: 'Current Room', kind: 'current', isCurrent: true, version: 2, items: [], zones: [] } }), { status: 200 });
+    }));
+    await useEditor.getState().saveNow();
+    expect(JSON.parse(calls[0].body).version).toBe(1);
+    expect(useEditor.getState().activeVersion).toBe(2);
+  });
+  it('a stale save (409) reloads the latest version and keeps the local edit one redo away', async () => {
+    const latest = { id: 'l1', roomId: 'r1', name: 'Current Room', kind: 'current', isCurrent: true, version: 5, items: [], zones: [] };
+    vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT') return new Response(JSON.stringify({ detail: { message: 'stale version; refetch the layout', version: 5 } }), { status: 409 });
+      if (String(url).includes('/furniture')) return new Response(JSON.stringify({ items: [] }), { status: 200 });
+      if (String(url).includes('/rooms/')) return new Response(JSON.stringify({ room, layouts: [latest] }), { status: 200 });
+      return new Response(JSON.stringify({ layout: latest, room }), { status: 200 });
+    }));
+    const mine = useEditor.getState().items;
+    await useEditor.getState().saveNow();
+    const s = useEditor.getState();
+    expect(s.activeVersion).toBe(5);
+    expect(s.items).toEqual([]);
+    expect(s.future[0].items).toEqual(mine);
+    expect(s.toasts.some((t) => t.text.includes('changed elsewhere'))).toBe(true);
   });
 });

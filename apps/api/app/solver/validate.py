@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from typing import Literal
 
 from app.models import FreeRect, FurnitureRef, LayoutItem, LayoutMetrics, RoomSkeleton, ValidationResult, Violation, Walkability, Zone
-from app.solver.constants import ACCESS_EDGE, ACCESS_FREE_RATIO, CORRIDOR_CELLS, DOOR_CLEARANCE, EPS, WINDOW_BAND, js_round
+from app.solver.constants import ACCESS_EDGE, ACCESS_FREE_RATIO, CORRIDOR_CELLS, DOOR_CLEARANCE, EPS, STORAGE_FRONT, WINDOW_BAND, js_round
 from app.solver.grid import (
     Grid,
     any_mask_in_rect,
@@ -208,11 +208,11 @@ def validate_layout(
         elif f.kind in ("wardrobe", "dresser", "storage"):
             dx, dz = front_dir(it.rotation)
             side: Side = "x1" if dx > 0 else "x0" if dx < 0 else "z1" if dz > 0 else "z0"
-            ratio = _band_free(g, others, _band_rect(r, side, ACCESS_EDGE))
+            ratio = _band_free(g, others, _band_rect(r, side, STORAGE_FRONT))
             ok = ratio + EPS >= ACCESS_FREE_RATIO
             storage_reach.append(ok)
             if f.kind in ("wardrobe", "dresser") and not ok:
-                violations.append(Violation(rule="access_edge", severity="warning", items=[it.id], message=f"{_name(fur, it)} needs {js_round(ACCESS_EDGE * 100)} cm clear in front"))
+                violations.append(Violation(rule="access_edge", severity="warning", items=[it.id], message=f"{_name(fur, it)} needs {js_round(STORAGE_FRONT * 100)} cm clear in front"))
 
     # 7. Requested clear zones must be free.
     for z in zones or []:
@@ -235,7 +235,7 @@ def validate_layout(
             continue
         nb = rect_neighbours(g, rects[it.id])
         if not any(reach[k] for k in nb):
-            violations.append(Violation(rule="walkable_path", severity="error", items=[it.id], message=f"Path blocked to {_name(fur, it).lower()}"))
+            violations.append(Violation(rule="walkable_path", severity="warning", items=[it.id], message=f"Path blocked to {_name(fur, it).lower()}"))
             walk = "Blocked"
         elif walk == "Good" and not any(wide[k] or _nb_near_wide(g, wide, k) for k in nb):
             walk = "Tight"

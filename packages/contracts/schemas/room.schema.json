@@ -8,6 +8,9 @@
     "id": {"type": "string"}, "userId": {"type": ["string", "null"]}, "name": {"type": "string"},
     "skeleton": {"$ref": "skeleton.schema.json"},
     "source": {"type": "string", "enum": ["scan", "manual", "sample"]},
-    "createdAt": {"type": "string"}
+    "usdzUrl": {"type": ["string", "null"], "description": "raw RoomPlan scan in Blob, stored before conversion"},
+    "thumbnailUrl": {"type": ["string", "null"]}, "baseLayoutId": {"type": ["string", "null"]}, "currentLayoutId": {"type": ["string", "null"]},
+    "conversion": {"type": ["object", "null"], "properties": {"primCounts": {"type": "object"}, "metersPerUnit": {"type": "number"}, "upAxis": {"type": "string"}, "warnings": {"type": "array", "items": {"type": "string"}}}},
+    "createdAt": {"type": "string"}, "updatedAt": {"type": ["string", "null"]}
   }
 }

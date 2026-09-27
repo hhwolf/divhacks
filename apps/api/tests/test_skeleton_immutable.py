@@ -8,7 +8,7 @@ def test_layout_edits_never_touch_skeleton(client: TestClient, bedroom: dict) ->
     assert client.put(f"/layouts/{fork['id']}", json={"items": items, "zones": [{"label": "Yoga", "x": 1.4, "z": 0.4, "w": 1.2, "d": 1.8}]}).status_code == 200
     assert client.put(f"/layouts/{bedroom['currentId']}", json={"items": bedroom["current"]["items"], "source": "editor"}).status_code == 200
     assert client.delete(f"/layouts/{fork['id']}").status_code == 204
-    r = client.post("/agent/request", json={"text": "make space for yoga, keep my dresser", "roomId": bedroom["roomId"], "baseLayoutId": bedroom["currentId"], "channel": "app"})
+    r = client.post("/agent/request", json={"text": "make space for yoga, keep my dresser", "roomId": bedroom["roomId"], "layoutId": bedroom["currentId"]})
     assert r.json()["status"] == "ok"
     after = client.get(f"/rooms/{bedroom['roomId']}").json()["room"]["skeleton"]
     assert after == before

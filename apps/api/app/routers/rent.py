@@ -60,7 +60,8 @@ async def payment_checkout(body: PaymentQuoteBody, ctx: AppContext = Depends(get
 
 @router.post("/webhooks/stripe")
 async def stripe_webhook(request: Request, stripe_signature: str | None = Header(default=None), ctx: AppContext = Depends(get_ctx)) -> dict:
-    if ctx.settings.stripe_webhook_secret and not stripe_signature:
+    """Acknowledges only; payments are a non-goal and nothing is processed. A configured secret still demands a signature header."""
+    if ctx.settings.stripe_webhook_secret is not None and not stripe_signature:
         raise HTTPException(401, "missing Stripe signature")
     payload = await request.json()
-    return {"status": "ok", "mode": "verified" if ctx.settings.stripe_webhook_secret else "mock", "type": payload.get("type", "unknown")}
+    return {"status": "ok", "mode": "ignored", "type": payload.get("type", "unknown")}

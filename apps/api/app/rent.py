@@ -26,7 +26,7 @@ from app.models import (
     SourceBreakdown,
     SpaceQuality,
 )
-from app.services import new_id, now_iso, validate_for_room
+from app.services.rooms import new_id, now_iso, validate_for_room
 
 FIXTURES = REPO_ROOT / "fixtures" / "housing"
 SQM_TO_SQFT = 10.7639
@@ -226,7 +226,7 @@ async def assess_rent(ctx: AppContext, profile: HousingProfile, layout_id: str |
 
 def guard_payment(ctx: AppContext, *, purpose: PaymentPurpose, amount: float, rent_amount: float | None = None, room_id: str | None = None, assessment_id: str | None = None) -> PaymentQuote:
     guards: list[str] = ["Card/bank details are handled by Stripe Checkout only; this app never stores payment credentials."]
-    status = "ready" if ctx.settings.stripe_live else "mock"
+    status = "mock"  # payments are a non-goal: STRIPE_* keys are loaded but Stripe is never called
     if amount <= 0:
         guards.append("Amount must be greater than $0.")
         status = "blocked"
@@ -249,7 +249,7 @@ def guard_payment(ctx: AppContext, *, purpose: PaymentPurpose, amount: float, re
         guards.append("Rent payment prototype: verify landlord identity and lease terms before paying.")
     else:
         guards.append("Furniture purchase prototype: no escrow or cash-transfer protection is provided.")
-    if purpose in ("rent_payment", "deposit") and not ctx.settings.stripe_connect_enabled:
+    if purpose in ("rent_payment", "deposit"):
         guards.append("Real landlord/seller payouts are disabled until a verified Stripe Connect recipient is configured.")
         if status == "ready":
             status = "mock"

@@ -67,4 +67,4 @@ def test_agent_rent_and_payment_questions_do_not_mutate_current_room(client: Tes
     ).json()
     assert dep["status"] == "ok"
     assert dep["quote"]["status"] == "mock"
-    assert [l["name"] for l in client.get(f"/rooms/{bedroom['roomId']}").json()["layouts"]] == ["Current Room"]
+    assert [l["name"] for l in client.get(f"/rooms/{bedroom['roomId']}").json()["layouts"]] == ["Original Room", "Current Room"]

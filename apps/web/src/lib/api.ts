@@ -4,19 +4,25 @@ let base = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://local
 export function setApiBase(url: string) { base = url.replace(/\/$/, ''); }
 export function apiBase() { return base; }
 
+/** An HTTP error with its status, so callers can react to 403 (read-only) and 409 (stale version). */
+export class ApiError extends Error {
+  constructor(public status: number, message: string) { super(message); }
+}
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${base}${path}`, { headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) }, ...init });
   if (!res.ok) {
     let detail = res.statusText;
     try { const j = await res.json(); detail = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail ?? j); } catch { /* ignore */ }
-    throw new Error(`${res.status} ${detail}`);
+    throw new ApiError(res.status, `${res.status} ${detail}`);
   }
   return res.json() as Promise<T>;
 }
 
 export interface LayoutResponse { layout: Layout; furniture: Record<string, FurnitureItem>; validation?: ValidationResult; room?: Room }
 export interface RoomResponse { room: Room; layouts: Layout[]; currentLayout?: Layout }
-export interface AgentResponse { plan: unknown; layout: Layout | null; reply: string; status: string; links?: string[]; requestId?: string }
+export interface AgentOption { variantName: string; layoutId: string | null; explanation: string; tradeoff: string; moved: string[]; validation: { ok: boolean; warnings: number; open_floor_pct: number } }
+export interface AgentResponse { plan: unknown; layout: Layout | null; reply: string; status: string; links?: string[]; requestId?: string; options?: AgentOption[]; recommended?: string | null }
 export interface RentAssessBody extends HousingProfile { layoutId?: string | null }
 export interface CompareResponse {
   a: Layout; b: Layout;
@@ -31,7 +37,7 @@ export const api = {
   rooms: () => req<Room[]>('/rooms'),
   room: (id: string) => req<RoomResponse>(`/rooms/${id}`),
   layout: (id: string) => req<LayoutResponse>(`/layouts/${id}`),
-  saveLayout: (id: string, body: Partial<Layout> & { source: 'editor' }) => req<LayoutResponse>(`/layouts/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  saveLayout: (id: string, body: Partial<Layout> & { source: 'editor'; version?: number }) => req<LayoutResponse>(`/layouts/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   fork: (id: string, name?: string) => req<LayoutResponse | Layout>(`/layouts/${id}/fork`, { method: 'POST', body: JSON.stringify({ name }) }),
   deleteLayout: (id: string) => req<unknown>(`/layouts/${id}`, { method: 'DELETE' }),
   compare: (a: string, b: string) => req<CompareResponse>(`/layouts/${a}/compare/${b}`),

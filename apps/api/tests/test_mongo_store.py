@@ -89,25 +89,45 @@ async def test_layouts_list_by_room_update_delete(mongo_uri: str) -> None:
     assert [l["id"] for l in await store.list_by_room("layouts", "ra")] == ["l0"]
 
 
+@pytest.mark.asyncio
+async def test_compare_and_set_and_batches(mongo_uri: str) -> None:
+    store = MongoStore(mongo_uri, _db())
+    await store.insert("layouts", {"id": "l1", "roomId": "r", "version": 1, "items": []})
+    assert (await store.update_if("layouts", "l1", {"version": 1}, {"version": 2}))["version"] == 2
+    assert await store.update_if("layouts", "l1", {"version": 1}, {"version": 3}) is None  # stale writer loses
+    for i in range(3):
+        await store.insert("agent_requests", {"id": f"a{i}", "roomId": "r" if i < 2 else "other"})
+    await store.insert("rooms", {"id": "r", "name": "R"})
+    # standalone mongod has no transactions: apply() falls back to running the ops in order
+    await store.apply([("delete_where", "layouts", {"roomId": "r"}), ("delete_where", "agent_requests", {"roomId": "r"}), ("delete", "rooms", "r")])
+    assert await store.list("layouts") == [] and [a["id"] for a in await store.list("agent_requests")] == ["a2"] and await store.get("rooms", "r") is None
+
+
 def test_api_flow_with_mongodb_uri(mongo_uri: str, monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     monkeypatch.setenv("MONGODB_URI", mongo_uri)
-    monkeypatch.setenv("MONGODB_DB", _db())
     monkeypatch.setenv("ARP_DATA_DIR", str(tmp_path))
     monkeypatch.delenv("MOCK_MODE", raising=False)
+    monkeypatch.setattr("app.repo.MONGODB_DB", _db())
     settings = Settings.from_env()
     assert settings.mongo_live
     with TestClient(create_app(settings)) as client:
         assert type(client.app.state.ctx.repo).__name__ == "MongoStore"
         assert client.get("/health").json()["integrations"]["mongo"] == "live"
         created = client.post("/rooms", json={"sample": "nyc-bedroom"}).json()
-        room_id, cur = created["room"]["id"], created["currentLayout"]["id"]
+        room_id, cur, base = created["room"]["id"], created["currentLayout"]["id"], created["baseLayout"]["id"]
         fork = client.post(f"/layouts/{cur}/fork", json={"name": "Mongo variant"})
         assert fork.status_code == 201
-        items = fork.json()["items"] + [{"id": "desk_1", "furnitureId": "desk", "x": 2.5, "z": 0.3, "rotation": 0, "locked": False}]
-        put = client.put(f"/layouts/{fork.json()['id']}", json={"items": items})
-        assert put.status_code == 200 and len(put.json()["layout"]["items"]) == 6
-        assert len(client.get(f"/layouts/{fork.json()['id']}").json()["layout"]["items"]) == 6
-        assert [l["name"] for l in client.get(f"/rooms/{room_id}").json()["layouts"]] == ["Current Room", "Mongo variant"]
+        items = fork.json()["items"] + [{"id": "desk_1", "furnitureId": "desk", "x": 2.5, "z": 0.6, "rotation": 90, "locked": False}]
+        put = client.put(f"/layouts/{fork.json()['id']}", json={"items": items, "version": 1})
+        assert put.status_code == 200 and len(put.json()["layout"]["items"]) == 6 and put.json()["layout"]["version"] == 2
+        assert client.put(f"/layouts/{fork.json()['id']}", json={"items": items, "version": 1}).status_code == 409
+        assert [l["name"] for l in client.get(f"/rooms/{room_id}").json()["layouts"]] == ["Original Room", "Current Room", "Mongo variant"]
+        assert client.put(f"/layouts/{base}", json={"items": items, "source": "editor"}).status_code == 403
         assert client.delete(f"/layouts/{cur}").status_code == 409
-        assert client.get(f"/layouts/{cur}").json()["layout"]["isCurrent"] is True
+        promoted = client.post(f"/layouts/{fork.json()['id']}/promote").json()
+        assert promoted["current"]["kind"] == "current" and promoted["previous"]["kind"] == "variant"
+        agent = client.post("/agent/request", json={"roomId": room_id, "layoutId": fork.json()["id"], "text": "make space for yoga"})
+        assert agent.status_code == 200 and agent.json()["status"] in ("ok", "rejected")
+        assert client.delete(f"/rooms/{room_id}").status_code == 204
+        assert client.get(f"/rooms/{room_id}").status_code == 404 and client.get(f"/layouts/{cur}").status_code == 404
     assert not (tmp_path / "db.json").exists()  # nothing was written to the JSON store

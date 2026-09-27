@@ -1,5 +1,5 @@
 import type { FurnitureItem, Layout, LayoutItem, LayoutMetrics, RoomSkeleton, ValidationResult, Violation, Walkability, Zone } from '@arp/contracts';
-import { ACCESS_EDGE, ACCESS_FREE_RATIO, CORRIDOR_CELLS, DOOR_CLEARANCE, EPS, GRID, M2_TO_SQFT, WINDOW_BAND } from './constants';
+import { ACCESS_EDGE, ACCESS_FREE_RATIO, CORRIDOR_CELLS, DOOR_CLEARANCE, EPS, GRID, M2_TO_SQFT, STORAGE_FRONT, WINDOW_BAND } from './constants';
 import {
   anyMaskInRect, countMaskInRect, erode, fillDisc, fillRect, floodFill, footprint, frontDir, itemRect, largestFreeRect, makeGrid,
   rectCells, rectNeighbours, rectsOverlap, type Grid,
@@ -134,11 +134,11 @@ export function validateLayout(input: ValidateInput): ValidationResult {
     } else if (f.kind === 'wardrobe' || f.kind === 'dresser' || f.kind === 'storage') {
       const [dx, dz] = frontDir(it.rotation);
       const side = dx > 0 ? 'x1' : dx < 0 ? 'x0' : dz > 0 ? 'z1' : 'z0';
-      const ratio = bandFree(g, others, bandRect(r, side, ACCESS_EDGE));
+      const ratio = bandFree(g, others, bandRect(r, side, STORAGE_FRONT));
       const ok = ratio + EPS >= ACCESS_FREE_RATIO;
       storageReach.push(ok);
       if ((f.kind === 'wardrobe' || f.kind === 'dresser') && !ok)
-        violations.push({ rule: 'access_edge', severity: 'warning', items: [it.id], message: `${nameOf(fur, it)} needs ${Math.round(ACCESS_EDGE * 100)} cm clear in front` });
+        violations.push({ rule: 'access_edge', severity: 'warning', items: [it.id], message: `${nameOf(fur, it)} needs ${Math.round(STORAGE_FRONT * 100)} cm clear in front` });
     }
   }
 
@@ -160,7 +160,7 @@ export function validateLayout(input: ValidateInput): ValidationResult {
     const f = fur[it.furnitureId]; if (f.kind !== 'bed' && f.kind !== 'desk') continue;
     const nb = rectNeighbours(g, rects.get(it.id)!);
     const reachable = nb.some((k) => reach[k]);
-    if (!reachable) { violations.push({ rule: 'walkable_path', severity: 'error', items: [it.id], message: `Path blocked to ${nameOf(fur, it).toLowerCase()}` }); walk = 'Blocked'; }
+    if (!reachable) { violations.push({ rule: 'walkable_path', severity: 'warning', items: [it.id], message: `Path blocked to ${nameOf(fur, it).toLowerCase()}` }); walk = 'Blocked'; }
     else if (walk === 'Good' && !nb.some((k) => wide[k] || nbNearWide(g, wide, k))) walk = 'Tight';
   }
 

@@ -9,7 +9,7 @@
     "id": {"type": "string"},
     "userId": {"type": ["string", "null"]},
     "name": {"type": "string"},
-    "category": {"type": "string", "enum": ["bed", "desk", "seating", "storage", "table", "decor", "imported"]},
+    "category": {"type": "string", "enum": ["bed", "desk", "seating", "storage", "table", "decor", "imported", "other"]},
     "kind": {"type": "string", "description": "Rule kind used by validation", "enum": ["bed", "desk", "wardrobe", "dresser", "storage", "seating", "table", "decor", "floor"]},
     "dims": {
       "type": "object", "required": ["w", "d", "h"], "additionalProperties": false,
@@ -19,6 +19,7 @@
     "thumbUrl": {"type": ["string", "null"]},
     "source": {"type": "string", "enum": ["preset", "link", "photo", "manual", "scan"]},
     "sourceUrl": {"type": ["string", "null"]},
+    "photoUrl": {"type": ["string", "null"]},
     "price": {"type": ["number", "null"]},
     "color": {"type": ["string", "null"]},
     "estimated": {"type": "boolean", "default": false},

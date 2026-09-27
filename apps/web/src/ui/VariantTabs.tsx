@@ -27,7 +27,7 @@ export function VariantTabs() {
             onContextMenu={(e) => { e.preventDefault(); if (!l.isCurrent) setMenu({ id: l.id, x: e.clientX, y: e.clientY }); }}
             onPointerDown={(e) => { if (l.isCurrent) return; const { clientX: x, clientY: y } = e; pressTimer = setTimeout(() => setMenu({ id: l.id, x, y }), 550); }}
             onPointerUp={() => { if (pressTimer) clearTimeout(pressTimer); }} onPointerLeave={() => { if (pressTimer) clearTimeout(pressTimer); }}>
-            {l.isCurrent && <span className="tab-lock"><I.lock /></span>}{l.name}
+            {(l.isCurrent || l.kind === 'base') && <span className="tab-lock"><I.lock /></span>}{l.name}
             {l.id === activeId && saveState !== 'saved' && saveState !== 'readonly' && <span className={`save-dot ${saveState}`} title={saveState} />}
           </button>
         )
