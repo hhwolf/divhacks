@@ -43,6 +43,7 @@
     },
     "createdBy": {"type": "string", "enum": ["user", "agent", "system"]},
     "requestText": {"type": ["string", "null"]},
+    "style": {"type": ["string", "null"], "enum": ["japandi", "industrial", "boho", "minimal", "cozy", null], "description": "material palette the editor renders this layout with"},
     "createdAt": {"type": "string"},
     "updatedAt": {"type": "string"}
   }

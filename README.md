@@ -27,6 +27,8 @@ Everything runs in **mock mode with zero env vars and no network**: the JSON sto
 
 Channel split: **Photon/iMessage brings new furniture into the room** from listing links or photos, checks it against the saved scan, and creates a layout variant. The **in-app AI assistant arranges the room**: reading corners, yoga space, window placement, locked-item rules, and other spatial changes inside the existing 3D room.
 
+To furnish a clean room, complete scan/manual setup, then describe a style or add up to four inspiration photos in the editor's empty-room card. Furnishing and Restyle create variants. Deterministic kits work offline; Gemini is optional. See [furnishing behavior and branch integration decisions](docs/BRANCH_INTEGRATION.md).
+
 ```bash
 make test           # pnpm typecheck + lint + vitest, then pytest (incl. TS/Python parity on fixtures/validation)
 make bench          # validation p95, room-load, import and agent timings → .data/bench.json
@@ -100,6 +102,8 @@ The Scan screen hosts Apple's `RoomCaptureView` through the local Expo module in
 3. **Use this scan** → room setup (space types → elements) → the clean scanned room opens in the editor. Detected furniture stays on the room as `detectedObjects`.
 
 If the camera is denied the screen shows an "Open Settings" button. Without LiDAR (or in Expo Go / the Simulator) the screen falls back to sample room, typed dimensions, or pasted RoomPlan JSON — `fixtures/rooms/roomplan-export-sample.json` is a hand-authored export in exactly the shape the module produces.
+
+Optional local USDZ inspection: install `apps/api/requirements-usdz.txt` into `.venv`, then run `.venv/bin/python apps/api/scripts/inspect_usdz.py /path/to/room.usdz --convert`. This developer utility does not add a hosted upload endpoint or change the native JSON scan flow. See [USDZ setup and limitations](docs/BRANCH_INTEGRATION.md#optional-local-usdz-inspection).
 
 ## Photon (iMessage) in real mode
 

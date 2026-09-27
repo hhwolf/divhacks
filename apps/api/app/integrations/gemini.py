@@ -123,6 +123,15 @@ class GeminiAdapter:
             contents.append("The previous plan was rejected by the fit validator:\n- " + "\n- ".join(violations) + "\nPropose a different placement.")
         return await self._generate(system_prompt, contents, PLAN_SCHEMA)
 
+    async def furnish(self, system_prompt: str, theme: str, photos: list[tuple[bytes, str]] | None = None) -> dict[str, Any]:
+        """Raw furnishing plan for a theme and optional inspiration photos (live only; app.furnish owns the mock kits and validation)."""
+        from google.genai import types
+
+        from app.furnish import FURNISH_SCHEMA
+
+        parts: list[Any] = [types.Part.from_bytes(data=data, mime_type=mime) for data, mime in photos or []]
+        return await self._generate(system_prompt, [*parts, f"Theme: {theme}"], FURNISH_SCHEMA)
+
     async def extract_listing(self, text: str, html_meta: dict[str, Any]) -> dict[str, Any]:
         if not self.live:
             return dict(MOCK_DESK)

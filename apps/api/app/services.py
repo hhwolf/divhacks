@@ -12,7 +12,7 @@ from app.deps import AppContext
 from app.models import RoomElement, Dimensions, Door, Layout, LayoutItem, Room, RoomSkeleton, ValidationResult, WallSegment, Window, Zone
 from app.solver.validate import validate_layout
 
-SAMPLES = {"nyc-bedroom": "sample-nyc-bedroom.json", "studio": "sample-studio.json"}
+SAMPLES = {"nyc-bedroom": "sample-nyc-bedroom.json", "studio": "sample-studio.json", "l-shaped": "sample-l-shaped.json"}
 
 
 def now_iso() -> str:

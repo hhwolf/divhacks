@@ -1,0 +1,2 @@
+# Optional local RoomPlan inspection/conversion; not required by the Vercel API.
+usd-core>=25.5,<27

@@ -20,9 +20,11 @@ export interface AgentLogEntry {
   response?: AgentRequestResponse;
 }
 
-interface PersistedSettings { units: Units; apiUrl: string; webUrl: string }
+interface PersistedSettings { units: Units; apiUrl: string; webUrl: string; onboarded?: boolean }
 
 interface AppState extends PersistedSettings {
+  onboarded: boolean;
+  setOnboarded: (onboarded: boolean) => void;
   hydrated: boolean;
   agentLog: AgentLogEntry[];
   /** Captured-but-not-created room handed from scan / dimensions to /setup. In-memory only. */
@@ -52,10 +54,17 @@ export const useStore = create<AppState>((set, get) => ({
   units: 'imperial',
   apiUrl: DEFAULT_API_URL,
   webUrl: DEFAULT_WEB_URL,
+  onboarded: false,
   hydrated: false,
   agentLog: [],
   roomDraft: null,
   setRoomDraft: (roomDraft) => set({ roomDraft }),
+
+  setOnboarded: (onboarded) => {
+    set({ onboarded });
+    const { units, apiUrl, webUrl } = get();
+    void persist({ units, apiUrl, webUrl, onboarded });
+  },
 
   hydrate: async () => {
     try {
@@ -66,6 +75,7 @@ export const useStore = create<AppState>((set, get) => ({
           units: saved.units === 'metric' ? 'metric' : 'imperial',
           apiUrl: saved.apiUrl ? stripSlash(saved.apiUrl) : DEFAULT_API_URL,
           webUrl: saved.webUrl ? stripSlash(saved.webUrl) : DEFAULT_WEB_URL,
+          onboarded: saved.onboarded === true,
         });
       }
     } catch (e) {
@@ -78,7 +88,7 @@ export const useStore = create<AppState>((set, get) => ({
   setUnits: (units) => {
     set({ units });
     const { apiUrl, webUrl } = get();
-    void persist({ units, apiUrl, webUrl });
+    void persist({ units, apiUrl, webUrl, onboarded: get().onboarded });
   },
 
   setUrls: (urls) => {
@@ -87,12 +97,12 @@ export const useStore = create<AppState>((set, get) => ({
       webUrl: urls.webUrl !== undefined ? stripSlash(urls.webUrl) || DEFAULT_WEB_URL : get().webUrl,
     };
     set(next);
-    void persist({ units: get().units, ...next });
+    void persist({ units: get().units, onboarded: get().onboarded, ...next });
   },
 
   resetUrls: () => {
     set({ apiUrl: DEFAULT_API_URL, webUrl: DEFAULT_WEB_URL });
-    void persist({ units: get().units, apiUrl: DEFAULT_API_URL, webUrl: DEFAULT_WEB_URL });
+    void persist({ units: get().units, onboarded: get().onboarded, apiUrl: DEFAULT_API_URL, webUrl: DEFAULT_WEB_URL });
   },
 
   pushAgentLog: (entry) => set((s) => ({ agentLog: [entry, ...s.agentLog] })),

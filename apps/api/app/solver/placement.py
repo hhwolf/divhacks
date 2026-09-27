@@ -104,8 +104,8 @@ def _snap(v: float) -> float:
     return round(v, 4)
 
 
-def wall_positions(sk: RoomSkeleton, wall: int, item: FurnitureItem, corners_only: bool) -> list[tuple[float, float, Rotation, float]]:
-    """(x, z, rotation, t_center) for the item flush against `wall`, back to the wall, edge on the 10 cm grid."""
+def wall_positions(sk: RoomSkeleton, wall: int, item: FurnitureItem, corners_only: bool, step: float = GRID) -> list[tuple[float, float, Rotation, float]]:
+    """(x, z, rotation, t_center) for the item flush against `wall`, back to the wall, edge every `step` (default the 10 cm grid)."""
     w = sk.walls[wall]
     n = wall_inward_normal(sk, wall)
     rot = _rotation_facing(n)
@@ -118,8 +118,10 @@ def wall_positions(sk: RoomSkeleton, wall: int, item: FurnitureItem, corners_onl
     length = wall_length(w)
     if along > length + EPS:
         return []
-    steps = int(math.floor((length - along) / GRID + EPS))
-    t0s = [0.0, length - along] if corners_only else [k * GRID for k in range(steps + 1)]
+    steps = int(math.floor((length - along) / step + EPS))
+    t0s = [0.0, length - along] if corners_only else [k * step for k in range(steps + 1)]
+    if not corners_only and step > GRID + EPS and length - along - t0s[-1] > EPS:
+        t0s.append(length - along)  # coarse steps: still try flush against the far corner
     out = []
     for t0 in t0s:
         tc = t0 + along / 2
@@ -167,11 +169,12 @@ def _warning_keys(res: ValidationResult) -> set[tuple[str, tuple[str, ...]]]:
 
 
 class Solver:
-    def __init__(self, sk: RoomSkeleton, catalog: Catalog, base_items: list[LayoutItem], furniture_id: str | None = None) -> None:
+    def __init__(self, sk: RoomSkeleton, catalog: Catalog, base_items: list[LayoutItem], furniture_id: str | None = None, step: float = GRID) -> None:
         self.sk = sk
         self.catalog = catalog
         self.base_items = base_items
         self.furniture_id = furniture_id
+        self.step = step
         self.grid: Grid = make_grid(sk)
         self.keep_clear, _ = door_keep_clear(self.grid, sk)
 
@@ -235,7 +238,7 @@ class Solver:
                 spec = ZoneSpec(spec.wall, feature, spec.centered, spec.corner, spec.label)  # type: ignore[arg-type]
             walls = [spec.wall] if spec.wall is not None else list(range(len(self.sk.walls)))
             for wall in walls:
-                for x, z, rot, tc in wall_positions(self.sk, wall, fur, spec.corner):
+                for x, z, rot, tc in wall_positions(self.sk, wall, fur, spec.corner, self.step):
                     cand_item = target.model_copy(update={"x": x, "z": z, "rotation": rot})
                     res = self._validate([*others, cand_item])
                     rect = item_rect(x, z, rot, fur.dims)

@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import type { Zone } from '@arp/contracts';
 import { GRID, type OverlayMasks } from '@arp/geometry';
 import { maskTexture } from './textures';
+import { DECAL_LAYER } from './Furniture';
 
 export function FloorOverlays({ masks, show }: { masks: OverlayMasks | null; show: { walkable: boolean; keepClear: boolean; lowClearance: boolean } }) {
   const tex = useMemo(() => {
@@ -16,7 +17,7 @@ export function FloorOverlays({ masks, show }: { masks: OverlayMasks | null; sho
   if (!tex || !masks) return null;
   const { grid } = masks; const w = grid.nx * GRID, d = grid.nz * GRID;
   return (
-    <mesh position={[grid.ox + w / 2, 0.018, grid.oz + d / 2]} rotation={[-Math.PI / 2, 0, 0]}>
+    <mesh position={[grid.ox + w / 2, 0.018, grid.oz + d / 2]} rotation={[-Math.PI / 2, 0, 0]} layers={DECAL_LAYER}>
       <planeGeometry args={[w, d]} />
       <meshBasicMaterial map={tex} transparent depthWrite={false} side={THREE.DoubleSide} />
     </mesh>
@@ -27,8 +28,8 @@ export function ZoneMarkers({ zones }: { zones: Zone[] }) {
     <group>
       {zones.map((z, k) => (
         <group key={k} position={[z.x + z.w / 2, 0.016, z.z + z.d / 2]}>
-          <mesh rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[z.w, z.d]} /><meshBasicMaterial color="#7FA8C9" transparent opacity={0.28} depthWrite={false} /></mesh>
-          <lineSegments rotation={[-Math.PI / 2, 0, 0]}><edgesGeometry args={[new THREE.PlaneGeometry(z.w, z.d)]} /><lineBasicMaterial color="#F7F2EA" /></lineSegments>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} layers={DECAL_LAYER}><planeGeometry args={[z.w, z.d]} /><meshBasicMaterial color="#7FA8C9" transparent opacity={0.28} depthWrite={false} /></mesh>
+          <lineSegments rotation={[-Math.PI / 2, 0, 0]} layers={DECAL_LAYER}><edgesGeometry args={[new THREE.PlaneGeometry(z.w, z.d)]} /><lineBasicMaterial color="#F7F2EA" /></lineSegments>
         </group>
       ))}
     </group>

@@ -45,6 +45,8 @@ export interface Zone { label: string; x: number; z: number; w: number; d: numbe
 export type Walkability = 'Good' | 'Tight' | 'Blocked';
 export interface FreeRect { x: number; z: number; w: number; d: number; areaM2: number; fits: string }
 export interface LayoutMetrics { openFloor: number; conflicts: number; walkability: Walkability; reachableStorage: number; largestFreeRect: FreeRect | null }
+export type FurnishStyle = 'japandi' | 'industrial' | 'boho' | 'minimal' | 'cozy';
+
 export interface Layout {
   id: string;
   roomId: string;
@@ -56,6 +58,8 @@ export interface Layout {
   metrics?: LayoutMetrics | null;
   createdBy?: 'user' | 'agent' | 'system';
   requestText?: string | null;
+  /** material palette the editor renders this layout with (set by POST /rooms/{id}/furnish) */
+  style?: FurnishStyle | null;
   createdAt?: string;
   updatedAt?: string;
 }

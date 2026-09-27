@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 UVICORN := .venv/bin/uvicorn
 
-.PHONY: setup api web mobile test bench demo e2e thumbs screenshots photon fps record
+.PHONY: setup api web mobile mobile-web test bench demo e2e thumbs screenshots photon fps record
 
 setup: .venv/.ok node_modules/.ok
 
@@ -20,6 +20,10 @@ web: setup
 
 mobile: setup
 	cd apps/mobile && npx expo start --dev-client
+
+# Mobile app in a browser (Expo web on :8081); view it in a phone frame at http://localhost:5173/device
+mobile-web:
+	cd apps/mobile && npx expo start --web --port 8081
 
 test: setup
 	pnpm typecheck && pnpm lint && pnpm test && cd apps/api && ../../$(PY) -m pytest -q

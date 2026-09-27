@@ -99,6 +99,8 @@ export const api = {
   getSetupSuggestions: (types: string[]) =>
     request<SetupSuggestionsResponse>(`/setup/suggestions?types=${encodeURIComponent(types.join(','))}`),
 
+  updateRoom: (id: string, patch: { name?: string }) => request<{ room: Room }>(`/rooms/${encodeURIComponent(id)}`, { method: 'PATCH', body: json(patch) }),
+  deleteRoom: (id: string) => request<unknown>(`/rooms/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   /** GET /layouts/{id} returns `{layout, furniture, validation}`; unwrap to the bare Layout. */
   getLayout: async (id: string): Promise<Layout> => {
     const data = await request<Layout | { layout: Layout }>(`/layouts/${encodeURIComponent(id)}`);
