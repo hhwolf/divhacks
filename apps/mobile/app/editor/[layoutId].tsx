@@ -5,7 +5,12 @@ import { api } from '../../src/api';
 import { EditorWebView } from '../../src/components/EditorWebView';
 
 export default function EditorScreen() {
-  const { layoutId, roomId: roomIdParam, fps } = useLocalSearchParams<{ layoutId: string; roomId?: string; fps?: string }>();
+  const { layoutId, roomId: roomIdParam, fps, reviewFurniture } = useLocalSearchParams<{
+    layoutId: string;
+    roomId?: string;
+    fps?: string;
+    reviewFurniture?: string;
+  }>();
   const [roomId, setRoomId] = useState<string | undefined>(roomIdParam);
 
   // Resolve the room id in the background so the editor can hand off to /ask and /variants.
@@ -24,5 +29,8 @@ export default function EditorScreen() {
   }, [layoutId, roomId]);
 
   if (!layoutId) return null;
-  return <EditorWebView key={layoutId} route={`/layout/${encodeURIComponent(layoutId)}`} layoutId={layoutId} roomId={roomId} fpsProbe={fps === '1'} />;
+  const route = reviewFurniture
+    ? `/layout/${encodeURIComponent(layoutId)}?reviewFurniture=${encodeURIComponent(reviewFurniture)}`
+    : `/layout/${encodeURIComponent(layoutId)}`;
+  return <EditorWebView key={`${layoutId}:${reviewFurniture ?? ''}`} route={route} layoutId={layoutId} roomId={roomId} fpsProbe={fps === '1'} />;
 }
