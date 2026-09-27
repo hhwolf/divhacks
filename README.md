@@ -83,7 +83,19 @@ See [setup, data provenance, migrations, production gates and the reproducible w
 4. **Dev client with RoomPlan** (iPhone Pro, LiDAR): `npx expo run:ios --device`, then `make mobile`.
 5. **TestFlight** (Xcode-free, cloud build): `npx eas-cli build --platform ios --profile production` then `npx eas-cli submit --platform ios --profile production --latest`. The first build needs an interactive Apple login (2FA); App Store Connect app id 6816528380, team 59MGA3685P are in `eas.json`.
 
+New scans, manually entered rooms, and samples all open the portrait **Room goals** flow before room creation. Sample furniture is preserved; new scans start clean. The goals summary uses the floor polygon for irregular room area.
+
+On phones, **Furniture** opens a scrollable inventory with labeled thumbnails and full-size touch controls. The default room background is green; an explicitly selected theme is preserved.
+
 The editor screen locks to landscape and embeds the web editor through a typed `postMessage` bridge (`packages/contracts/schemas/bridge.schema.json`).
+
+Phone UI regression checks (local API and Vite servers required):
+
+```sh
+.venv/bin/python scripts/e2e_phone.py --web http://localhost:5173 --api http://localhost:8000
+```
+
+The script checks Chromium and WebKit at five phone sizes and saves screenshots under `.context/phone-qa`. Optional `--native http://localhost:8083` also checks the Expo goals flow at three portrait sizes. For this QA harness, install `react-native-web@^0.21.0` with `npm install --no-save --package-lock=false` in `apps/mobile`, then run `npx expo start --web --port 8083`. The harness does not exercise LiDAR or replace device testing.
 
 ### Scanning a real room (LiDAR iPhone Pro / iPad Pro, iOS 16+)
 
