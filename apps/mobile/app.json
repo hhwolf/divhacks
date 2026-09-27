@@ -13,7 +13,8 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Room Planner uses the camera and LiDAR to scan your room with RoomPlan.",
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "appleTeamId": "59MGA3685P"
     },
     "android": {
       "package": "dev.roomplanner.app",
