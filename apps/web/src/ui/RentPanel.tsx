@@ -20,7 +20,12 @@ export function RentPanel({ onClose }: { onClose: () => void }) {
   const [candidates, setCandidates] = useState<AddressCandidate[]>([]); const [detailsOpen, setDetailsOpen] = useState(false); const [paymentOpen, setPaymentOpen] = useState(false);
   const [utilities, setUtilities] = useState('0'); const [deposit, setDeposit] = useState('1600'); const [moving, setMoving] = useState('0');
   const [benchmarks, setBenchmarks] = useState<{ source: string; value: number; label: string; observedAt: string; sourceUrl: string }[]>([]);
-  useEffect(() => { let active = true; void Promise.all([api.housingProfile(room.id).catch(() => ({ profile: null })), api.latestAssessment(room.id).catch(() => null)]).then(([p, a]) => { if (active) { if (p.profile) setProfile(p.profile); if (a?.assessment) setAssessment(a.assessment); } }).catch((e: Error) => { if (active) setError(e.message); }).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, [room.id]);
+  useEffect(() => {
+    let active = true;
+    if (room.source === 'sample') { setLoading(false); return () => { active = false; }; }
+    void Promise.all([api.housingProfile(room.id).catch(() => ({ profile: null })), api.latestAssessment(room.id).catch(() => null)]).then(([p, a]) => { if (active) { if (p.profile) setProfile(p.profile); if (a?.assessment) setAssessment(a.assessment); } }).catch((e: Error) => { if (active) setError(e.message); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [room.id, room.source]);
   const change = (patch: Partial<HousingProfile>) => { setProfile((p) => ({ ...p, ...patch })); setDirty(true); setMessage(''); };
   const run = async (fn: () => Promise<void>) => { setBusy(true); setError(''); try { await fn(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };
   const compare = () => run(async () => { await api.saveHousingProfile(profile); const r = await api.assessRent({ ...profile, layoutId: activeId }); setAssessment(r.assessment); setBenchmarks(r.benchmarks); setDirty(false); setMessage('Comparison updated.'); });
@@ -65,7 +70,7 @@ export function RentPanel({ onClose }: { onClose: () => void }) {
           <button className="btn" disabled={busy || (profile.address ?? '').length < 3} onClick={() => void run(async () => { const result = await api.addresses(profile.address!, profile.dataMode); setCandidates(result.candidates); setMessage(result.source.note); })}>Find address</button>
           {candidates.length > 0 && <fieldset><legend>Choose the matching property</legend>{candidates.map((c, i) => <button className="housing-record" key={i} onClick={() => { change({ address: c.label, bbl: c.bbl, bin: c.bin, latitude: c.latitude, longitude: c.longitude }); setCandidates([]); }}>{c.label}</button>)}</fieldset>}
         </section>
-        <ConditionsPanel roomId={room.id} value={profile.conditions} onChange={(conditions) => change({ conditions })} />
+        {room.source !== 'sample' && <ConditionsPanel roomId={room.id} value={profile.conditions} onChange={(conditions) => change({ conditions })} />}
         {assessment && <section className="housing-section">
           <h3>Sources</h3>
           <div className="comparable-list">{assessment.comparables.map((c) => <article className="housing-record" key={c.id}><b>{dollars(c.rentCents)}/month · {c.areaSqFt} sq ft</b><span>{c.provenance === 'fixture' ? 'Demo data' : c.provenance === 'user' ? 'User reported' : 'RentCast; reviewed by user'} · observed {c.observedAt}</span>{c.provenance !== 'fixture' && <a href={externalUrl(c.sourceUrl)} target="_blank" rel="noreferrer">Source listing</a>}</article>)}</div>
