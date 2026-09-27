@@ -73,10 +73,11 @@ function Wall({ sk, i, hidden, height, color, night, theme }: { sk: RoomSkeleton
   if (hidden) return null;
   // Place: local x along wall, local y up, extrude along local +z which we orient outward (−n)
   const pos: [number, number, number] = [w.x1, 0, w.z1];
+  const depthScale = wallDepthScale(dx, dz, n);
   return (
     <group position={pos} rotation={[0, angle, 0]}>
-      {/* extrude goes toward local +z; we want outward, i.e. away from the inward normal. Local +z after rotation maps to (−dz... ) — flip if needed */}
-      <group rotation={[0, wallOutwardFlip(dx, dz, n) ? Math.PI : 0, 0]} position={wallOutwardFlip(dx, dz, n) ? [L, 0, 0] : [0, 0, 0]}>
+      {/* Flip depth only when local +z points inward. Rotating the wall 180° would mirror opening offsets. */}
+      <group scale={depthScale}>
         <mesh geometry={geo} castShadow receiveShadow><meshStandardMaterial color={night ? shadeHex(color, -0.25) : color} roughness={0.95} /></mesh>
         {/* baseboard trim */}
         <mesh position={[L / 2, TRIM / 2, -0.012]}><boxGeometry args={[L, TRIM, 0.024]} /><meshStandardMaterial color={COLORS.trim} /></mesh>
@@ -88,10 +89,18 @@ function Wall({ sk, i, hidden, height, color, night, theme }: { sk: RoomSkeleton
     </group>
   );
 }
-function wallOutwardFlip(dx: number, dz: number, n: [number, number]): boolean {
+export function wallOutwardFlip(dx: number, dz: number, n: [number, number]): boolean {
   // after rotation by angle=atan2(-dz,dx), local +z maps to world (−dz·?…). Compute world dir of local +z: rotate (0,0,1) by angle about y → (sin a, 0, cos a)
   const a = Math.atan2(-dz, dx); const wx = Math.sin(a), wz = Math.cos(a);
   return wx * n[0] + wz * n[1] > 0; // local +z points inward → flip so the extrusion goes outward
+}
+export function wallDepthScale(dx: number, dz: number, n: [number, number]): [number, number, number] {
+  return [1, 1, wallOutwardFlip(dx, dz, n) ? -1 : 1];
+}
+export function wallLocalPointToWorld(sk: RoomSkeleton, i: number, x: number, z = 0): [number, number] {
+  const w = sk.walls[i]; const [dx, dz] = wallDir(w); const n = wallInwardNormal(sk, i);
+  const localZ = z * wallDepthScale(dx, dz, n)[2];
+  return [w.x1 + x * dx - localZ * dz, w.z1 + x * dz + localZ * dx];
 }
 function shadeHex(hex: string, amt: number): string { const c = new THREE.Color(hex); const h = { h: 0, s: 0, l: 0 }; c.getHSL(h); c.setHSL(h.h, h.s, Math.max(0, Math.min(1, h.l + amt))); return `#${c.getHexString()}`; }
 
