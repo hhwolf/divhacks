@@ -16,7 +16,7 @@ def test_sample_room_seeds_current_layout(client: TestClient) -> None:
     cur = body["currentLayout"]
     assert cur["isCurrent"] is True and cur["createdBy"] == "system" and cur["name"] == "Current Room"
     assert [i["id"] for i in cur["items"]] == ["bed_double_1", "nightstand_2", "dresser_3", "bookshelf_low_4", "plant_5"]
-    assert cur["items"][0]["locked"] is True
+    assert not any(i["locked"] for i in cur["items"])  # nothing in a sample starts locked; the person locks what matters to them
     assert cur["metrics"]["openFloor"] == 62.3
     assert body["layouts"] == [cur]
 

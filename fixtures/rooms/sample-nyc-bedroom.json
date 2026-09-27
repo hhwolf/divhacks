@@ -23,7 +23,7 @@
     "floorPolygon": [[0, 0], [3.4, 0], [3.4, 3.0], [0, 3.0]]
   },
   "objects": [
-    {"furnitureId": "bed_double",   "x": 0.70, "z": 0.95, "rotation": 0,  "locked": true},
+    {"furnitureId": "bed_double",   "x": 0.70, "z": 0.95, "rotation": 0,  "locked": false},
     {"furnitureId": "nightstand",   "x": 1.63, "z": 0.20, "rotation": 0,  "locked": false},
     {"furnitureId": "dresser",      "x": 3.15, "z": 1.30, "rotation": 270, "locked": false},
     {"furnitureId": "bookshelf_low","x": 0.40, "z": 2.85, "rotation": 180, "locked": false},

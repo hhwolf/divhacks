@@ -17,6 +17,11 @@ def _ask(client: TestClient, bedroom: dict, text: str, **extra: Any) -> dict:
     return r.json()
 
 
+def _lock_bed(client: TestClient, room: dict) -> None:
+    items = [{**i, "locked": i["furnitureId"] == "bed_double" or i["locked"]} for i in room["current"]["items"]]
+    assert client.put(f"/layouts/{room['currentId']}", json={"items": items, "source": "editor"}).status_code == 200
+
+
 def _bed(layout: dict) -> dict:
     return next(i for i in layout["items"] if i["furnitureId"] == "bed_double")
 
@@ -152,6 +157,7 @@ def test_two_bad_plans_reject_and_keep_layouts(client: TestClient, bedroom: dict
 def test_plan_moving_locked_bed_is_rejected(client: TestClient, bedroom: dict) -> None:
     locked = {"intent": "fit_item", "variantName": "Nope", "actions": [{"type": "move", "item": "bed", "zone": "east wall"}], "reply": "Moved the bed."}
     _patch_gemini(client, [locked, locked])
+    _lock_bed(client, bedroom)  # sample beds start unlocked; the person locks theirs in the editor
     out = _ask(client, bedroom, "move my bed to the east wall")
     assert out["status"] == "rejected"
     assert out["violations"][0]["rule"] == "locked"

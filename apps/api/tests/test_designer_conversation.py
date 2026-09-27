@@ -50,6 +50,8 @@ def test_add_then_remove_follows_the_open_layout(client: TestClient, bedroom: di
 
 
 def test_remove_everything_keeps_locked_pieces(client: TestClient, bedroom: dict) -> None:
+    items = [{**i, "locked": i["furnitureId"] == "bed_double"} for i in bedroom["current"]["items"]]
+    assert client.put(f"/layouts/{bedroom['currentId']}", json={"items": items, "source": "editor"}).status_code == 200
     out = _ask(client, bedroom, "can you remove all the furniture")
     assert out["status"] == "ok" and _ids(out["layout"]) == ["bed_double"]
     assert "locked" in out["reply"]

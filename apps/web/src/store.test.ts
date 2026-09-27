@@ -49,7 +49,10 @@ describe('editor store', () => {
   it('R rotates 90° and swaps the footprint; locked items do not rotate or move', () => {
     const id = useEditor.getState().addItem('desk');
     useEditor.getState().rotateItem(id); expect(useEditor.getState().items.find((i) => i.id === id)!.rotation).toBe(90);
-    const bed = useEditor.getState().items.find((i) => i.furnitureId === 'bed_double')!;
+    const unlocked = useEditor.getState().items.find((i) => i.furnitureId === 'bed_double')!;
+    expect(unlocked.locked).toBe(false); // samples start unlocked; the person locks what matters to them
+    useEditor.getState().toggleLock(unlocked.id);
+    const bed = useEditor.getState().items.find((i) => i.id === unlocked.id)!;
     expect(bed.locked).toBe(true);
     useEditor.getState().moveItem(bed.id, 2, 2, { commit: true }); useEditor.getState().rotateItem(bed.id);
     const after = useEditor.getState().items.find((i) => i.id === bed.id)!;

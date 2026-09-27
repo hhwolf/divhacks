@@ -3,9 +3,15 @@ import { sessionHeaders } from './auth';
 import type { FurnishStyle, FurnitureItem, HousingProfile, Layout, PaymentQuote, PaymentRecord, QuoteRequest, Tenancy, EvidencePhoto, AddressCandidate, SourceInfo, RentalComparable, RentAssessment, Room, ValidationResult } from '@arp/contracts';
 
 const nativeApi = (window as unknown as { __ARP_NATIVE_API_URL?: string }).__ARP_NATIVE_API_URL;
-let base = nativeApi ?? (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000';
+/** In development, a page opened from another device (http://<this Mac's LAN IP>:5173) must call the API on that same host, not the device's own localhost. */
+function devApi(configured: string): string {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return configured;
+  const api = new URL(configured); const page = window.location.hostname;
+  return ['localhost', '127.0.0.1'].includes(api.hostname) && !['localhost', '127.0.0.1', ''].includes(page) ? `${api.protocol}//${page}:${api.port || '8000'}` : configured;
+}
+let base = nativeApi ?? devApi((import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000');
 export function setApiBase(url: string) {
-  const target = new URL(url); const configured = new URL((import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000');
+  const target = new URL(url); const configured = new URL(devApi((import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000'));
   const local = ['localhost', '127.0.0.1'].includes(target.hostname);
   if (target.origin !== configured.origin && target.origin !== (nativeApi ? new URL(nativeApi).origin : null) && !(import.meta.env.DEV && local)) throw new Error('Untrusted API origin');
   base = target.origin;

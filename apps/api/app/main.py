@@ -15,6 +15,11 @@ from app.deps import get_ctx
 from fastapi import Depends
 
 
+# Local development only: the editor opened at this Mac's LAN address (or on a phone on the same Wi-Fi) is on a
+# private-network origin that changes with the network, so it can't be listed ahead of time in ALLOWED_ORIGINS.
+LOCAL_NETWORK_ORIGINS = r"https?://(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?"
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
     if settings.payments_mode not in ("demo", "stripe_test"):
@@ -25,7 +30,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         raise ValueError("ALLOWED_ORIGINS must list explicit web origins")
     app = FastAPI(title="Adaptive Room Planner API", version=health.VERSION)
     app.state.ctx = AppContext.build(settings)
-    app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in settings.allowed_origins.split(",") if o.strip()], allow_methods=["*"], allow_headers=["*"])
+    app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in settings.allowed_origins.split(",") if o.strip()],
+                       allow_origin_regex=LOCAL_NETWORK_ORIGINS if settings.local_dev else None, allow_methods=["*"], allow_headers=["*"])
     for r in (health.router, rooms.router, rooms.setup_router, layouts.router, furniture.router, rent.router, payments.router, evidence.router, agent.router, webhooks.router):
         app.include_router(r)
 

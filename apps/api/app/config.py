@@ -90,6 +90,11 @@ class Settings:
             evidence_bucket=_env("EVIDENCE_BUCKET", "housing-evidence"),
         )
 
+    @property
+    def local_dev(self) -> bool:
+        """Running on a developer machine: the public web URL is this machine, not a deployed site."""
+        return self.public_web_url.startswith(("http://localhost", "http://127.0.0.1"))
+
     def live(self, key: str) -> bool:
         """A service is live when MOCK_MODE is off and its credential is present."""
         return not self.mock_mode and bool(key)
