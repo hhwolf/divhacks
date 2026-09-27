@@ -21,6 +21,7 @@ class CreateRoomBody(BaseModel):
     doors: list[Door] = []
     windows: list[Window] = []
     name: str | None = None
+    supersedesRoomId: str | None = None
     seed: bool = True  # False → clean base room: objects are kept as room.detectedObjects, Current Room starts empty
     spaceTypes: list[str] = []
     elements: list[RoomElement] = []
@@ -29,6 +30,8 @@ class CreateRoomBody(BaseModel):
 @router.post("", status_code=201)
 async def post_room(body: CreateRoomBody, ctx: AppContext = Depends(get_ctx)) -> dict:
     user = await ctx.demo_user()
+    if body.supersedesRoomId and not await ctx.repo.get("rooms", body.supersedesRoomId):
+        raise HTTPException(404, "Previous room not found")
     space_types, elements = body.spaceTypes, body.elements
     if body.sample:
         data = load_sample(body.sample)
@@ -44,6 +47,9 @@ async def post_room(body: CreateRoomBody, ctx: AppContext = Depends(get_ctx)) ->
     else:
         raise HTTPException(422, f"Provide 'sample' ({', '.join(SAMPLES)}), 'skeleton' or 'dimensions'")
     room, layout = await create_room(ctx, name=name, skeleton=skeleton, source=source, objects=objects, user_id=user.id, seed=body.seed, space_types=space_types, elements=elements)
+    if body.supersedesRoomId:
+        await ctx.repo.update("rooms", room.id, {"supersedesRoomId": body.supersedesRoomId})
+        room = room.model_copy(update={"supersedesRoomId": body.supersedesRoomId})
     return {"room": room.model_dump(), "currentLayout": layout.model_dump(), "layouts": [layout.model_dump()]}
 
 

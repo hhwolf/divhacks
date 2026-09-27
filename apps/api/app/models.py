@@ -238,76 +238,8 @@ class AgentRequestLog(Loose):
     createdAt: str
 
 
-class HousingProfile(Loose):
-    roomId: str
-    address: str | None = None
-    zip: str | None = None
-    borough: str | None = None
-    neighborhood: str | None = None
-    bbl: str | None = None
-    source: Literal["user", "fixture", "open_data"] = "user"
-    askingRent: float
-    depositRequested: float | None = None
-    applicationFee: float | None = None
-    utilitiesIncluded: bool = False
-    occupancyType: OccupancyType = "private_room"
-    bedrooms: int | None = None
-    declaredIssues: list[str] = []
-
-
-class SpaceQuality(Loose):
-    floorAreaSqFt: float
-    usableAreaSqFt: float
-    openFloorPct: float
-    ceilingHeightFt: float
-    windowCount: int
-    floorMaterial: FloorMaterial = "unknown"
-    materialConfidence: Confidence = "low"
-    conditionScore: int
-    issuePenalties: list[str] = []
-
-
-class RentRange(Strict):
-    low: int
-    mid: int
-    high: int
-
-
-class SourceBreakdown(Strict):
-    source: str
-    label: str
-    value: str
-
-
-class RentAssessment(Loose):
-    id: str
-    roomId: str
-    layoutId: str | None = None
-    profile: HousingProfile
-    spaceQuality: SpaceQuality
-    estimatedFairRange: RentRange
-    askingRent: float
-    deltaVsMid: float
-    pricePerSqFt: float
-    confidence: Confidence
-    explanation: list[str]
-    sourceBreakdown: list[SourceBreakdown]
-    legalFlags: list[str]
-    buildingHealthSignals: list[str]
-    createdAt: str
-    updatedAt: str
-
-
-class PaymentQuote(Loose):
-    id: str
-    roomId: str | None = None
-    assessmentId: str | None = None
-    purpose: PaymentPurpose
-    amount: float
-    rentAmount: float | None = None
-    status: PaymentStatus
-    guardrails: list[str]
-    checkoutUrl: str | None = None
-    paymentRecordId: str | None = None
-    createdAt: str
-    updatedAt: str
+# Financial and housing contracts are strict and versioned independently of geometry.
+from app.housing_models import (  # noqa: E402,F401
+    HousingProfile, ConditionObservation, RentalComparable, SourceInfo, BuildingRecord,
+    RentRange, RentAssessment, PaymentQuote, PaymentRecord, Tenancy, QuoteRequest,
+)

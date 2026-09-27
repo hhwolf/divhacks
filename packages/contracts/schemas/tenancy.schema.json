@@ -1,0 +1,127 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "userId": {
+      "title": "Userid",
+      "type": "string"
+    },
+    "roomId": {
+      "title": "Roomid",
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "demo",
+        "test"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "recipientId": {
+      "title": "Recipientid",
+      "type": "string"
+    },
+    "recipientName": {
+      "title": "Recipientname",
+      "type": "string"
+    },
+    "recipientVerified": {
+      "default": false,
+      "title": "Recipientverified",
+      "type": "boolean"
+    },
+    "supportedArrangement": {
+      "default": true,
+      "title": "Supportedarrangement",
+      "type": "boolean"
+    },
+    "leaseDocumented": {
+      "default": false,
+      "title": "Leasedocumented",
+      "type": "boolean"
+    },
+    "monthlyRentCents": {
+      "exclusiveMinimum": 0,
+      "title": "Monthlyrentcents",
+      "type": "integer"
+    },
+    "screeningActualCostCents": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Screeningactualcostcents"
+    },
+    "screeningDocumentsProvided": {
+      "default": false,
+      "title": "Screeningdocumentsprovided",
+      "type": "boolean"
+    },
+    "recentScreeningReport": {
+      "default": false,
+      "title": "Recentscreeningreport",
+      "type": "boolean"
+    },
+    "depositAlreadyPaidCents": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Depositalreadypaidcents",
+      "type": "integer"
+    },
+    "screeningAlreadyPaidCents": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Screeningalreadypaidcents",
+      "type": "integer"
+    },
+    "brokerHiredBy": {
+      "default": "unknown",
+      "enum": [
+        "landlord",
+        "tenant",
+        "unknown"
+      ],
+      "title": "Brokerhiredby",
+      "type": "string"
+    },
+    "contact": {
+      "title": "Contact",
+      "type": "string"
+    },
+    "refundPolicy": {
+      "title": "Refundpolicy",
+      "type": "string"
+    },
+    "createdAt": {
+      "format": "date-time",
+      "title": "Createdat",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "userId",
+    "roomId",
+    "mode",
+    "recipientId",
+    "recipientName",
+    "monthlyRentCents",
+    "contact",
+    "refundPolicy",
+    "createdAt"
+  ],
+  "title": "Tenancy",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/tenancy.schema.json"
+}

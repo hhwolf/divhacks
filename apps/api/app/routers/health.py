@@ -14,7 +14,11 @@ async def health(ctx: AppContext = Depends(get_ctx)) -> dict:
         "backboard": "live" if s.backboard_live else "mock",
         "photon": "live" if s.photon_live else "mock",
         "supabase": s.store_kind,
-        "payments": "record-only",
+        "payments": s.payments_mode,
+        "housing": s.housing_data_mode,
+        "rentcast": "configured" if s.rentcast_api_key else "unavailable",
+        "auth": "supabase" if s.supabase_url else "demo",
+        "livePayments": "disabled",
     }
     states = {integrations["gemini"], integrations["backboard"], integrations["photon"]}
     mode = "live" if states == {"live"} else "mock" if states == {"mock"} else "mixed"

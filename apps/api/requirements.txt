@@ -12,3 +12,6 @@ google-genai>=1.0
 backboard-sdk
 playwright>=1.47
 python-multipart>=0.0.9
+
+stripe>=12,<15
+psycopg[binary]>=3.2,<4

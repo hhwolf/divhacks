@@ -44,6 +44,17 @@ class Settings:
     public_api_url: str
     data_dir: Path
 
+    supabase_publishable_key: str = ""
+    housing_data_mode: str = "demo"
+    rentcast_api_key: str = ""
+    payments_mode: str = "demo"
+    payments_database_url: str = ""
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_connected_account: str = ""
+    allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5186"
+    evidence_bucket: str = "housing-evidence"
+
     @classmethod
     def from_env(cls) -> Settings:
         return cls(
@@ -65,6 +76,16 @@ class Settings:
             public_web_url=_env("PUBLIC_WEB_URL", "http://localhost:5173"),
             public_api_url=_env("PUBLIC_API_URL", "http://localhost:8000"),
             data_dir=_writable_data_dir(),
+            supabase_publishable_key=_env("SUPABASE_PUBLISHABLE_KEY"),
+            housing_data_mode=_env("HOUSING_DATA_MODE", "demo"),
+            rentcast_api_key=_env("RENTCAST_API_KEY"),
+            payments_mode=_env("PAYMENTS_MODE", "demo"),
+            payments_database_url=_env("PAYMENTS_DATABASE_URL"),
+            stripe_secret_key=_env("STRIPE_SECRET_KEY"),
+            stripe_webhook_secret=_env("STRIPE_WEBHOOK_SECRET"),
+            stripe_connected_account=_env("STRIPE_CONNECTED_ACCOUNT"),
+            allowed_origins=_env("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5186"),
+            evidence_bucket=_env("EVIDENCE_BUCKET", "housing-evidence"),
         )
 
     def live(self, key: str) -> bool:

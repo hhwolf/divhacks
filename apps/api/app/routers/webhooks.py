@@ -9,7 +9,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.agent import pipeline
 from app.agent.router import route
-from app.deps import AppContext, get_ctx
+from app.deps import AppContext, raw_ctx
+from app.auth import Principal, resolve_principal
+from app.repo.scoped import ScopedRepository
+from dataclasses import replace
 from app.imports import URL_RE
 from app.integrations.photon import normalize_inbound, verify_signature
 
@@ -21,8 +24,10 @@ FURNITURE_ONLY = "Text me a furniture listing link or photo, then ask if it fits
 
 
 @router.post("/photon")
-async def photon_webhook(request: Request, ctx: AppContext = Depends(get_ctx)) -> dict:
+async def photon_webhook(request: Request, ctx: AppContext = Depends(raw_ctx)) -> dict:
     raw = await request.body()
+    if ctx.photon.live and not ctx.photon.secret:
+        raise HTTPException(503, "Real Photon requires signature verification")
     if ctx.photon.secret and not verify_signature(ctx.photon.secret, raw, request.headers):
         raise HTTPException(401, "bad signature")
     try:
@@ -33,8 +38,16 @@ async def photon_webhook(request: Request, ctx: AppContext = Depends(get_ctx)) -
     if inbound is None:
         return {"ok": True, "reply": CLARIFY, "layoutId": None, "outbound": None}
 
-    user = await ctx.user_by_phone(inbound.sender)
-    rooms = await ctx.repo.list("rooms", userId=user.id) or await ctx.repo.list("rooms")
+    if ctx.photon.live:
+        links = await ctx.repo.list("phone_links", phone=inbound.sender)
+        if not links:
+            return {"ok": True, "reply": NO_ROOM, "layoutId": None, "outbound": None}
+        principal = Principal(links[0]["userId"], True, inbound.sender)
+    else:
+        principal = await resolve_principal(request)
+    ctx = replace(ctx, repo=ScopedRepository(ctx.repo, principal.id), principal=principal)
+    user = await ctx.demo_user()
+    rooms = await ctx.repo.list("rooms", userId=user.id)
     if not rooms:
         outbound = await ctx.photon.send_text(inbound.sender, NO_ROOM, [])
         return {"ok": True, "reply": NO_ROOM, "layoutId": None, "outbound": outbound}

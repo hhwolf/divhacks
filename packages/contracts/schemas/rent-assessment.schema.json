@@ -1,51 +1,893 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://roomplanner.dev/schemas/rent-assessment.schema.json",
-  "title": "RentAssessment",
-  "type": "object",
-  "required": ["id", "roomId", "profile", "spaceQuality", "estimatedFairRange", "askingRent", "deltaVsMid", "pricePerSqFt", "confidence", "explanation", "sourceBreakdown", "legalFlags", "buildingHealthSignals"],
-  "additionalProperties": true,
-  "properties": {
-    "id": {"type": "string"},
-    "roomId": {"type": "string"},
-    "layoutId": {"type": ["string", "null"]},
-    "profile": {
-      "type": "object",
-      "required": ["roomId", "askingRent"],
-      "additionalProperties": true,
+  "$defs": {
+    "BuildingRecord": {
+      "additionalProperties": false,
       "properties": {
-        "roomId": {"type": "string"},
-        "zip": {"type": ["string", "null"]},
-        "askingRent": {"type": "number"},
-        "depositRequested": {"type": ["number", "null"]},
-        "applicationFee": {"type": ["number", "null"]},
-        "occupancyType": {"type": "string", "enum": ["whole_apartment", "studio", "private_room", "shared_room"]},
-        "declaredIssues": {"type": "array", "items": {"type": "string"}}
-      }
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "violation",
+            "inspection",
+            "complaint"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "unit",
+            "building",
+            "area"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "severity": {
+          "title": "Severity",
+          "type": "string"
+        },
+        "observedAt": {
+          "title": "Observedat",
+          "type": "string"
+        },
+        "sourceUrl": {
+          "title": "Sourceurl",
+          "type": "string"
+        },
+        "bbl": {
+          "title": "Bbl",
+          "type": "string"
+        },
+        "apartment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Apartment"
+        },
+        "demo": {
+          "default": false,
+          "title": "Demo",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "scope",
+        "summary",
+        "status",
+        "severity",
+        "observedAt",
+        "sourceUrl",
+        "bbl"
+      ],
+      "title": "BuildingRecord",
+      "type": "object"
+    },
+    "ConditionObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "insects",
+            "rodents",
+            "leaks",
+            "plumbing",
+            "heat_hot_water",
+            "other"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "status": {
+          "default": "ongoing",
+          "enum": [
+            "ongoing",
+            "resolved",
+            "unknown"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "severity": {
+          "default": "unknown",
+          "enum": [
+            "minor",
+            "moderate",
+            "severe",
+            "unknown"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "observedAt": {
+          "format": "date",
+          "title": "Observedat",
+          "type": "string"
+        },
+        "source": {
+          "default": "user",
+          "enum": [
+            "user",
+            "photo",
+            "public_record"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "scope": {
+          "default": "unit",
+          "enum": [
+            "unit",
+            "building",
+            "area"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "note": {
+          "default": "",
+          "maxLength": 1000,
+          "title": "Note",
+          "type": "string"
+        },
+        "photoIds": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Photoids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "category",
+        "observedAt"
+      ],
+      "title": "ConditionObservation",
+      "type": "object"
+    },
+    "HousingProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "roomId": {
+          "title": "Roomid",
+          "type": "string"
+        },
+        "address": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Address"
+        },
+        "zip": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{5}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Zip"
+        },
+        "apartment": {
+          "anyOf": [
+            {
+              "maxLength": 30,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Apartment"
+        },
+        "bbl": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{10}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bbl"
+        },
+        "bin": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{7}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bin"
+        },
+        "latitude": {
+          "anyOf": [
+            {
+              "maximum": 90,
+              "minimum": -90,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latitude"
+        },
+        "longitude": {
+          "anyOf": [
+            {
+              "maximum": 180,
+              "minimum": -180,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Longitude"
+        },
+        "askingRent": {
+          "exclusiveMinimum": 0,
+          "maximum": 1000000,
+          "title": "Askingrent",
+          "type": "number"
+        },
+        "occupancyType": {
+          "default": "private_room",
+          "enum": [
+            "private_room",
+            "shared_room",
+            "studio",
+            "whole_apartment"
+          ],
+          "title": "Occupancytype",
+          "type": "string"
+        },
+        "scanCoverage": {
+          "default": "room",
+          "enum": [
+            "room",
+            "whole_apartment"
+          ],
+          "title": "Scancoverage",
+          "type": "string"
+        },
+        "measurementConfirmed": {
+          "default": false,
+          "title": "Measurementconfirmed",
+          "type": "boolean"
+        },
+        "confirmedAreaSqFt": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 100000,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confirmedareasqft"
+        },
+        "bedrooms": {
+          "anyOf": [
+            {
+              "maximum": 50,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bedrooms"
+        },
+        "bathrooms": {
+          "anyOf": [
+            {
+              "maximum": 50,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bathrooms"
+        },
+        "leaseMonths": {
+          "default": 12,
+          "maximum": 120,
+          "minimum": 1,
+          "title": "Leasemonths",
+          "type": "integer"
+        },
+        "utilitiesIncluded": {
+          "default": false,
+          "title": "Utilitiesincluded",
+          "type": "boolean"
+        },
+        "furnished": {
+          "default": false,
+          "title": "Furnished",
+          "type": "boolean"
+        },
+        "conditions": {
+          "items": {
+            "$ref": "#/$defs/ConditionObservation"
+          },
+          "maxItems": 30,
+          "title": "Conditions",
+          "type": "array"
+        },
+        "comparables": {
+          "items": {
+            "$ref": "#/$defs/RentalComparable"
+          },
+          "maxItems": 200,
+          "title": "Comparables",
+          "type": "array"
+        },
+        "dataMode": {
+          "default": "real",
+          "enum": [
+            "demo",
+            "real"
+          ],
+          "title": "Datamode",
+          "type": "string"
+        },
+        "declaredIssues": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 30,
+          "title": "Declaredissues",
+          "type": "array"
+        },
+        "depositRequested": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Depositrequested"
+        },
+        "applicationFee": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Applicationfee"
+        }
+      },
+      "required": [
+        "roomId",
+        "askingRent"
+      ],
+      "title": "HousingProfile",
+      "type": "object"
+    },
+    "RentRange": {
+      "additionalProperties": false,
+      "properties": {
+        "low": {
+          "title": "Low",
+          "type": "integer"
+        },
+        "mid": {
+          "title": "Mid",
+          "type": "integer"
+        },
+        "high": {
+          "title": "High",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "low",
+        "mid",
+        "high"
+      ],
+      "title": "RentRange",
+      "type": "object"
+    },
+    "RentalComparable": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "unitKey": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Unitkey",
+          "type": "string"
+        },
+        "sourceUrl": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Sourceurl",
+          "type": "string"
+        },
+        "observedAt": {
+          "format": "date",
+          "title": "Observedat",
+          "type": "string"
+        },
+        "occupancyType": {
+          "enum": [
+            "private_room",
+            "shared_room",
+            "studio",
+            "whole_apartment"
+          ],
+          "title": "Occupancytype",
+          "type": "string"
+        },
+        "rentCents": {
+          "exclusiveMinimum": 0,
+          "maximum": 100000000,
+          "title": "Rentcents",
+          "type": "integer"
+        },
+        "areaSqFt": {
+          "exclusiveMinimum": 0,
+          "maximum": 100000,
+          "title": "Areasqft",
+          "type": "number"
+        },
+        "areaConfirmed": {
+          "default": true,
+          "title": "Areaconfirmed",
+          "type": "boolean"
+        },
+        "latitude": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "Latitude",
+          "type": "number"
+        },
+        "longitude": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "Longitude",
+          "type": "number"
+        },
+        "bedrooms": {
+          "anyOf": [
+            {
+              "maximum": 50,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bedrooms"
+        },
+        "bathrooms": {
+          "anyOf": [
+            {
+              "maximum": 50,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bathrooms"
+        },
+        "leaseMonths": {
+          "anyOf": [
+            {
+              "maximum": 120,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Leasemonths"
+        },
+        "furnished": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Furnished"
+        },
+        "utilitiesIncluded": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Utilitiesincluded"
+        },
+        "sharedAmenities": {
+          "default": "",
+          "maxLength": 500,
+          "title": "Sharedamenities",
+          "type": "string"
+        },
+        "conditionsDocumented": {
+          "default": false,
+          "title": "Conditionsdocumented",
+          "type": "boolean"
+        },
+        "conditions": {
+          "items": {
+            "$ref": "#/$defs/ConditionObservation"
+          },
+          "maxItems": 30,
+          "title": "Conditions",
+          "type": "array"
+        },
+        "provenance": {
+          "default": "user",
+          "enum": [
+            "user",
+            "rentcast",
+            "fixture"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "unitKey",
+        "sourceUrl",
+        "observedAt",
+        "occupancyType",
+        "rentCents",
+        "areaSqFt",
+        "latitude",
+        "longitude"
+      ],
+      "title": "RentalComparable",
+      "type": "object"
+    },
+    "SourceInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "demo",
+            "available",
+            "unavailable",
+            "not_applicable"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        },
+        "retrievedAt": {
+          "format": "date-time",
+          "title": "Retrievedat",
+          "type": "string"
+        },
+        "observedAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observedat"
+        },
+        "note": {
+          "default": "",
+          "title": "Note",
+          "type": "string"
+        },
+        "permittedUse": {
+          "default": "Display with attribution; review provider terms before redistribution.",
+          "title": "Permitteduse",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "status",
+        "url",
+        "retrievedAt"
+      ],
+      "title": "SourceInfo",
+      "type": "object"
+    },
+    "SpaceQuality": {
+      "additionalProperties": false,
+      "properties": {
+        "floorAreaSqFt": {
+          "title": "Floorareasqft",
+          "type": "number"
+        },
+        "usableAreaSqFt": {
+          "title": "Usableareasqft",
+          "type": "number"
+        },
+        "openFloorPct": {
+          "title": "Openfloorpct",
+          "type": "number"
+        },
+        "ceilingHeightFt": {
+          "title": "Ceilingheightft",
+          "type": "number"
+        },
+        "windowCount": {
+          "title": "Windowcount",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "floorAreaSqFt",
+        "usableAreaSqFt",
+        "openFloorPct",
+        "ceilingHeightFt",
+        "windowCount"
+      ],
+      "title": "SpaceQuality",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "userId": {
+      "title": "Userid",
+      "type": "string"
+    },
+    "roomId": {
+      "title": "Roomid",
+      "type": "string"
+    },
+    "layoutId": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Layoutid"
+    },
+    "profile": {
+      "$ref": "#/$defs/HousingProfile"
     },
     "spaceQuality": {
-      "type": "object",
-      "required": ["floorAreaSqFt", "usableAreaSqFt", "openFloorPct", "ceilingHeightFt", "windowCount", "floorMaterial", "materialConfidence", "conditionScore", "issuePenalties"],
-      "properties": {
-        "floorAreaSqFt": {"type": "number"},
-        "usableAreaSqFt": {"type": "number"},
-        "openFloorPct": {"type": "number"},
-        "ceilingHeightFt": {"type": "number"},
-        "windowCount": {"type": "integer"},
-        "floorMaterial": {"type": "string", "enum": ["hardwood", "engineered_wood", "tile", "laminate", "concrete", "carpet", "vinyl", "unknown"]},
-        "materialConfidence": {"type": "string", "enum": ["high", "medium", "low"]},
-        "conditionScore": {"type": "integer"},
-        "issuePenalties": {"type": "array", "items": {"type": "string"}}
-      }
+      "$ref": "#/$defs/SpaceQuality"
     },
-    "estimatedFairRange": {"type": "object", "required": ["low", "mid", "high"], "properties": {"low": {"type": "integer"}, "mid": {"type": "integer"}, "high": {"type": "integer"}}},
-    "askingRent": {"type": "number"},
-    "deltaVsMid": {"type": "number"},
-    "pricePerSqFt": {"type": "number"},
-    "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
-    "explanation": {"type": "array", "items": {"type": "string"}},
-    "sourceBreakdown": {"type": "array", "items": {"type": "object", "required": ["source", "label", "value"], "properties": {"source": {"type": "string"}, "label": {"type": "string"}, "value": {"type": "string"}}}},
-    "legalFlags": {"type": "array", "items": {"type": "string"}},
-    "buildingHealthSignals": {"type": "array", "items": {"type": "string"}}
-  }
+    "status": {
+      "enum": [
+        "demo",
+        "estimated",
+        "insufficient_data",
+        "legacy_demo"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "methodVersion": {
+      "default": "comparable-asking-rents-v1",
+      "title": "Methodversion",
+      "type": "string"
+    },
+    "estimatedFairRange": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RentRange"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "conditionMatchedRange": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RentRange"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "conditionDifference": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Conditiondifference"
+    },
+    "askingRent": {
+      "title": "Askingrent",
+      "type": "number"
+    },
+    "deltaVsMid": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Deltavsmid"
+    },
+    "pricePerSqFt": {
+      "title": "Pricepersqft",
+      "type": "number"
+    },
+    "comparables": {
+      "items": {
+        "$ref": "#/$defs/RentalComparable"
+      },
+      "title": "Comparables",
+      "type": "array"
+    },
+    "conditionComparableIds": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Conditioncomparableids",
+      "type": "array"
+    },
+    "explanation": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Explanation",
+      "type": "array"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/SourceInfo"
+      },
+      "title": "Sources",
+      "type": "array"
+    },
+    "buildingRecords": {
+      "items": {
+        "$ref": "#/$defs/BuildingRecord"
+      },
+      "title": "Buildingrecords",
+      "type": "array"
+    },
+    "notices": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Notices",
+      "type": "array"
+    },
+    "createdAt": {
+      "format": "date-time",
+      "title": "Createdat",
+      "type": "string"
+    },
+    "updatedAt": {
+      "format": "date-time",
+      "title": "Updatedat",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "userId",
+    "roomId",
+    "profile",
+    "spaceQuality",
+    "status",
+    "askingRent",
+    "pricePerSqFt",
+    "comparables",
+    "conditionComparableIds",
+    "explanation",
+    "sources",
+    "buildingRecords",
+    "notices",
+    "createdAt",
+    "updatedAt"
+  ],
+  "title": "RentAssessment",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/rent-assessment.schema.json"
 }

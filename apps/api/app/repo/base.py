@@ -5,8 +5,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Literal
 
-Collection = Literal["rooms", "furniture", "layouts", "users", "agent_requests", "rent_assessments", "payment_quotes"]
-COLLECTIONS: tuple[Collection, ...] = ("rooms", "furniture", "layouts", "users", "agent_requests", "rent_assessments", "payment_quotes")
+Collection = Literal["rooms", "furniture", "layouts", "users", "agent_requests", "rent_assessments", "payment_quotes", "housing_profiles", "evidence", "phone_links"]
+COLLECTIONS: tuple[Collection, ...] = ("rooms", "furniture", "layouts", "users", "agent_requests", "rent_assessments", "payment_quotes", "housing_profiles", "evidence", "phone_links")
 Doc = dict[str, Any]
 
 

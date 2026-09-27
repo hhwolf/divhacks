@@ -10,10 +10,10 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-import httpx
 from bs4 import BeautifulSoup
 
 from app.catalog import FIXTURES_DIR, PRESETS
+from app.safe_fetch import fetch_public
 from app.integrations.gemini import GeminiAdapter
 from app.models import FurnitureItem, FurnitureKind, FurnitureSource
 from app.repo.base import Repository
@@ -39,6 +39,8 @@ def local_fixture_path(url: str) -> Path | None:
     u = urlparse(url)
     if u.hostname in LOCAL_HOSTS and u.path.startswith("/fixtures/listings/"):
         name = u.path.rsplit("/", 1)[-1]
+        if name not in {"desk", "desk.html", "desk.jpg"}:
+            return None
         path = FIXTURES_DIR / "listings" / (name if "." in name else f"{name}.html")
         return path if path.exists() else None
     return None
@@ -49,10 +51,7 @@ async def fetch_bytes(url: str) -> tuple[bytes, str]:
     if local is not None:
         mime = "text/html" if local.suffix == ".html" else "image/jpeg" if local.suffix in (".jpg", ".jpeg") else "application/octet-stream"
         return local.read_bytes(), mime
-    async with httpx.AsyncClient(timeout=10, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 AdaptiveRoomPlanner/0.1"}) as client:
-        resp = await client.get(url)
-        resp.raise_for_status()
-        return resp.content, resp.headers.get("content-type", "").split(";")[0]
+    return await fetch_public(url)
 
 
 def parse_dims(text: str) -> dict[str, float] | None:

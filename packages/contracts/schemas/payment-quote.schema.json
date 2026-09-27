@@ -1,20 +1,136 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://roomplanner.dev/schemas/payment-quote.schema.json",
+  "additionalProperties": false,
+  "properties": {
+    "tenancyId": {
+      "title": "Tenancyid",
+      "type": "string"
+    },
+    "purpose": {
+      "enum": [
+        "rent_payment",
+        "deposit",
+        "application_fee",
+        "screening_fee",
+        "broker_fee",
+        "other",
+        "furniture_purchase"
+      ],
+      "title": "Purpose",
+      "type": "string"
+    },
+    "amountCents": {
+      "exclusiveMinimum": 0,
+      "maximum": 100000000,
+      "title": "Amountcents",
+      "type": "integer"
+    },
+    "rentalPeriod": {
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+      "title": "Rentalperiod",
+      "type": "string"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "userId": {
+      "title": "Userid",
+      "type": "string"
+    },
+    "roomId": {
+      "title": "Roomid",
+      "type": "string"
+    },
+    "recipientId": {
+      "title": "Recipientid",
+      "type": "string"
+    },
+    "recipientName": {
+      "title": "Recipientname",
+      "type": "string"
+    },
+    "currency": {
+      "const": "usd",
+      "default": "usd",
+      "title": "Currency",
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "demo",
+        "test"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "ready",
+        "blocked",
+        "needs_review"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "ruleVersion": {
+      "default": "nyc-residential-2026-09-26-v1",
+      "title": "Ruleversion",
+      "type": "string"
+    },
+    "ruleSources": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Rulesources",
+      "type": "array"
+    },
+    "contact": {
+      "title": "Contact",
+      "type": "string"
+    },
+    "refundPolicy": {
+      "title": "Refundpolicy",
+      "type": "string"
+    },
+    "expiresAt": {
+      "format": "date-time",
+      "title": "Expiresat",
+      "type": "string"
+    },
+    "createdAt": {
+      "format": "date-time",
+      "title": "Createdat",
+      "type": "string"
+    }
+  },
+  "required": [
+    "tenancyId",
+    "purpose",
+    "amountCents",
+    "rentalPeriod",
+    "id",
+    "userId",
+    "roomId",
+    "recipientId",
+    "recipientName",
+    "mode",
+    "decision",
+    "reasons",
+    "ruleSources",
+    "contact",
+    "refundPolicy",
+    "expiresAt",
+    "createdAt"
+  ],
   "title": "PaymentQuote",
   "type": "object",
-  "required": ["id", "purpose", "amount", "status", "guardrails"],
-  "additionalProperties": true,
-  "properties": {
-    "id": {"type": "string"},
-    "roomId": {"type": ["string", "null"]},
-    "assessmentId": {"type": ["string", "null"]},
-    "purpose": {"type": "string", "enum": ["rent_payment", "deposit", "application_fee", "furniture_purchase"]},
-    "amount": {"type": "number"},
-    "rentAmount": {"type": ["number", "null"]},
-    "status": {"type": "string", "enum": ["mock", "ready", "blocked", "paid_test"]},
-    "guardrails": {"type": "array", "items": {"type": "string"}},
-    "checkoutUrl": {"type": ["string", "null"]},
-    "paymentRecordId": {"type": ["string", "null"]}
-  }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/payment-quote.schema.json"
 }

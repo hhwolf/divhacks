@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Room } from '@arp/contracts';
 import { api } from '../lib/api';
+import { Account } from './Account';
 import { Backdrop } from './Backdrop';
 
 export function Home() {
@@ -18,6 +19,7 @@ export function Home() {
     <div className="home theme-peach">
       <Backdrop />
       <header><h1>Adaptive Room Planner</h1><p>Where did my space go? Scan once, then every idea becomes a named variant. <span className={`chip ${health}`}>API: {health}</span></p></header>
+      <Account />
       <div className="cards">
         <button className="card" onClick={() => alert('Scanning needs the iPhone app (LiDAR). Use the sample room here.')}><span className="card-icon">📐</span><b>Scan room</b><small>RoomPlan on iPhone Pro</small></button>
         <button className="card" disabled={busy} onClick={() => create({ sample: 'nyc-bedroom' })}><span className="card-icon">🛏️</span><b>Load sample room</b><small>3.4 × 3.0 m NYC bedroom</small></button>

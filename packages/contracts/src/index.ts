@@ -32,7 +32,7 @@ export interface FurnitureItem {
   sourceUrl?: string | null;
   price?: number | null;
   color?: string | null;
-  estimated?: boolean;
+  estimated?: boolean; dimensionsConfirmed?: boolean; deliveryCost?: number;
   frontAxis?: '+z' | '-z' | '+x' | '-x';
   colors?: string[];
   /** Per material-slot colours (Kenney slot names: wood, carpet, metal, …) for realistic, varied palettes. */
@@ -64,6 +64,7 @@ export type SpaceType = 'bedroom' | 'study' | 'living' | 'workout' | 'creative' 
 export interface RoomElement { id: string; label: string; furnitureIds?: string[]; custom?: boolean; zone?: { w: number; d: number } | null }
 export interface Room {
   id: string; userId?: string | null; name: string; skeleton: RoomSkeleton; source: 'scan' | 'manual' | 'sample'; createdAt?: string;
+  supersedesRoomId?: string | null;
   spaceTypes?: SpaceType[] | string[]; elements?: RoomElement[]; detectedObjects?: LayoutItem[];
 }
 
@@ -86,70 +87,53 @@ export interface BridgeMessage<T = unknown> { type: BridgeType; id?: string; pay
 
 export type Units = 'imperial' | 'metric';
 
-// ---- Rent reality check + guarded payment prototype ----
+// Housing comparisons and guarded test payments. Payment amounts are integer USD cents.
 export type OccupancyType = 'whole_apartment' | 'studio' | 'private_room' | 'shared_room';
-export type FloorMaterial = 'hardwood' | 'engineered_wood' | 'tile' | 'laminate' | 'concrete' | 'carpet' | 'vinyl' | 'unknown';
-export type Confidence = 'high' | 'medium' | 'low';
-export type PaymentPurpose = 'rent_payment' | 'deposit' | 'application_fee' | 'furniture_purchase';
-export type PaymentStatus = 'mock' | 'ready' | 'blocked' | 'paid_test';
+export type ConditionCategory = 'insects' | 'rodents' | 'leaks' | 'plumbing' | 'heat_hot_water' | 'other';
+export interface ConditionObservation {
+  category: ConditionCategory; status: 'ongoing' | 'resolved' | 'unknown'; severity: 'minor' | 'moderate' | 'severe' | 'unknown';
+  observedAt: string; source: 'user' | 'photo' | 'public_record'; scope: 'unit' | 'building' | 'area'; note: string; photoIds: string[];
+}
+export interface RentalComparable {
+  id: string; unitKey: string; sourceUrl: string; observedAt: string; occupancyType: OccupancyType;
+  rentCents: number; areaSqFt: number; areaConfirmed: boolean; latitude: number; longitude: number;
+  bedrooms: number | null; bathrooms: number | null; leaseMonths: number | null; furnished: boolean | null; utilitiesIncluded: boolean | null;
+  sharedAmenities: string; conditionsDocumented: boolean; conditions: ConditionObservation[]; provenance: 'user' | 'rentcast' | 'fixture';
+}
 export interface HousingProfile {
-  roomId: string;
-  address?: string | null;
-  zip?: string | null;
-  borough?: string | null;
-  neighborhood?: string | null;
-  bbl?: string | null;
-  source?: 'user' | 'fixture' | 'open_data';
-  askingRent: number;
-  depositRequested?: number | null;
-  applicationFee?: number | null;
-  utilitiesIncluded?: boolean;
-  occupancyType?: OccupancyType;
-  bedrooms?: number | null;
-  declaredIssues?: string[];
+  roomId: string; address?: string | null; zip?: string | null; apartment?: string | null; bbl?: string | null; bin?: string | null;
+  latitude?: number | null; longitude?: number | null; askingRent: number; occupancyType: OccupancyType; scanCoverage: 'room' | 'whole_apartment';
+  measurementConfirmed: boolean; confirmedAreaSqFt?: number | null; bedrooms?: number | null; bathrooms?: number | null; leaseMonths: number;
+  utilitiesIncluded: boolean; furnished: boolean; conditions: ConditionObservation[]; comparables: RentalComparable[]; dataMode: 'demo' | 'real';
+  declaredIssues?: string[]; depositRequested?: number | null; applicationFee?: number | null;
 }
-export interface SpaceQuality {
-  floorAreaSqFt: number;
-  usableAreaSqFt: number;
-  openFloorPct: number;
-  ceilingHeightFt: number;
-  windowCount: number;
-  floorMaterial: FloorMaterial;
-  materialConfidence: Confidence;
-  conditionScore: number;
-  issuePenalties: string[];
-}
+export interface SourceInfo { source: string; status: 'demo' | 'available' | 'unavailable' | 'not_applicable'; url: string; retrievedAt: string; observedAt?: string | null; note: string; permittedUse: string }
+export interface BuildingRecord { id: string; kind: 'violation' | 'inspection' | 'complaint'; scope: 'unit' | 'building' | 'area'; summary: string; status: string; severity: string; observedAt: string; sourceUrl: string; bbl: string; apartment?: string | null; demo: boolean }
 export interface RentRange { low: number; mid: number; high: number }
-export interface SourceBreakdown { source: string; label: string; value: string }
+export interface SpaceQuality { floorAreaSqFt: number; usableAreaSqFt: number; openFloorPct: number; ceilingHeightFt: number; windowCount: number }
 export interface RentAssessment {
-  id: string;
-  roomId: string;
-  layoutId?: string | null;
-  profile: HousingProfile;
-  spaceQuality: SpaceQuality;
-  estimatedFairRange: RentRange;
-  askingRent: number;
-  deltaVsMid: number;
-  pricePerSqFt: number;
-  confidence: Confidence;
-  explanation: string[];
-  sourceBreakdown: SourceBreakdown[];
-  legalFlags: string[];
-  buildingHealthSignals: string[];
-  createdAt: string;
-  updatedAt: string;
+  id: string; userId: string; roomId: string; layoutId?: string | null; profile: HousingProfile; spaceQuality: SpaceQuality;
+  status: 'demo' | 'estimated' | 'insufficient_data' | 'legacy_demo'; methodVersion: string; estimatedFairRange: RentRange | null;
+  conditionMatchedRange: RentRange | null; conditionDifference: number | null; askingRent: number; deltaVsMid: number | null; pricePerSqFt: number;
+  comparables: RentalComparable[]; conditionComparableIds: string[]; explanation: string[]; sources: SourceInfo[]; buildingRecords: BuildingRecord[];
+  notices: string[]; createdAt: string; updatedAt: string;
 }
-export interface PaymentQuote {
-  id: string;
-  roomId?: string | null;
-  assessmentId?: string | null;
-  purpose: PaymentPurpose;
-  amount: number;
-  rentAmount?: number | null;
-  status: PaymentStatus;
-  guardrails: string[];
-  checkoutUrl?: string | null;
-  paymentRecordId?: string | null;
-  createdAt: string;
-  updatedAt: string;
+export type PaymentPurpose = 'rent_payment' | 'deposit' | 'application_fee' | 'screening_fee' | 'broker_fee' | 'other' | 'furniture_purchase';
+export interface Tenancy {
+  id: string; userId: string; roomId: string; mode: 'demo' | 'test'; recipientId: string; recipientName: string; recipientVerified: boolean;
+  supportedArrangement: boolean; leaseDocumented: boolean; monthlyRentCents: number; screeningActualCostCents: number | null;
+  screeningDocumentsProvided: boolean; recentScreeningReport: boolean; depositAlreadyPaidCents: number; screeningAlreadyPaidCents: number;
+  brokerHiredBy: 'landlord' | 'tenant' | 'unknown'; contact: string; refundPolicy: string; createdAt: string;
 }
+export interface QuoteRequest { tenancyId: string; purpose: PaymentPurpose; amountCents: number; rentalPeriod: string }
+export interface PaymentQuote extends QuoteRequest {
+  id: string; userId: string; roomId: string; recipientId: string; recipientName: string; currency: 'usd'; mode: 'demo' | 'test';
+  decision: 'ready' | 'blocked' | 'needs_review'; reasons: string[]; ruleVersion: string; ruleSources: string[]; contact: string; refundPolicy: string; expiresAt: string; createdAt: string;
+}
+export interface PaymentRecord {
+  id: string; quoteId: string; userId: string; roomId: string; tenancyId: string; recipientId: string; purpose: PaymentPurpose; rentalPeriod: string;
+  amountCents: number; currency: 'usd'; mode: 'demo' | 'test'; status: 'created' | 'pending' | 'succeeded' | 'failed' | 'canceled' | 'expired' | 'refunded' | 'disputed';
+  sessionId: string | null; paymentIntentId: string | null; checkoutUrl: string | null; refundedCents: number; createdAt: string; updatedAt: string;
+}
+export interface EvidencePhoto { id: string; roomId: string; createdAt: string; mimeType: string; size: number; mode: 'demo' | 'private' }
+export interface AddressCandidate { label: string; latitude: number; longitude: number; bbl: string | null; bin: string | null }

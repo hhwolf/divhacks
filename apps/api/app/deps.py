@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 
 from fastapi import Request
@@ -13,6 +13,8 @@ from app.integrations.backboard import BackboardAdapter
 from app.integrations.gemini import GeminiAdapter
 from app.integrations.photon import PhotonAdapter
 from app.models import User
+from app.auth import Principal, resolve_principal
+from app.repo.scoped import ScopedRepository
 from app.repo import make_repository
 from app.repo.base import Repository
 
@@ -24,6 +26,8 @@ class AppContext:
     gemini: GeminiAdapter
     backboard: BackboardAdapter
     photon: PhotonAdapter
+
+    principal: Principal | None = None
 
     @classmethod
     def build(cls, settings: Settings) -> AppContext:
@@ -40,8 +44,16 @@ class AppContext:
         return user
 
     async def demo_user(self) -> User:
+        if self.principal:
+            return User(id=self.principal.id, phone=self.principal.phone, createdAt=datetime.now(UTC).isoformat())
         return await self.user_by_phone(self.settings.demo_phone)
 
 
-def get_ctx(request: Request) -> AppContext:
+def raw_ctx(request: Request) -> AppContext:
     return request.app.state.ctx
+
+
+async def get_ctx(request: Request) -> AppContext:
+    ctx = raw_ctx(request)
+    principal = await resolve_principal(request)
+    return replace(ctx, repo=ScopedRepository(ctx.repo, principal.id), principal=principal)

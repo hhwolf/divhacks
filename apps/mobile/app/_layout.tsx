@@ -4,8 +4,11 @@ import React, { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { ToastProvider } from '../src/components/Toast';
+import { installCrashGuard } from '../src/crashGuard';
 import { useStore } from '../src/store';
 import { colors } from '../src/theme';
+
+installCrashGuard();
 
 export default function RootLayout() {
   const hydrated = useStore((s) => s.hydrated);

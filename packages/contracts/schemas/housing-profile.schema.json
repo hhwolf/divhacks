@@ -1,0 +1,520 @@
+{
+  "$defs": {
+    "ConditionObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "insects",
+            "rodents",
+            "leaks",
+            "plumbing",
+            "heat_hot_water",
+            "other"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "status": {
+          "default": "ongoing",
+          "enum": [
+            "ongoing",
+            "resolved",
+            "unknown"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "severity": {
+          "default": "unknown",
+          "enum": [
+            "minor",
+            "moderate",
+            "severe",
+            "unknown"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "observedAt": {
+          "format": "date",
+          "title": "Observedat",
+          "type": "string"
+        },
+        "source": {
+          "default": "user",
+          "enum": [
+            "user",
+            "photo",
+            "public_record"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "scope": {
+          "default": "unit",
+          "enum": [
+            "unit",
+            "building",
+            "area"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "note": {
+          "default": "",
+          "maxLength": 1000,
+          "title": "Note",
+          "type": "string"
+        },
+        "photoIds": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Photoids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "category",
+        "observedAt"
+      ],
+      "title": "ConditionObservation",
+      "type": "object"
+    },
+    "RentalComparable": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "unitKey": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Unitkey",
+          "type": "string"
+        },
+        "sourceUrl": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Sourceurl",
+          "type": "string"
+        },
+        "observedAt": {
+          "format": "date",
+          "title": "Observedat",
+          "type": "string"
+        },
+        "occupancyType": {
+          "enum": [
+            "private_room",
+            "shared_room",
+            "studio",
+            "whole_apartment"
+          ],
+          "title": "Occupancytype",
+          "type": "string"
+        },
+        "rentCents": {
+          "exclusiveMinimum": 0,
+          "maximum": 100000000,
+          "title": "Rentcents",
+          "type": "integer"
+        },
+        "areaSqFt": {
+          "exclusiveMinimum": 0,
+          "maximum": 100000,
+          "title": "Areasqft",
+          "type": "number"
+        },
+        "areaConfirmed": {
+          "default": true,
+          "title": "Areaconfirmed",
+          "type": "boolean"
+        },
+        "latitude": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "Latitude",
+          "type": "number"
+        },
+        "longitude": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "Longitude",
+          "type": "number"
+        },
+        "bedrooms": {
+          "anyOf": [
+            {
+              "maximum": 50,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bedrooms"
+        },
+        "bathrooms": {
+          "anyOf": [
+            {
+              "maximum": 50,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bathrooms"
+        },
+        "leaseMonths": {
+          "anyOf": [
+            {
+              "maximum": 120,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Leasemonths"
+        },
+        "furnished": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Furnished"
+        },
+        "utilitiesIncluded": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Utilitiesincluded"
+        },
+        "sharedAmenities": {
+          "default": "",
+          "maxLength": 500,
+          "title": "Sharedamenities",
+          "type": "string"
+        },
+        "conditionsDocumented": {
+          "default": false,
+          "title": "Conditionsdocumented",
+          "type": "boolean"
+        },
+        "conditions": {
+          "items": {
+            "$ref": "#/$defs/ConditionObservation"
+          },
+          "maxItems": 30,
+          "title": "Conditions",
+          "type": "array"
+        },
+        "provenance": {
+          "default": "user",
+          "enum": [
+            "user",
+            "rentcast",
+            "fixture"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "unitKey",
+        "sourceUrl",
+        "observedAt",
+        "occupancyType",
+        "rentCents",
+        "areaSqFt",
+        "latitude",
+        "longitude"
+      ],
+      "title": "RentalComparable",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "roomId": {
+      "title": "Roomid",
+      "type": "string"
+    },
+    "address": {
+      "anyOf": [
+        {
+          "maxLength": 300,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Address"
+    },
+    "zip": {
+      "anyOf": [
+        {
+          "pattern": "^\\d{5}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Zip"
+    },
+    "apartment": {
+      "anyOf": [
+        {
+          "maxLength": 30,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Apartment"
+    },
+    "bbl": {
+      "anyOf": [
+        {
+          "pattern": "^\\d{10}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bbl"
+    },
+    "bin": {
+      "anyOf": [
+        {
+          "pattern": "^\\d{7}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bin"
+    },
+    "latitude": {
+      "anyOf": [
+        {
+          "maximum": 90,
+          "minimum": -90,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Latitude"
+    },
+    "longitude": {
+      "anyOf": [
+        {
+          "maximum": 180,
+          "minimum": -180,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Longitude"
+    },
+    "askingRent": {
+      "exclusiveMinimum": 0,
+      "maximum": 1000000,
+      "title": "Askingrent",
+      "type": "number"
+    },
+    "occupancyType": {
+      "default": "private_room",
+      "enum": [
+        "private_room",
+        "shared_room",
+        "studio",
+        "whole_apartment"
+      ],
+      "title": "Occupancytype",
+      "type": "string"
+    },
+    "scanCoverage": {
+      "default": "room",
+      "enum": [
+        "room",
+        "whole_apartment"
+      ],
+      "title": "Scancoverage",
+      "type": "string"
+    },
+    "measurementConfirmed": {
+      "default": false,
+      "title": "Measurementconfirmed",
+      "type": "boolean"
+    },
+    "confirmedAreaSqFt": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "maximum": 100000,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Confirmedareasqft"
+    },
+    "bedrooms": {
+      "anyOf": [
+        {
+          "maximum": 50,
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bedrooms"
+    },
+    "bathrooms": {
+      "anyOf": [
+        {
+          "maximum": 50,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bathrooms"
+    },
+    "leaseMonths": {
+      "default": 12,
+      "maximum": 120,
+      "minimum": 1,
+      "title": "Leasemonths",
+      "type": "integer"
+    },
+    "utilitiesIncluded": {
+      "default": false,
+      "title": "Utilitiesincluded",
+      "type": "boolean"
+    },
+    "furnished": {
+      "default": false,
+      "title": "Furnished",
+      "type": "boolean"
+    },
+    "conditions": {
+      "items": {
+        "$ref": "#/$defs/ConditionObservation"
+      },
+      "maxItems": 30,
+      "title": "Conditions",
+      "type": "array"
+    },
+    "comparables": {
+      "items": {
+        "$ref": "#/$defs/RentalComparable"
+      },
+      "maxItems": 200,
+      "title": "Comparables",
+      "type": "array"
+    },
+    "dataMode": {
+      "default": "real",
+      "enum": [
+        "demo",
+        "real"
+      ],
+      "title": "Datamode",
+      "type": "string"
+    },
+    "declaredIssues": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 30,
+      "title": "Declaredissues",
+      "type": "array"
+    },
+    "depositRequested": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Depositrequested"
+    },
+    "applicationFee": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Applicationfee"
+    }
+  },
+  "required": [
+    "roomId",
+    "askingRent"
+  ],
+  "title": "HousingProfile",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/housing-profile.schema.json"
+}
