@@ -46,9 +46,14 @@ function LiveScan() {
   const [cameraDenied, setCameraDenied] = useState(false);
   useKeepAwake(); // a room scan takes a minute or two; never let the screen sleep mid-capture
 
-  const onCaptureStatus = useCallback((e: { nativeEvent: CaptureProgress }) => {
+  const onCaptureStatus = useCallback((e: { nativeEvent?: CaptureProgress | null } | CaptureProgress | null | undefined) => {
+    // Expo delivers view events as { nativeEvent: payload } on the new architecture, but the payload can also arrive
+    // bare; a null payload on a real device crashed the release build here (TypeError 'message' of null).
+    const raw = e && typeof e === 'object' && 'nativeEvent' in e ? e.nativeEvent : (e as CaptureProgress | null | undefined);
+    if (!raw || typeof raw !== 'object' || typeof raw.status !== 'string') return;
+    const p: CaptureProgress = raw;
     // Keep the last known counts when an instruction-only event arrives.
-    setProgress((prev) => ({ ...prev, ...e.nativeEvent, message: e.nativeEvent.message ?? (e.nativeEvent.status === prev.status ? prev.message : undefined) }));
+    setProgress((prev) => ({ ...prev, ...p, message: p.message ?? (p.status === prev.status ? prev.message : undefined) }));
   }, []);
 
   const start = async () => {
@@ -58,11 +63,11 @@ function LiveScan() {
       await mod?.startCapture();
       setProgress({ status: 'scanning', walls: 0, doors: 0, windows: 0, objects: 0 });
     } catch (e) {
-      const err = e as Error & { code?: string };
-      const denied = err.code === 'CameraPermissionDenied' || /camera access/i.test(err.message);
+      const err = (e ?? {}) as Error & { code?: string };
+      const denied = err.code === 'CameraPermissionDenied' || /camera access/i.test(err.message ?? '');
       setCameraDenied(denied);
-      setProgress({ status: 'error', message: denied ? 'Camera access is off for Room Planner.' : err.message });
-      if (!denied) toast(`Could not start capture: ${err.message}`, { tone: 'danger' });
+      setProgress({ status: 'error', message: denied ? 'Camera access is off for Room Planner.' : err.message ?? String(e) });
+      if (!denied) toast(`Could not start capture: ${err.message ?? String(e)}`, { tone: 'danger' });
     }
   };
 
@@ -80,8 +85,9 @@ function LiveScan() {
       setScan(result);
       setProgress((p) => ({ ...p, status: 'done', message: undefined }));
     } catch (e) {
-      setProgress({ status: 'error', message: (e as Error).message });
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
+      const msg = (e as Error | null)?.message ?? String(e);
+      setProgress({ status: 'error', message: msg });
+      toast(msg, { tone: 'danger', ms: 4500 });
     } finally {
       setBusy(null);
     }
