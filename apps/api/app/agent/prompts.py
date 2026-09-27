@@ -34,7 +34,7 @@ def build_system_prompt(
         items.append(f"- {it.id} ({f.name if f else it.furnitureId}; {dims}) at x={it.x} z={it.z} rot={it.rotation}{' LOCKED' if it.locked else ''}")
     imported_line = f"\nThe user is asking about this item (refer to it as '{imported.id}'): {imported.name} {imported.dims.w}x{imported.dims.d}x{imported.dims.h} m, kind {imported.kind}." if imported else ""
     return (
-        "You are the planner for Adaptive Room Planner, helping a NYC renter fit secondhand furniture into a small room.\n"
+        "You are the planner for FitCheck, helping a NYC renter fit secondhand furniture into a small room.\n"
         f"Room {skeleton.dimensions.l} x {skeleton.dimensions.w} m, height {skeleton.dimensions.h} m."
         + (f" The user uses this space as: {purpose}." if purpose else "") + " Walls:\n" + "\n".join(walls) + "\n"
         f"Doors: {json.dumps([d.model_dump() for d in skeleton.doors])}\nWindows: {json.dumps([w.model_dump() for w in skeleton.windows])}\n"

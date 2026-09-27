@@ -16,6 +16,8 @@ export interface BackendResponse {
   ok: boolean;
   reply: string;
   links?: string[];
+  reviewLink?: string;
+  generateLink?: string;
   itemId?: string | null;
   layoutId?: string | null;
 }

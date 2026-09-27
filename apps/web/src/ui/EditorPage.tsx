@@ -31,8 +31,10 @@ export function EditorPage() {
   const furniture = useEditor((x) => x.furniture);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [openedReviewId, setOpenedReviewId] = useState<string | null>(null);
+  const [openedGenerateId, setOpenedGenerateId] = useState<string | null>(null);
   const ui = params.get('ui') !== '0';
-  const reviewFurnitureId = params.get('reviewFurniture');
+  const generateFurnitureId = params.get('generateFurniture');
+  const reviewFurnitureId = params.get('reviewFurniture') ?? generateFurnitureId;
   const reviewFurniture = reviewFurnitureId ? furniture[reviewFurnitureId] : undefined;
 
   useEffect(() => {
@@ -43,11 +45,17 @@ export function EditorPage() {
   }, [id, sample, params, s]);
 
   useEffect(() => {
-    if (reviewFurniture && reviewFurnitureId !== openedReviewId) {
+    if (reviewFurniture && reviewFurnitureId !== openedReviewId && (!generateFurnitureId || !reviewFurniture.dimensionsConfirmed)) {
       setReviewOpen(true);
       setOpenedReviewId(reviewFurnitureId);
     }
-  }, [openedReviewId, reviewFurniture, reviewFurnitureId]);
+  }, [generateFurnitureId, openedReviewId, reviewFurniture, reviewFurnitureId]);
+
+  useEffect(() => {
+    if (!generateFurnitureId || !reviewFurniture?.dimensionsConfirmed || openedGenerateId === generateFurnitureId || !room || loading) return;
+    setOpenedGenerateId(generateFurnitureId);
+    void s.getState().askAgent('Generate a room version with this Marketplace item.', generateFurnitureId);
+  }, [generateFurnitureId, loading, openedGenerateId, reviewFurniture, room, s]);
 
   // bridge: host → editor
   useEffect(() => {
@@ -88,7 +96,7 @@ export function EditorPage() {
           <TopLeft /><TopRight /><VariantTabs /><AnalysisTile /><RoomNeeds /><Palette /><SidePanel /><QuickActions /><FurnishCard /><BottomCenter /><RequestBar /><Drawers />
         </>
       )}
-      {reviewOpen && reviewFurniture && <FurnitureImport existing={reviewFurniture} onClose={() => setReviewOpen(false)} />}
+      {reviewOpen && reviewFurniture && <FurnitureImport existing={reviewFurniture} onClose={() => setReviewOpen(false)} ctaLabel={generateFurnitureId ? 'Confirm and generate version' : undefined} afterConfirm={generateFurnitureId ? async (f) => { setOpenedGenerateId(f.id); await s.getState().askAgent('Generate a room version with this Marketplace item.', f.id); } : undefined} />}
       <Toasts />
     </div>
   );

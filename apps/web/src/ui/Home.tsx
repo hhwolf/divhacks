@@ -20,7 +20,7 @@ export function Home() {
   return (
     <div className={`home theme-${theme}`}>
       <Backdrop />
-      <header><h1>Adaptive Room Planner</h1><p>Where did my space go? Scan once, then every idea becomes a named variant. <span className={`chip ${health}`}>API: {health}</span></p></header>
+      <header><h1>FitCheck</h1><p>Where did my space go? Scan once, then every idea becomes a named variant. <span className={`chip ${health}`}>API: {health}</span></p></header>
       <Account />
       <div className="cards">
         <button className="card" onClick={() => alert('Scanning needs the iPhone app (LiDAR). Use the sample room here.')}><span className="card-icon">📐</span><b>Scan room</b><small>RoomPlan on iPhone Pro</small></button>

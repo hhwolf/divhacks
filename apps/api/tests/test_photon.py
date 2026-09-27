@@ -112,6 +112,10 @@ def test_normalized_photon_imports_marketplace_link_for_review(monkeypatch: pyte
         assert body["ok"] is True and body["itemId"].startswith("imp_")
         assert body["layoutId"] == created["currentLayout"]["id"]
         assert f"reviewFurniture={body['itemId']}" in body["links"][0]
+        assert f"generateFurniture={body['itemId']}" in body["links"][1]
+        assert body["reviewLink"] == body["links"][0]
+        assert body["generateLink"] == body["links"][1]
+        assert body["links"][0] not in body["reply"] and body["links"][1] not in body["reply"]
         item = c.get("/furniture").json()["items"][-1]
         assert item["source"] == "link" and item["sourceUrl"] == payload["text"]
         assert item["dimensionsConfirmed"] is False and item["estimated"] is True
@@ -145,6 +149,7 @@ def test_normalized_photon_imports_screenshot_for_review(monkeypatch: pytest.Mon
         body = _post_normalized(c, payload).json()
         assert body["layoutId"] == created["currentLayout"]["id"]
         assert "estimated item" in body["reply"]
+        assert f"generateFurniture={body['itemId']}" in body["generateLink"]
         item = c.get("/furniture").json()["items"][-1]
         assert item["source"] == "photo" and item["dimensionsConfirmed"] is False
 

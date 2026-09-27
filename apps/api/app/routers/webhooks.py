@@ -10,6 +10,7 @@ import hashlib
 import hmac
 import time
 from typing import Any
+from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
@@ -82,7 +83,11 @@ async def _latest_room_and_current(ctx: AppContext, user_id: str) -> tuple[dict[
 
 
 def _review_link(ctx: AppContext, layout_id: str, item_id: str) -> str:
-    return f"{ctx.settings.public_web_url}/layout/{layout_id}?reviewFurniture={item_id}"
+    return f"{ctx.settings.public_web_url}/layout/{layout_id}?{urlencode({'reviewFurniture': item_id})}"
+
+
+def _generate_link(ctx: AppContext, layout_id: str, item_id: str) -> str:
+    return f"{ctx.settings.public_web_url}/layout/{layout_id}?{urlencode({'generateFurniture': item_id})}"
 
 
 async def _import_from_normalized(ctx: AppContext, user_id: str, body: NormalizedPhotonBody) -> tuple[dict[str, Any], str]:
@@ -190,9 +195,19 @@ async def photon_normalized(request: Request, ctx: AppContext = Depends(raw_ctx)
 
     _, base = room_base
     item, import_note = await _import_from_normalized(scoped, user.id, body)
-    link = _review_link(ctx, base["id"], item["id"])
-    reply = f"{import_note} {link}"
-    response = {"ok": True, "reply": reply, "itemId": item["id"], "layoutId": base["id"], "links": [link], "item": item}
+    review_link = _review_link(ctx, base["id"], item["id"])
+    generate_link = _generate_link(ctx, base["id"], item["id"])
+    reply = f"{import_note} Review dimensions first, or open the room-version link to confirm and generate a preview variant."
+    response = {
+        "ok": True,
+        "reply": reply,
+        "itemId": item["id"],
+        "layoutId": base["id"],
+        "links": [review_link, generate_link],
+        "reviewLink": review_link,
+        "generateLink": generate_link,
+        "item": item,
+    }
     await ctx.repo.insert(
         "photon_messages",
         {"id": body.messageId, "sender": body.sender, "userId": user.id, "itemId": item["id"], "layoutId": base["id"], "response": response},
