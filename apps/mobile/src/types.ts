@@ -117,7 +117,8 @@ export interface RoomPlanExport { skeleton: RoomSkeleton; objects: ScannedObject
  */
 export interface RoomDraft {
   name: string;
-  source: 'scan' | 'manual';
+  source: 'scan' | 'manual' | 'sample';
+  sample?: 'l-shaped' | 'nyc-bedroom';
   skeleton?: RoomSkeleton;
   dimensions?: Dimensions;
   doors?: Door[];

@@ -27,6 +27,8 @@ Everything runs in **mock mode with zero env vars and no network**: the JSON sto
 
 Channel split: **Photon/iMessage brings new furniture into the room** from listing links or photos, checks it against the saved scan, and creates a layout variant. The **in-app AI assistant arranges the room**: reading corners, yoga space, window placement, locked-item rules, and other spatial changes inside the existing 3D room.
 
+To furnish a clean room, complete scan/manual setup, then describe a style or add up to four inspiration photos in the editor's empty-room card. Furnishing and Restyle create variants. Deterministic kits work offline; Gemini is optional. See [furnishing behavior and branch integration decisions](docs/BRANCH_INTEGRATION.md).
+
 ```bash
 make test           # pnpm typecheck + lint + vitest, then pytest (incl. TS/Python parity on fixtures/validation)
 make bench          # validation p95, room-load, import and agent timings → .data/bench.json
@@ -50,7 +52,7 @@ SUPABASE_SECRET_KEY=...
 make supabase-assets
 ```
 
-The furniture uploader stores GLB, thumbnail PNG and manifest bytes in the public `furniture-assets` Storage bucket and upserts queryable rows into `arp_furniture_assets` with checksums, sizes, storage paths and public URLs. It is idempotent; run `scripts/upload_furniture_assets.py --dry-run` to preview the 51 uploaded assets.
+The furniture uploader stores GLB, thumbnail PNG and manifest bytes in the public `furniture-assets` Storage bucket and upserts queryable rows into `arp_furniture_assets` with checksums, sizes, storage paths and public URLs. It is idempotent; run `scripts/upload_furniture_assets.py --dry-run` to preview the 53 bundled assets.
 
 ## Repository layout
 
@@ -61,7 +63,7 @@ The furniture uploader stores GLB, thumbnail PNG and manifest bytes in the publi
 | `apps/mobile` | Expo app (expo-router): Home, Scan (RoomPlan module), Editor (WebView bridge), Ask, Variants, Settings |
 | `packages/geometry` | TypeScript fit validation + metrics (source of truth; Python port in `apps/api/app/solver`) |
 | `packages/contracts` | JSON Schemas + TS types for skeleton, layout, furniture, plan, bridge, Photon |
-| `assets/furniture` | 25 Kenney Furniture Kit GLBs (CC0) + `manifest.json` (real-world dims) + thumbnails |
+| `assets/furniture` | 26 bundled furniture GLBs (CC0) + `manifest.json` (real-world dims) + thumbnails |
 | `fixtures/` | sample rooms, validation parity suite, canned plans, listing page, Photon payloads |
 | `docs/` | specs, reference images, per-iteration screenshots, demo recording |
 
@@ -81,7 +83,19 @@ See [setup, data provenance, migrations, production gates and the reproducible w
 4. **Dev client with RoomPlan** (iPhone Pro, LiDAR): `npx expo run:ios --device`, then `make mobile`.
 5. **TestFlight** (Xcode-free, cloud build): `npx eas-cli build --platform ios --profile production` then `npx eas-cli submit --platform ios --profile production --latest`. The first build needs an interactive Apple login (2FA); App Store Connect app id 6816528380, team 59MGA3685P are in `eas.json`.
 
+New scans, manually entered rooms, and samples all open the portrait **Room goals** flow before room creation. Sample furniture is preserved; new scans start clean. The goals summary uses the floor polygon for irregular room area.
+
+On phones, **Furniture** opens a scrollable inventory with labeled thumbnails and full-size touch controls. The default room background is green; an explicitly selected theme is preserved.
+
 The editor screen locks to landscape and embeds the web editor through a typed `postMessage` bridge (`packages/contracts/schemas/bridge.schema.json`).
+
+Phone UI regression checks (local API and Vite servers required):
+
+```sh
+.venv/bin/python scripts/e2e_phone.py --web http://localhost:5173 --api http://localhost:8000
+```
+
+The script checks Chromium and WebKit at five phone sizes and saves screenshots under `.context/phone-qa`. Optional `--native http://localhost:8083` also checks the Expo goals flow at three portrait sizes. For this QA harness, install `react-native-web@^0.21.0` with `npm install --no-save --package-lock=false` in `apps/mobile`, then run `npx expo start --web --port 8083`. The harness does not exercise LiDAR or replace device testing.
 
 ### Scanning a real room (LiDAR iPhone Pro / iPad Pro, iOS 16+)
 
@@ -93,19 +107,16 @@ The Scan screen hosts Apple's `RoomCaptureView` through the local Expo module in
 
 If the camera is denied the screen shows an "Open Settings" button. Without LiDAR (or in Expo Go / the Simulator) the screen falls back to sample room, typed dimensions, or pasted RoomPlan JSON — `fixtures/rooms/roomplan-export-sample.json` is a hand-authored export in exactly the shape the module produces.
 
+Optional local USDZ inspection: install `apps/api/requirements-usdz.txt` into `.venv`, then run `.venv/bin/python apps/api/scripts/inspect_usdz.py /path/to/room.usdz --convert`. This developer utility does not add a hosted upload endpoint or change the native JSON scan flow. See [USDZ setup and limitations](docs/BRANCH_INTEGRATION.md#optional-local-usdz-inspection).
+
 ## Photon (iMessage) in real mode
 
-Photon and the editor’s **Import furniture** button share the same import backend. Send a Facebook Marketplace listing or furniture screenshot to the Photon iMessage line; the relay imports a pending item, replies with an editor link containing `reviewFurniture=<itemId>`, and the editor opens the dimension-confirmation modal before the item can be test-placed. Spatial planning requests without new furniture belong in the in-app assistant.
-
-Live Photon runs through the Spectrum relay in `apps/photon-relay`, then forwards normalized, HMAC-signed payloads to FastAPI. Live mode requires a signed Photon/Spectrum webhook and a verified phone linked to the signed-in user; see [housing setup](docs/HOUSING_PAYMENTS.md).
+Photon and the editor’s **Import furniture** button share the same import backend. Send a supported listing or screenshot, then confirm dimensions in the editor before requesting a fit variant. For Facebook Marketplace use screenshots/manual entry and preserve the original purchase link. Live Photon requires a signed webhook and a verified phone linked to the signed-in user; see [housing setup](docs/HOUSING_PAYMENTS.md). Spatial planning requests without new furniture belong in the in-app assistant.
 
 ```bash
-pnpm --filter @arp/photon-relay dev
-ngrok http 8787           # public URL for the relay
-# set SPECTRUM_PROJECT_ID + SPECTRUM_PROJECT_SECRET (or PHOTON_API_KEY),
-# PHOTON_WEBHOOK_SECRET/SPECTRUM_WEBHOOK_SECRET, PHOTON_RELAY_SECRET,
-# PUBLIC_API_URL, and PUBLIC_WEB_URL.
-# in the Photon dashboard: webhook → https://<ngrok>/spectrum/webhook
+ngrok http 8000           # public URL for the webhook
+# set SPECTRUM_PROJECT_ID + SPECTRUM_PROJECT_SECRET (or PHOTON_API_KEY) plus PHOTON_WEBHOOK_SECRET
+# in the Photon dashboard: webhook → https://<ngrok>/webhooks/photon
 .venv/bin/python scripts/simulate_photon.py     # posts fixtures/photon/*.json to the local webhook (works in mock mode too)
 ```
 

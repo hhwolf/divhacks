@@ -1,0 +1,33 @@
+{
+  "name": "L-shaped loft (sample)",
+  "source": "sample",
+  "skeleton": {
+    "dimensions": {"l": 6.0, "w": 5.0, "h": 2.8},
+    "walls": [
+      {"x1": 0,   "z1": 0,   "x2": 6.0, "z2": 0,   "height": 2.8},
+      {"x1": 6.0, "z1": 0,   "x2": 6.0, "z2": 2.6, "height": 2.8},
+      {"x1": 6.0, "z1": 2.6, "x2": 3.4, "z2": 2.6, "height": 2.8},
+      {"x1": 3.4, "z1": 2.6, "x2": 3.4, "z2": 5.0, "height": 2.8},
+      {"x1": 3.4, "z1": 5.0, "x2": 0,   "z2": 5.0, "height": 2.8},
+      {"x1": 0,   "z1": 5.0, "x2": 0,   "z2": 0,   "height": 2.8}
+    ],
+    "doors":   [{"wall": 3, "offset": 1.3, "width": 0.9, "height": 2.0, "swing": "in", "hinge": "left"}],
+    "windows": [
+      {"wall": 0, "offset": 0.9, "width": 1.4, "sillHeight": 0.9, "height": 1.4},
+      {"wall": 0, "offset": 3.9, "width": 1.4, "sillHeight": 0.9, "height": 1.4},
+      {"wall": 5, "offset": 1.2, "width": 1.2, "sillHeight": 0.9, "height": 1.3}
+    ],
+    "outlets": [{"wall": 0, "offset": 3.6}, {"wall": 4, "offset": 2.8}],
+    "floorPolygon": [[0, 0], [6.0, 0], [6.0, 2.6], [3.4, 2.6], [3.4, 5.0], [0, 5.0]]
+  },
+  "objects": [
+    {"furnitureId": "bed_double",    "x": 0.95, "z": 4.2,  "rotation": 90,  "locked": true},
+    {"furnitureId": "nightstand",    "x": 0.2,  "z": 3.2,  "rotation": 90,  "locked": false},
+    {"furnitureId": "rug",           "x": 4.6,  "z": 1.3,  "rotation": 90,  "locked": false},
+    {"furnitureId": "sofa",          "x": 5.55, "z": 1.3,  "rotation": 270, "locked": false},
+    {"furnitureId": "coffee_table",  "x": 4.5,  "z": 1.3,  "rotation": 90,  "locked": false},
+    {"furnitureId": "floor_lamp",    "x": 5.75, "z": 2.4,  "rotation": 0,   "locked": false},
+    {"furnitureId": "bookshelf_low", "x": 3.1,  "z": 0.15, "rotation": 0,   "locked": false},
+    {"furnitureId": "plant",         "x": 0.25, "z": 0.35, "rotation": 0,   "locked": false}
+  ]
+}

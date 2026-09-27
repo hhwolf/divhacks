@@ -4,8 +4,10 @@ import type { Room } from '@arp/contracts';
 import { api } from '../lib/api';
 import { Account } from './Account';
 import { Backdrop } from './Backdrop';
+import { useEditor } from '../store';
 
 export function Home() {
+  const theme = useEditor((s) => s.theme);
   const nav = useNavigate(); const [rooms, setRooms] = useState<Room[]>([]); const [health, setHealth] = useState<string>('…'); const [busy, setBusy] = useState(false); const [err, setErr] = useState<string | null>(null);
   const [dims, setDims] = useState({ l: '11', w: '10', h: '9' }); const [showDims, setShowDims] = useState(false);
   useEffect(() => { api.rooms().then(setRooms).catch(() => undefined); api.health().then((h) => setHealth(h.mode)).catch(() => setHealth('offline')); }, []);
@@ -16,7 +18,7 @@ export function Home() {
   };
   const ft = (v: string) => (parseFloat(v) || 0) * 0.3048;
   return (
-    <div className="home theme-peach">
+    <div className={`home theme-${theme}`}>
       <Backdrop />
       <header><h1>Adaptive Room Planner</h1><p>Where did my space go? Scan once, then every idea becomes a named variant. <span className={`chip ${health}`}>API: {health}</span></p></header>
       <Account />
@@ -34,6 +36,7 @@ export function Home() {
         </form>
       )}
       <button className="link" disabled={busy} onClick={() => create({ sample: 'studio' })}>or load the studio sample</button>
+      <p><a className="link" href="/device">Preview the mobile app in a phone frame →</a></p>
       {err && <p className="err">{err}</p>}
       {rooms.length > 0 && (
         <section className="recent"><h2>Recent rooms</h2>

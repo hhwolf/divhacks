@@ -15,8 +15,8 @@ export function ComparePage() {
     if (!a || !b) return;
     Promise.all([api.compare(a, b), api.layout(a), api.layout(b)]).then(([c, la, lb]) => { setData(c); setFur({ ...(la.furniture ?? {}), ...(lb.furniture ?? {}) }); return api.room(la.layout.roomId); }).then((r) => setRoom(r.room)).catch((e) => setErr((e as Error).message));
   }, [a, b]);
-  if (err) return <div className="compare theme-peach"><Backdrop /><p className="err">{err}</p></div>;
-  if (!data || !room) return <div className="compare theme-peach"><Backdrop /><div className="loading"><div className="spinner" />Comparing…</div></div>;
+  if (err) return <div className={`compare theme-${theme}`}><Backdrop /><p className="err">{err}</p></div>;
+  if (!data || !room) return <div className={`compare theme-${theme}`}><Backdrop /><div className="loading"><div className="spinner" />Comparing…</div></div>;
   const d = data.deltas; const sign = (v: number, suffix = '') => `${v > 0 ? '+' : ''}${Math.round(v * 10) / 10}${suffix}`;
   return (
     <div className={`compare theme-${theme}`}>

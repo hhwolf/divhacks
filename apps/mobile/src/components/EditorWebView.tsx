@@ -240,7 +240,7 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp, fpsProbe }:
 
       {loading && !loadError ? (
         <View style={styles.center} pointerEvents="none">
-          <ActivityIndicator color={colors.tile} size="large" />
+          <ActivityIndicator color={colors.ink} size="large" />
           <Text style={styles.loadingText}>Loading editor…</Text>
         </View>
       ) : null}
@@ -294,22 +294,22 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp, fpsProbe }:
 
 const styles = StyleSheet.create({
   // Matches the editor page's own background so the safe-area strips blend in.
-  root: { flex: 1, backgroundColor: '#B57C56' },
-  web: { flex: 1, backgroundColor: '#B57C56' },
-  center: { position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: 'rgba(217,165,110,0.85)' },
-  loadingText: { color: colors.tile, marginTop: 10, fontWeight: '600' },
+  root: { flex: 1, backgroundColor: '#84AA9D' },
+  web: { flex: 1, backgroundColor: '#84AA9D' },
+  center: { position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: 'rgba(243,244,239,0.92)' },
+  loadingText: { color: colors.ink, marginTop: 10, fontWeight: '600' },
   errorTitle: { color: colors.ink, fontSize: 18, fontWeight: '800', marginBottom: 6 },
   errorBody: { color: colors.ink, fontSize: 13, textAlign: 'center', marginTop: 2 },
   pillButton: { backgroundColor: colors.ink, paddingHorizontal: 16, paddingVertical: 10, borderRadius: radius.pill },
   pillText: { color: colors.tile, fontWeight: '700' },
   back: {
     position: 'absolute',
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.pill,
-    backgroundColor: 'rgba(74,51,39,0.88)',
+    backgroundColor: 'rgba(37,52,32,0.88)',
     ...shadow.soft,
   },
   chip: {
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     height: 32,
     paddingHorizontal: 12,
     borderRadius: radius.pill,
-    backgroundColor: 'rgba(74,51,39,0.88)',
+    backgroundColor: 'rgba(37,52,32,0.88)',
     ...shadow.soft,
   },
   chipText: { color: colors.tile, fontWeight: '700', fontSize: 12 },

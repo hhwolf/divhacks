@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FurnitureItem } from '@arp/contracts';
 import { useEditor } from '../store';
 import { I } from './icons';
 import { apiBase } from '../lib/api';
 import { FurnitureImport } from './FurnitureImport';
+import { useCompactEditor } from '../lib/useCompactEditor';
 
 const CATS: { key: string; label: string; icon: keyof typeof I }[] = [
   { key: 'All', label: 'All', icon: 'grid' }, { key: 'bed', label: 'Bed', icon: 'bed' }, { key: 'desk', label: 'Desk', icon: 'desk' }, { key: 'seating', label: 'Seating', icon: 'chair' },
@@ -15,23 +16,32 @@ export function thumbUrl(f: FurnitureItem): string | null {
   if (!f.thumbUrl) return null; return f.thumbUrl.startsWith('http') || f.thumbUrl.startsWith('/assets') ? f.thumbUrl : `${apiBase()}${f.thumbUrl}`;
 }
 export function Palette() {
+  const compact = useCompactEditor(); const [open, setOpen] = useState(false);
+  const requestOpen = useEditor((s) => s.requestOpen); const drawer = useEditor((s) => s.drawer);
+  useEffect(() => { if (requestOpen || drawer) setOpen(false); }, [requestOpen, drawer]);
   const furniture = useEditor((s) => s.furniture); const placing = useEditor((s) => s.placing); const page = useEditor((s) => s.palettePage); const category = useEditor((s) => s.category); const search = useEditor((s) => s.search);
   const set = useEditor; const [showCats, setShowCats] = useState(false);
   const [importing, setImporting] = useState(false); const [review, setReview] = useState<FurnitureItem | undefined>();
+  const room = useEditor((s) => s.room);
+  const suggested = useMemo(() => new Set(room?.elements?.flatMap(e => e.furnitureIds ?? []) ?? []), [room]);
+  const cats = useMemo(() => suggested.size ? [{ key: 'room', label: 'For this room', icon: 'tree' as const }, ...CATS] : CATS, [suggested]);
   const list = useMemo(() => {
     let items = Object.values(furniture);
-    if (category !== 'All') items = items.filter((f) => (category === 'imported' ? f.source !== 'preset' : f.category === category));
+    if (category === 'room') items = items.filter((f) => suggested.has(f.id));
+    else if (category !== 'All') items = items.filter((f) => (category === 'imported' ? f.source !== 'preset' : f.category === category));
     if (search) items = items.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()));
     return items.sort((a, b) => (a.source === 'preset' ? 0 : 1) - (b.source === 'preset' ? 0 : 1) || a.name.localeCompare(b.name));
-  }, [furniture, category, search]);
-  const pages = Math.max(1, Math.ceil(list.length / PER_PAGE)); const p = Math.min(page, pages - 1); const slice = list.slice(p * PER_PAGE, (p + 1) * PER_PAGE);
+  }, [furniture, category, search, suggested]);
+  const pages = Math.max(1, Math.ceil(list.length / PER_PAGE)); const p = Math.min(page, pages - 1); const slice = compact ? list : list.slice(p * PER_PAGE, (p + 1) * PER_PAGE);
   return (
-    <><div className="palette" data-testid="palette">
+    <>{compact && <button className="palette-toggle btn dark" aria-label="Open furniture inventory" aria-expanded={open} onClick={() => { setOpen(!open); set.getState().setRequestOpen(false); set.getState().select(null); }}><I.grid />Furniture</button>}
+    <div className={`palette ${open ? 'is-open' : ''}`} data-testid="palette" hidden={compact && !open}>
+      {compact && <div className="palette-header"><strong>Furniture</strong><button className="sq small" aria-label="Close furniture inventory" onClick={() => setOpen(false)}><I.close /></button></div>}
       <div className="cat-row">
         <button className={`sq small ${search !== null ? 'active' : ''}`} title="Search" aria-label="Search" onClick={() => { set.getState().setSearch(search === null ? '' : null); }}><I.search /></button>
-        <button className={`sq small ${showCats ? 'active' : ''}`} title="Categories" aria-label="Categories" onClick={() => setShowCats((v) => !v)}>{(() => { const Icon = I[CATS.find((c) => c.key === category)?.icon ?? 'grid']; return <Icon />; })()}</button>
+        <button className={`sq small ${showCats ? 'active' : ''}`} title="Categories" aria-label="Categories" onClick={() => setShowCats((v) => !v)}>{(() => { const Icon = I[cats.find((c) => c.key === category)?.icon ?? 'grid']; return <Icon />; })()}</button>
         {showCats && (
-          <div className="cat-menu">{CATS.map((c) => { const Icon = I[c.icon]; return <button key={c.key} className={`cat ${category === c.key ? 'active' : ''}`} onClick={() => { set.getState().setCategory(c.key); setShowCats(false); }}><Icon /><span>{c.label}</span></button>; })}</div>
+          <div className="cat-menu">{cats.map((c) => { const Icon = I[c.icon]; return <button key={c.key} className={`cat ${category === c.key ? 'active' : ''}`} onClick={() => { set.getState().setCategory(c.key); setShowCats(false); }}><Icon /><span>{c.label}</span></button>; })}</div>
         )}
       </div>
       <button className="btn small import-furniture" onClick={() => { setReview(undefined); setImporting(true); }}>Import furniture</button>
@@ -40,14 +50,15 @@ export function Palette() {
         <button className={`tile tool ${!placing ? 'active' : ''}`} title="Select / move" aria-label="Select tool" onClick={() => set.getState().cancelPlacing()}><I.cursor /></button>
         {slice.map((f) => (
           <button key={f.id} className={`tile ${placing?.furnitureId === f.id ? 'active' : ''}`} title={`${f.name}${f.estimated ? ' (estimated)' : ''}`} aria-label={f.name}
-            onClick={() => { if (['photo', 'link'].includes(f.source) && !f.dimensionsConfirmed) { setReview(f); setImporting(true); } else if (placing?.furnitureId === f.id) set.getState().cancelPlacing(); else set.getState().startPlacing(f.id); }}>
+            onClick={() => { if (['photo', 'link'].includes(f.source) && !f.dimensionsConfirmed) { setReview(f); setImporting(true); } else if (placing?.furnitureId === f.id) set.getState().cancelPlacing(); else set.getState().startPlacing(f.id); if (compact) setOpen(false); }}>
             {thumbUrl(f) ? <img src={thumbUrl(f)!} alt="" draggable={false} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} /> : <span className="tile-fallback">{f.name.slice(0, 2)}</span>}
+            {compact && <span className="tile-name">{f.name}</span>}
             {f.source !== 'preset' && <span className="tile-badge">{f.price ? `$${f.price}` : 'new'}</span>}
           </button>
         ))}
-        {Array.from({ length: Math.max(0, PER_PAGE - slice.length) }, (_, k) => <span key={`e${k}`} className="tile empty" />)}
+        {Array.from({ length: compact ? 0 : Math.max(0, PER_PAGE - slice.length) }, (_, k) => <span key={`e${k}`} className="tile empty" />)}
       </div>
-      <div className="pager">
+      <div className="pager" hidden={compact}>
         <button className="sq small" aria-label="Previous page" disabled={p === 0} onClick={() => set.getState().setPalettePage(p - 1)}><I.chevL /></button>
         <span className="page-num">{p + 1}</span>
         <button className="sq small" aria-label="Next page" disabled={p >= pages - 1} onClick={() => set.getState().setPalettePage(p + 1)}><I.chevR /></button>

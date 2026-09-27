@@ -23,7 +23,18 @@ export function formatDims(dims: { l: number; w: number; h: number } | undefined
 }
 
 export function formatArea(l: number, w: number, units: Units): string {
-  const m2 = l * w;
+  return formatSquareMeters(l * w, units);
+}
+
+/** Area comes from the measured outline, including concave scanned rooms. */
+export function floorArea(polygon: [number, number][]): number {
+  return Math.abs(polygon.reduce((sum, [x, z], i) => {
+    const [nextX, nextZ] = polygon[(i + 1) % polygon.length];
+    return sum + x * nextZ - nextX * z;
+  }, 0)) / 2;
+}
+
+export function formatSquareMeters(m2: number, units: Units): string {
   if (units === 'metric') return `${m2.toFixed(1)} m²`;
   return `${Math.round(m2 / (M_PER_FT * M_PER_FT))} sq ft`;
 }

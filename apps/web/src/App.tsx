@@ -5,6 +5,7 @@ import { EditorPage } from './ui/EditorPage';
 import { ComparePage } from './ui/ComparePage';
 import { SnapshotPage } from './ui/SnapshotPage';
 import { ThumbPage } from './ui/ThumbPage';
+import { DevicePreview } from './ui/DevicePreview';
 
 export function App() {
   return (
@@ -16,6 +17,7 @@ export function App() {
       <Route path="/compare/:a/:b" element={<ComparePage />} />
       <Route path="/snapshot/:id" element={<SnapshotPage />} />
       <Route path="/thumb/:furnitureId" element={<ThumbPage />} />
+      <Route path="/device" element={<DevicePreview />} />
     </Routes>
   );
 }

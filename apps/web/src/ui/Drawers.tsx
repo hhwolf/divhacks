@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useEditor } from '../store';
 import { I } from './icons';
 import { api } from '../lib/api';
+import { snapshotCanvas } from './TopLeft';
+import { postToHost } from '../lib/bridge';
 
 const WALLS = ['#F3EDE4', '#F3DEC2', '#DCE3DA', '#5A845E', '#8FBDB0', '#C9B7E8', '#F2C7C0', '#B8CDE0', '#6B6E80', '#3E4A48'];
 const FLOORS: { style: 'brick' | 'herringbone' | 'plank'; color: string; label: string }[] = [
@@ -29,7 +31,12 @@ function Menu() {
       <h3>Units</h3>
       <div className="seg"><button className={units === 'imperial' ? 'on' : ''} onClick={() => set.getState().setUnits('imperial')}>feet & inches</button><button className={units === 'metric' ? 'on' : ''} onClick={() => set.getState().setUnits('metric')}>metric</button></div>
       <h3>Theme</h3>
-      <div className="seg"><button className={theme === 'peach' ? 'on' : ''} onClick={() => set.getState().setTheme('peach')}>peach</button><button className={theme === 'teal' ? 'on' : ''} onClick={() => set.getState().setTheme('teal')}>teal</button></div>
+      <div className="seg">{(['stone', 'peach', 'teal'] as const).map((t) => <button key={t} className={theme === t ? 'on' : ''} onClick={() => set.getState().setTheme(t)}>{t}</button>)}</div>
+      <h3>Designer</h3>
+      <button className="drawer-item" onClick={() => set.getState().toggleNight()}>Toggle day / night</button>
+      <button className="drawer-item" onClick={() => set.getState().toggleSound()}>Toggle sound</button>
+      <button className="drawer-item" onClick={() => set.getState().setDrawer('paint')}>Paint walls &amp; floor</button>
+      <button className="drawer-item" onClick={() => { const url = snapshotCanvas(); if (!url) return; postToHost('editor:snapshot', { dataUrl: url }); if (!set.getState().embedded) { const a = document.createElement('a'); a.href = url; a.download = 'room.png'; a.click(); } }}>Save snapshot</button>
       <h3>Help</h3>
       <button className="drawer-item" onClick={() => set.getState().setDrawer('help')}>Gestures & shortcuts</button>
       {health && <div className="health">API {health.mode}{Object.entries(health).filter(([k]) => k !== 'mode').map(([k, v]) => <span key={k} className={`chip ${v}`}>{k}: {v}</span>)}</div>}

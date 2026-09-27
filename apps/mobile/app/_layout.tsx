@@ -3,10 +3,15 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
+
 import { ToastProvider } from '../src/components/Toast';
 import { installCrashGuard } from '../src/crashGuard';
 import { useStore } from '../src/store';
 import { colors } from '../src/theme';
+import { webInsetsOverride } from '../src/webInsets';
+
+const insetsOverride = webInsetsOverride();
 
 installCrashGuard();
 
@@ -26,7 +31,7 @@ export default function RootLayout() {
     );
   }
 
-  return (
+  const tree = (
     <ToastProvider>
       <StatusBar style="dark" />
       <Stack
@@ -40,6 +45,7 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="welcome" options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }} />
         <Stack.Screen name="scan" options={{ title: 'Scan room' }} />
         <Stack.Screen name="setup" options={{ title: 'Set up room' }} />
         <Stack.Screen name="editor/[layoutId]" options={{ headerShown: false, animation: 'fade' }} />
@@ -51,4 +57,6 @@ export default function RootLayout() {
       </Stack>
     </ToastProvider>
   );
+  // Phone-frame preview on web: simulate the device's safe areas (see src/webInsets.ts).
+  return insetsOverride ? <SafeAreaInsetsContext.Provider value={insetsOverride}>{tree}</SafeAreaInsetsContext.Provider> : tree;
 }

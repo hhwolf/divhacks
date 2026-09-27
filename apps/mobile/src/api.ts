@@ -84,9 +84,9 @@ export const api = {
       method: 'POST',
       body: json({
         name: draft.name,
-        ...(draft.skeleton ? { skeleton: draft.skeleton } : { dimensions: draft.dimensions, doors: draft.doors ?? [], windows: draft.windows ?? [] }),
+        ...(draft.sample ? { sample: draft.sample } : draft.skeleton ? { skeleton: draft.skeleton } : { dimensions: draft.dimensions, doors: draft.doors ?? [], windows: draft.windows ?? [] }),
         objects: draft.objects,
-        seed: false,
+        seed: draft.source === 'sample',
         spaceTypes: setup.spaceTypes,
         elements: setup.elements,
       }),
@@ -99,6 +99,8 @@ export const api = {
   getSetupSuggestions: (types: string[]) =>
     request<SetupSuggestionsResponse>(`/setup/suggestions?types=${encodeURIComponent(types.join(','))}`),
 
+  updateRoom: (id: string, patch: { name?: string }) => request<{ room: Room }>(`/rooms/${encodeURIComponent(id)}`, { method: 'PATCH', body: json(patch) }),
+  deleteRoom: (id: string) => request<unknown>(`/rooms/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   /** GET /layouts/{id} returns `{layout, furniture, validation}`; unwrap to the bare Layout. */
   getLayout: async (id: string): Promise<Layout> => {
     const data = await request<Layout | { layout: Layout }>(`/layouts/${encodeURIComponent(id)}`);

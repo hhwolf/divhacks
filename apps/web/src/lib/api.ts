@@ -1,6 +1,6 @@
 import { sessionHeaders } from './auth';
 
-import type { FurnitureItem, HousingProfile, Layout, PaymentQuote, PaymentRecord, QuoteRequest, Tenancy, EvidencePhoto, AddressCandidate, SourceInfo, RentalComparable, RentAssessment, Room, ValidationResult } from '@arp/contracts';
+import type { FurnishStyle, FurnitureItem, HousingProfile, Layout, PaymentQuote, PaymentRecord, QuoteRequest, Tenancy, EvidencePhoto, AddressCandidate, SourceInfo, RentalComparable, RentAssessment, Room, ValidationResult } from '@arp/contracts';
 
 const nativeApi = (window as unknown as { __ARP_NATIVE_API_URL?: string }).__ARP_NATIVE_API_URL;
 let base = nativeApi ?? (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000';
@@ -25,6 +25,7 @@ export async function req<T>(path: string, init?: RequestInit): Promise<T> {
 export interface LayoutResponse { layout: Layout; furniture: Record<string, FurnitureItem>; validation?: ValidationResult; room?: Room }
 export interface RoomResponse { room: Room; layouts: Layout[]; currentLayout?: Layout }
 export interface AgentResponse { plan: unknown; layout: Layout | null; reply: string; status: string; links?: string[]; requestId?: string }
+export interface FurnishResponse { layout: Layout; style: FurnishStyle; placed: string[]; skipped: string[]; reply: string }
 export interface RentAssessBody extends HousingProfile { layoutId?: string | null }
 export interface CompareResponse {
   a: Layout; b: Layout;
@@ -50,6 +51,14 @@ export const api = {
     const res = await fetch(`${base}/furniture/from-photo`, { method: 'POST', body: fd, headers: await sessionHeaders() });
     if (!res.ok) throw new Error(`${res.status}`);
     return res.json() as Promise<FurnitureItem | { item: FurnitureItem }>;
+  },
+  furnish: (roomId: string, body: { theme: string; baseLayoutId?: string; purposeHint?: string | null }) => req<FurnishResponse>(`/rooms/${roomId}/furnish`, { method: 'POST', body: JSON.stringify(body) }),
+  furnishPhotos: async (roomId: string, photos: File[], body: { theme?: string; baseLayoutId?: string; purposeHint?: string | null }) => {
+    const fd = new FormData(); photos.forEach((p) => fd.append('images', p));
+    if (body.theme) fd.append('theme', body.theme); if (body.baseLayoutId) fd.append('baseLayoutId', body.baseLayoutId); if (body.purposeHint) fd.append('purposeHint', body.purposeHint);
+    const res = await fetch(`${base}/rooms/${roomId}/furnish/photos`, { method: 'POST', headers: await sessionHeaders(), body: fd });
+    if (!res.ok) { let d = res.statusText; try { const j = await res.json(); d = typeof j.detail === 'string' ? j.detail : d; } catch { /* ignore */ } throw new Error(`${res.status} ${d}`); }
+    return res.json() as Promise<FurnishResponse>;
   },
   agent: (body: { text: string; roomId: string; baseLayoutId: string; furnitureId?: string; channel: 'app' }) => req<AgentResponse>('/agent/request', { method: 'POST', body: JSON.stringify(body) }),
   assessRent: (body: RentAssessBody) => req<{ assessment: RentAssessment; benchmarks: { source: string; value: number; label: string; observedAt: string; sourceUrl: string }[] }>('/rent/assess', { method: 'POST', body: JSON.stringify(body) }),

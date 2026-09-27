@@ -2,8 +2,28 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { cpSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, createReadStream, mkdirSync, statSync, writeFileSync } from 'node:fs';
+import type { Plugin } from 'vite';
 const here = dirname(fileURLToPath(import.meta.url));
+const MIME: Record<string, string> = { '.json': 'application/json', '.glb': 'model/gltf-binary', '.png': 'image/png', '.jpg': 'image/jpeg', '.html': 'text/html', '.txt': 'text/plain' };
+/**
+ * Dev: serve /assets and /fixtures from the repo root. public/assets and public/fixtures are git symlinks, which a
+ * Windows checkout (core.symlinks=false) turns into plain text files, so without this the GLBs/manifest 404 there.
+ */
+const serveRepoDirs = (): Plugin => ({
+  name: 'arp-serve-repo-dirs',
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      let url: string;
+      try { url = decodeURIComponent((req.url ?? '').split('?')[0]); } catch { return next(); }
+      if (!/^\/(assets|fixtures)\//.test(url) || url.includes('..')) return next();
+      const file = resolve(here, '../..', `.${url}`);
+      try { if (!statSync(file).isFile()) return next(); } catch { return next(); }
+      res.setHeader('Content-Type', MIME[url.slice(url.lastIndexOf('.'))] ?? 'application/octet-stream');
+      createReadStream(file).pipe(res);
+    });
+  },
+});
 /** Copies ../../assets and ../../fixtures into dist so the static deploy doesn't depend on the dev-server symlinks. */
 const copyAssets = () => ({
   name: 'arp-copy-assets',
@@ -14,7 +34,7 @@ const copyAssets = () => ({
   },
 });
 export default defineConfig({
-  plugins: [react(), copyAssets()],
+  plugins: [react(), serveRepoDirs(), copyAssets()],
   publicDir: 'public',
   server: { host: true, port: 5173, fs: { allow: [resolve(here, '../..')] } },
   resolve: { alias: { '@': resolve(here, 'src') } },

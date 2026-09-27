@@ -1,1088 +1,1131 @@
 {
- "license": "Kenney Furniture Kit 2.0 (CC0) https://kenney.nl/assets/furniture-kit",
- "units": "meters",
- "items": [
-  {
-   "id": "bed_double",
-   "name": "Double bed",
-   "category": "bed",
-   "kind": "bed",
-   "dims": {
-    "w": 1.4,
-    "d": 1.9,
-    "h": 0.55
-   },
-   "glbUrl": "/assets/furniture/bed_double.glb",
-   "thumbUrl": "/assets/furniture/thumbs/bed_double.png",
-   "source": "preset",
-   "price": null,
-   "color": "#8E6A48",
-   "colors": [
-    "#8E6A48",
-    "#F2EFEA"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     -0.0586,
-     -0.13,
-     -1.892
-    ],
-    "size": [
-     1.6232,
-     0.505,
-     1.912
-    ],
-    "scale": [
-     0.8625,
-     1.0891,
-     0.9937
-    ]
-   },
-   "materials": {
-    "wood": "#8E6A48",
-    "carpetWhite": "#F2EFEA",
-    "carpet": "#B9C7D1",
-    "metal": "#8F9397"
-   }
-  },
-  {
-   "id": "bed_single",
-   "name": "Single bed",
-   "category": "bed",
-   "kind": "bed",
-   "dims": {
-    "w": 0.97,
-    "d": 1.9,
-    "h": 0.55
-   },
-   "glbUrl": "/assets/furniture/bed_single.glb",
-   "thumbUrl": "/assets/furniture/thumbs/bed_single.png",
-   "source": "preset",
-   "price": null,
-   "color": "#A38363",
-   "colors": [
-    "#A38363",
-    "#F4F1EC"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     -0.0586,
-     -0.13,
-     -1.892
-    ],
-    "size": [
-     1.6232,
-     0.505,
-     1.892
-    ],
-    "scale": [
-     0.5976,
-     1.0891,
-     1.0042
-    ]
-   },
-   "materials": {
-    "wood": "#A38363",
-    "carpetWhite": "#F4F1EC",
-    "carpet": "#93A68C",
-    "metal": "#8F9397"
-   }
-  },
-  {
-   "id": "desk",
-   "name": "Desk",
-   "category": "desk",
-   "kind": "desk",
-   "dims": {
-    "w": 1.2,
-    "d": 0.6,
-    "h": 0.75
-   },
-   "glbUrl": "/assets/furniture/desk.glb",
-   "thumbUrl": "/assets/furniture/thumbs/desk.png",
-   "source": "preset",
-   "price": null,
-   "color": "#B58B5E",
-   "colors": [
-    "#B58B5E",
-    "#4B4F55"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     -0.01,
-     0,
-     -0.38
-    ],
-    "size": [
-     0.7345,
-     0.3844,
-     0.5563
-    ],
-    "scale": [
-     1.6338,
-     1.9511,
-     1.0786
-    ]
-   },
-   "materials": {
-    "wood": "#B58B5E",
-    "metal": "#4B4F55"
-   }
-  },
-  {
-   "id": "chair_desk",
-   "name": "Desk chair",
-   "category": "desk",
-   "kind": "seating",
-   "dims": {
-    "w": 0.55,
-    "d": 0.55,
-    "h": 0.9
-   },
-   "glbUrl": "/assets/furniture/chair_desk.glb",
-   "thumbUrl": "/assets/furniture/thumbs/chair_desk.png",
-   "source": "preset",
-   "price": null,
-   "color": "#3A3F45",
-   "colors": [
-    "#3A3F45",
-    "#2F3338"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     -0.1675,
-     0,
-     -0.2832
-    ],
-    "size": [
-     0.4787,
-     0.4176,
-     0.4432
-    ],
-    "scale": [
-     1.1488,
-     2.1552,
-     1.2409
-    ]
-   },
-   "materials": {
-    "metalMedium": "#3A3F45",
-    "carpet": "#2F3338"
-   }
-  },
-  {
-   "id": "chair",
-   "name": "Dining chair",
-   "category": "seating",
-   "kind": "seating",
-   "dims": {
-    "w": 0.45,
-    "d": 0.45,
-    "h": 0.9
-   },
-   "glbUrl": "/assets/furniture/chair.glb",
-   "thumbUrl": "/assets/furniture/thumbs/chair.png",
-   "source": "preset",
-   "price": null,
-   "color": "#C19B6C",
-   "colors": [
-    "#C19B6C"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     0,
-     -0.2
-    ],
-    "size": [
-     0.2,
-     0.47,
-     0.2
-    ],
-    "scale": [
-     2.25,
-     1.9149,
-     2.25
-    ]
-   },
-   "materials": {
-    "wood": "#C19B6C"
-   }
-  },
-  {
-   "id": "dresser",
-   "name": "Dresser",
-   "category": "storage",
-   "kind": "dresser",
-   "dims": {
-    "w": 1.0,
-    "d": 0.5,
-    "h": 0.8
-   },
-   "glbUrl": "/assets/furniture/dresser.glb",
-   "thumbUrl": "/assets/furniture/thumbs/dresser.png",
-   "source": "preset",
-   "price": null,
-   "color": "#EAE5DC",
-   "colors": [
-    "#EAE5DC"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     0,
-     -0.25
-    ],
-    "size": [
-     0.8,
-     0.79,
-     0.25
-    ],
-    "scale": [
-     1.25,
-     1.0127,
-     2.0
-    ]
-   },
-   "materials": {
-    "wood": "#EAE5DC"
-   }
-  },
-  {
-   "id": "wardrobe",
-   "name": "Wardrobe",
-   "category": "storage",
-   "kind": "wardrobe",
-   "dims": {
-    "w": 1.0,
-    "d": 0.6,
-    "h": 2.0
-   },
-   "glbUrl": "/assets/furniture/wardrobe.glb",
-   "thumbUrl": "/assets/furniture/thumbs/wardrobe.png",
-   "source": "preset",
-   "price": null,
-   "color": "#A98661",
-   "colors": [
-    "#A98661",
-    "#9A9A9A"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     -0.16,
-     0,
-     -0.25
-    ],
-    "size": [
-     0.56,
-     0.85,
-     0.27
-    ],
-    "scale": [
-     1.7857,
-     2.3529,
-     2.2222
-    ]
-   },
-   "materials": {
-    "wood": "#A98661",
-    "metal": "#9A9A9A"
-   }
-  },
-  {
-   "id": "bookshelf",
-   "name": "Bookshelf",
-   "category": "storage",
-   "kind": "storage",
-   "dims": {
-    "w": 0.8,
-    "d": 0.3,
-    "h": 1.8
-   },
-   "glbUrl": "/assets/furniture/bookshelf.glb",
-   "thumbUrl": "/assets/furniture/thumbs/bookshelf.png",
-   "source": "preset",
-   "price": null,
-   "color": "#C8AB80",
-   "colors": [
-    "#C8AB80"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     0,
-     -0.25
-    ],
-    "size": [
-     0.4,
-     0.88,
-     0.25
-    ],
-    "scale": [
-     2.0,
-     2.0455,
-     1.2
-    ]
-   },
-   "materials": {
-    "wood": "#C8AB80"
-   }
-  },
-  {
-   "id": "bookshelf_low",
-   "name": "Low bookshelf",
-   "category": "storage",
-   "kind": "storage",
-   "dims": {
-    "w": 0.8,
-    "d": 0.3,
-    "h": 0.8
-   },
-   "glbUrl": "/assets/furniture/bookshelf_low.glb",
-   "thumbUrl": "/assets/furniture/thumbs/bookshelf_low.png",
-   "source": "preset",
-   "price": null,
-   "color": "#6E5140",
-   "colors": [
-    "#6E5140"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     0,
-     -0.25
-    ],
-    "size": [
-     0.4,
-     0.4,
-     0.25
-    ],
-    "scale": [
-     2.0,
-     2.0,
-     1.2
-    ]
-   },
-   "materials": {
-    "wood": "#6E5140"
-   }
-  },
-  {
-   "id": "nightstand",
-   "name": "Nightstand",
-   "category": "storage",
-   "kind": "storage",
-   "dims": {
-    "w": 0.45,
-    "d": 0.4,
-    "h": 0.6
-   },
-   "glbUrl": "/assets/furniture/nightstand.glb",
-   "thumbUrl": "/assets/furniture/thumbs/nightstand.png",
-   "source": "preset",
-   "price": null,
-   "color": "#9C7448",
-   "colors": [
-    "#9C7448",
-    "#E8E2D8"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     -0.01,
-     -0.0,
-     -0.205
-    ],
-    "size": [
-     0.266,
-     0.2632,
-     0.3813
-    ],
-    "scale": [
-     1.6917,
-     2.2796,
-     1.049
-    ]
-   },
-   "materials": {
-    "wood": "#9C7448",
-    "_defaultMat": "#E8E2D8",
-    "metal": "#8C8C8C"
-   }
-  },
-  {
-   "id": "sofa",
-   "name": "Sofa",
-   "category": "seating",
-   "kind": "seating",
-   "dims": {
-    "w": 1.8,
-    "d": 0.9,
-    "h": 0.85
-   },
-   "glbUrl": "/assets/furniture/sofa.glb",
-   "thumbUrl": "/assets/furniture/thumbs/sofa.png",
-   "source": "preset",
-   "price": null,
-   "color": "#5E7B99",
-   "colors": [
-    "#5E7B99",
-    "#5C4033"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     0,
-     -0.41
-    ],
-    "size": [
-     0.98,
-     0.46,
-     0.41
-    ],
-    "scale": [
-     1.8367,
-     1.8478,
-     2.1951
-    ]
-   },
-   "materials": {
-    "carpet": "#5E7B99",
-    "wood": "#5C4033"
-   }
-  },
-  {
-   "id": "armchair",
-   "name": "Armchair",
-   "category": "seating",
-   "kind": "seating",
-   "dims": {
-    "w": 0.9,
-    "d": 0.9,
-    "h": 0.85
-   },
-   "glbUrl": "/assets/furniture/armchair.glb",
-   "thumbUrl": "/assets/furniture/thumbs/armchair.png",
-   "source": "preset",
-   "price": null,
-   "color": "#C9A24A",
-   "colors": [
-    "#C9A24A",
-    "#6B4E3A"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     0,
-     -0.41
-    ],
-    "size": [
-     0.49,
-     0.46,
-     0.41
-    ],
-    "scale": [
-     1.8367,
-     1.8478,
-     2.1951
-    ]
-   },
-   "materials": {
-    "carpet": "#C9A24A",
-    "wood": "#6B4E3A"
-   }
-  },
-  {
-   "id": "coffee_table",
-   "name": "Coffee table",
-   "category": "table",
-   "kind": "table",
-   "dims": {
-    "w": 1.0,
-    "d": 0.6,
-    "h": 0.45
-   },
-   "glbUrl": "/assets/furniture/coffee_table.glb",
-   "thumbUrl": "/assets/furniture/thumbs/coffee_table.png",
-   "source": "preset",
-   "price": null,
-   "color": "#7B5B3F",
-   "colors": [
-    "#7B5B3F"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     -0.461,
-     -0.0,
-     -0.3
-    ],
-    "size": [
-     0.661,
-     0.23,
-     0.4
-    ],
-    "scale": [
-     1.5129,
-     1.9565,
-     1.5
-    ]
-   },
-   "materials": {
-    "wood": "#7B5B3F"
-   }
-  },
-  {
-   "id": "table",
-   "name": "Dining table",
-   "category": "table",
-   "kind": "table",
-   "dims": {
-    "w": 1.2,
-    "d": 0.75,
-    "h": 0.75
-   },
-   "glbUrl": "/assets/furniture/table.glb",
-   "thumbUrl": "/assets/furniture/thumbs/table.png",
-   "source": "preset",
-   "price": null,
-   "color": "#CDB48F",
-   "colors": [
-    "#CDB48F"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     0,
-     -0.4474
-    ],
-    "size": [
-     0.8415,
-     0.3267,
-     0.4474
-    ],
-    "scale": [
-     1.426,
-     2.2954,
-     1.6765
-    ]
-   },
-   "materials": {
-    "wood": "#CDB48F"
-   }
-  },
-  {
-   "id": "table_round",
-   "name": "Round table",
-   "category": "table",
-   "kind": "table",
-   "dims": {
-    "w": 0.9,
-    "d": 0.9,
-    "h": 0.75
-   },
-   "glbUrl": "/assets/furniture/table_round.glb",
-   "thumbUrl": "/assets/furniture/thumbs/table_round.png",
-   "source": "preset",
-   "price": null,
-   "color": "#8F6B4E",
-   "colors": [
-    "#8F6B4E"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     -0.27,
-     -0.8
-    ],
-    "size": [
-     0.6928,
-     0.3667,
-     0.8
-    ],
-    "scale": [
-     1.299,
-     2.0451,
-     1.125
-    ]
-   },
-   "materials": {
-    "wood": "#8F6B4E"
-   }
-  },
-  {
-   "id": "side_table",
-   "name": "Side table",
-   "category": "table",
-   "kind": "table",
-   "dims": {
-    "w": 0.5,
-    "d": 0.5,
-    "h": 0.6
-   },
-   "glbUrl": "/assets/furniture/side_table.glb",
-   "thumbUrl": "/assets/furniture/thumbs/side_table.png",
-   "source": "preset",
-   "price": null,
-   "color": "#D8CFC2",
-   "colors": [
-    "#D8CFC2",
-    "#EDE9E3"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     -0.01,
-     0,
-     -0.21
-    ],
-    "size": [
-     0.5345,
-     0.3844,
-     0.22
-    ],
-    "scale": [
-     0.9355,
-     1.5608,
-     2.2727
-    ]
-   },
-   "materials": {
-    "wood": "#D8CFC2",
-    "_defaultMat": "#EDE9E3"
-   }
-  },
-  {
-   "id": "tv_stand",
-   "name": "TV stand",
-   "category": "storage",
-   "kind": "storage",
-   "dims": {
-    "w": 1.2,
-    "d": 0.4,
-    "h": 0.5
-   },
-   "glbUrl": "/assets/furniture/tv_stand.glb",
-   "thumbUrl": "/assets/furniture/thumbs/tv_stand.png",
-   "source": "preset",
-   "price": null,
-   "color": "#3D3A38",
-   "colors": [
-    "#3D3A38"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     0,
-     -0.25
-    ],
-    "size": [
-     0.8,
-     0.31,
-     0.25
-    ],
-    "scale": [
-     1.5,
-     1.6129,
-     1.6
-    ]
-   },
-   "materials": {
-    "wood": "#3D3A38"
-   }
-  },
-  {
-   "id": "floor_lamp",
-   "name": "Floor lamp",
-   "category": "decor",
-   "kind": "decor",
-   "dims": {
-    "w": 0.3,
-    "d": 0.3,
-    "h": 1.6
-   },
-   "glbUrl": "/assets/furniture/floor_lamp.glb",
-   "thumbUrl": "/assets/furniture/thumbs/floor_lamp.png",
-   "source": "preset",
-   "price": null,
-   "color": "#2E2E33",
-   "colors": [
-    "#2E2E33",
-    "#F6E6B4"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     -0.016,
-     0,
-     -0.1478
-    ],
-    "size": [
-     0.152,
-     0.86,
-     0.1756
-    ],
-    "scale": [
-     1.9732,
-     1.8605,
-     1.7088
-    ]
-   },
-   "materials": {
-    "metal": "#2E2E33",
-    "lamp": "#F6E6B4"
-   }
-  },
-  {
-   "id": "plant",
-   "name": "Potted plant",
-   "category": "decor",
-   "kind": "decor",
-   "dims": {
-    "w": 0.4,
-    "d": 0.4,
-    "h": 1.0
-   },
-   "glbUrl": "/assets/furniture/plant.glb",
-   "thumbUrl": "/assets/furniture/thumbs/plant.png",
-   "source": "preset",
-   "price": null,
-   "color": "#C4B7A6",
-   "colors": [
-    "#C4B7A6",
-    "#7A6753"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     -0.0429,
-     0,
-     -0.2415
-    ],
-    "size": [
-     0.255,
-     0.5358,
-     0.291
-    ],
-    "scale": [
-     1.5689,
-     1.8664,
-     1.3746
-    ]
-   },
-   "materials": {
-    "wood": "#C4B7A6",
-    "woodDark": "#7A6753",
-    "plant": "#4F8A4B"
-   }
-  },
-  {
-   "id": "rug",
-   "name": "Rug",
-   "category": "decor",
-   "kind": "floor",
-   "dims": {
-    "w": 1.6,
-    "d": 2.3,
-    "h": 0.01
-   },
-   "glbUrl": "/assets/furniture/rug.glb",
-   "thumbUrl": "/assets/furniture/thumbs/rug.png",
-   "source": "preset",
-   "price": null,
-   "color": "#8E3B3B",
-   "colors": [
-    "#8E3B3B",
-    "#6B2A2A"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     0,
-     -0.92
-    ],
-    "size": [
-     1.57,
-     0.01,
-     0.92
-    ],
-    "scale": [
-     1.0191,
-     1.0,
-     2.5
-    ]
-   },
-   "materials": {
-    "carpet": "#8E3B3B",
-    "carpetDarker": "#6B2A2A"
-   }
-  },
-  {
-   "id": "yoga_mat",
-   "name": "Yoga mat",
-   "category": "decor",
-   "kind": "floor",
-   "dims": {
-    "w": 0.61,
-    "d": 1.83,
-    "h": 0.01
-   },
-   "glbUrl": "/assets/furniture/yoga_mat.glb",
-   "thumbUrl": "/assets/furniture/thumbs/yoga_mat.png",
-   "source": "preset",
-   "price": null,
-   "color": "#3F8F8A",
-   "colors": [
-    "#3F8F8A",
-    "#2E6B67"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     0,
-     -0.92
-    ],
-    "size": [
-     1.57,
-     0.01,
-     0.92
-    ],
-    "scale": [
-     0.3885,
-     1.0,
-     1.9891
-    ]
-   },
-   "materials": {
-    "carpet": "#3F8F8A",
-    "carpetDarker": "#2E6B67"
-   }
-  },
-  {
-   "id": "bench",
-   "name": "Bench",
-   "category": "seating",
-   "kind": "seating",
-   "dims": {
-    "w": 1.0,
-    "d": 0.4,
-    "h": 0.45
-   },
-   "glbUrl": "/assets/furniture/bench.glb",
-   "thumbUrl": "/assets/furniture/thumbs/bench.png",
-   "source": "preset",
-   "price": null,
-   "color": "#A57A4E",
-   "colors": [
-    "#A57A4E",
-    "#4A4A52"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     0,
-     -0.2
-    ],
-    "size": [
-     0.4,
-     0.46,
-     0.2
-    ],
-    "scale": [
-     2.5,
-     0.9783,
-     2.0
-    ]
-   },
-   "materials": {
-    "wood": "#A57A4E",
-    "carpet": "#4A4A52"
-   }
-  },
-  {
-   "id": "mini_fridge",
-   "name": "Mini fridge",
-   "category": "storage",
-   "kind": "storage",
-   "dims": {
-    "w": 0.5,
-    "d": 0.5,
-    "h": 0.85
-   },
-   "glbUrl": "/assets/furniture/mini_fridge.glb",
-   "thumbUrl": "/assets/furniture/thumbs/mini_fridge.png",
-   "source": "preset",
-   "price": null,
-   "color": "#ECEEEA",
-   "colors": [
-    "#ECEEEA",
-    "#3B4247"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     0,
-     -0.2819
-    ],
-    "size": [
-     0.43,
-     0.6002,
-     0.3169
-    ],
-    "scale": [
-     1.1628,
-     1.4161,
-     1.5776
-    ]
-   },
-   "materials": {
-    "metalLight": "#ECEEEA",
-    "metalDark": "#3B4247",
-    "glass": "#BFD8D2",
-    "metal": "#A7ACB1"
-   }
-  },
-  {
-   "id": "stool",
-   "name": "Stool",
-   "category": "seating",
-   "kind": "seating",
-   "dims": {
-    "w": 0.35,
-    "d": 0.35,
-    "h": 0.75
-   },
-   "glbUrl": "/assets/furniture/stool.glb",
-   "thumbUrl": "/assets/furniture/thumbs/stool.png",
-   "source": "preset",
-   "price": null,
-   "color": "#B98F63",
-   "colors": [
-    "#B98F63",
-    "#B5563C"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     0,
-     -0.2299
-    ],
-    "size": [
-     0.2654,
-     0.435,
-     0.2299
-    ],
-    "scale": [
-     1.3186,
-     1.7241,
-     1.5225
-    ]
-   },
-   "materials": {
-    "wood": "#B98F63",
-    "carpet": "#B5563C"
-   }
-  },
-  {
-   "id": "moving_box",
-   "name": "Moving box",
-   "category": "storage",
-   "kind": "storage",
-   "dims": {
-    "w": 0.45,
-    "d": 0.45,
-    "h": 0.45
-   },
-   "glbUrl": "/assets/furniture/moving_box.glb",
-   "thumbUrl": "/assets/furniture/thumbs/moving_box.png",
-   "source": "preset",
-   "price": null,
-   "color": "#C9A57A",
-   "colors": [
-    "#C9A57A",
-    "#9B7A55"
-   ],
-   "estimated": false,
-   "frontAxis": "+z",
-   "glb": {
-    "min": [
-     0,
-     0,
-     -0.2125
-    ],
-    "size": [
-     0.2125,
-     0.281,
-     0.2125
-    ],
-    "scale": [
-     2.1176,
-     1.6014,
-     2.1176
-    ]
-   },
-   "materials": {
-    "wood": "#C9A57A",
-    "woodDark": "#9B7A55"
-   }
-  },
-  {
-   "id": "divider",
-   "name": "Room divider",
-   "category": "divider",
-   "kind": "decor",
-   "dims": {
-    "w": 1.5,
-    "d": 0.35,
-    "h": 1.8
-   },
-   "source": "preset",
-   "color": "#c4aa87",
-   "dimensionsConfirmed": true,
-   "estimated": false
-  }
- ]
+  "license": "Kenney Furniture Kit 2.0 (CC0) https://kenney.nl/assets/furniture-kit",
+  "units": "meters",
+  "items": [
+    {
+      "id": "bed_double",
+      "name": "Double bed",
+      "category": "bed",
+      "kind": "bed",
+      "dims": {
+        "w": 1.4,
+        "d": 1.9,
+        "h": 0.55
+      },
+      "glbUrl": "/assets/furniture/bed_double.glb",
+      "thumbUrl": "/assets/furniture/thumbs/bed_double.png",
+      "source": "preset",
+      "price": null,
+      "color": "#8E6A48",
+      "colors": [
+        "#8E6A48",
+        "#F2EFEA"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          -0.0586,
+          -0.13,
+          -1.892
+        ],
+        "size": [
+          1.6232,
+          0.505,
+          1.912
+        ],
+        "scale": [
+          0.8625,
+          1.0891,
+          0.9937
+        ]
+      },
+      "materials": {
+        "wood": "#8E6A48",
+        "carpetWhite": "#F2EFEA",
+        "carpet": "#B9C7D1",
+        "metal": "#8F9397"
+      }
+    },
+    {
+      "id": "bed_single",
+      "name": "Single bed",
+      "category": "bed",
+      "kind": "bed",
+      "dims": {
+        "w": 0.97,
+        "d": 1.9,
+        "h": 0.55
+      },
+      "glbUrl": "/assets/furniture/bed_single.glb",
+      "thumbUrl": "/assets/furniture/thumbs/bed_single.png",
+      "source": "preset",
+      "price": null,
+      "color": "#A38363",
+      "colors": [
+        "#A38363",
+        "#F4F1EC"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          -0.0586,
+          -0.13,
+          -1.892
+        ],
+        "size": [
+          1.6232,
+          0.505,
+          1.892
+        ],
+        "scale": [
+          0.5976,
+          1.0891,
+          1.0042
+        ]
+      },
+      "materials": {
+        "wood": "#A38363",
+        "carpetWhite": "#F4F1EC",
+        "carpet": "#93A68C",
+        "metal": "#8F9397"
+      }
+    },
+    {
+      "id": "desk",
+      "name": "Desk",
+      "category": "desk",
+      "kind": "desk",
+      "dims": {
+        "w": 1.2,
+        "d": 0.6,
+        "h": 0.75
+      },
+      "glbUrl": "/assets/furniture/desk.glb",
+      "thumbUrl": "/assets/furniture/thumbs/desk.png",
+      "source": "preset",
+      "price": null,
+      "color": "#B58B5E",
+      "colors": [
+        "#B58B5E",
+        "#4B4F55"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          -0.01,
+          0,
+          -0.38
+        ],
+        "size": [
+          0.7345,
+          0.3844,
+          0.5563
+        ],
+        "scale": [
+          1.6338,
+          1.9511,
+          1.0786
+        ]
+      },
+      "materials": {
+        "wood": "#B58B5E",
+        "metal": "#4B4F55"
+      }
+    },
+    {
+      "id": "chair_desk",
+      "name": "Desk chair",
+      "category": "desk",
+      "kind": "seating",
+      "dims": {
+        "w": 0.55,
+        "d": 0.55,
+        "h": 0.9
+      },
+      "glbUrl": "/assets/furniture/chair_desk.glb",
+      "thumbUrl": "/assets/furniture/thumbs/chair_desk.png",
+      "source": "preset",
+      "price": null,
+      "color": "#3A3F45",
+      "colors": [
+        "#3A3F45",
+        "#2F3338"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          -0.1675,
+          0,
+          -0.2832
+        ],
+        "size": [
+          0.4787,
+          0.4176,
+          0.4432
+        ],
+        "scale": [
+          1.1488,
+          2.1552,
+          1.2409
+        ]
+      },
+      "materials": {
+        "metalMedium": "#3A3F45",
+        "carpet": "#2F3338"
+      }
+    },
+    {
+      "id": "chair",
+      "name": "Dining chair",
+      "category": "seating",
+      "kind": "seating",
+      "dims": {
+        "w": 0.45,
+        "d": 0.45,
+        "h": 0.9
+      },
+      "glbUrl": "/assets/furniture/chair.glb",
+      "thumbUrl": "/assets/furniture/thumbs/chair.png",
+      "source": "preset",
+      "price": null,
+      "color": "#C19B6C",
+      "colors": [
+        "#C19B6C"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          0,
+          -0.2
+        ],
+        "size": [
+          0.2,
+          0.47,
+          0.2
+        ],
+        "scale": [
+          2.25,
+          1.9149,
+          2.25
+        ]
+      },
+      "materials": {
+        "wood": "#C19B6C"
+      }
+    },
+    {
+      "id": "dresser",
+      "name": "Dresser",
+      "category": "storage",
+      "kind": "dresser",
+      "dims": {
+        "w": 1.0,
+        "d": 0.5,
+        "h": 0.8
+      },
+      "glbUrl": "/assets/furniture/dresser.glb",
+      "thumbUrl": "/assets/furniture/thumbs/dresser.png",
+      "source": "preset",
+      "price": null,
+      "color": "#EAE5DC",
+      "colors": [
+        "#EAE5DC"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          0,
+          -0.25
+        ],
+        "size": [
+          0.8,
+          0.79,
+          0.25
+        ],
+        "scale": [
+          1.25,
+          1.0127,
+          2.0
+        ]
+      },
+      "materials": {
+        "wood": "#EAE5DC"
+      }
+    },
+    {
+      "id": "wardrobe",
+      "name": "Wardrobe",
+      "category": "storage",
+      "kind": "wardrobe",
+      "dims": {
+        "w": 1.0,
+        "d": 0.6,
+        "h": 2.0
+      },
+      "glbUrl": "/assets/furniture/wardrobe.glb",
+      "thumbUrl": "/assets/furniture/thumbs/wardrobe.png",
+      "source": "preset",
+      "price": null,
+      "color": "#A98661",
+      "colors": [
+        "#A98661",
+        "#9A9A9A"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          -0.16,
+          0,
+          -0.25
+        ],
+        "size": [
+          0.56,
+          0.85,
+          0.27
+        ],
+        "scale": [
+          1.7857,
+          2.3529,
+          2.2222
+        ]
+      },
+      "materials": {
+        "wood": "#A98661",
+        "metal": "#9A9A9A"
+      }
+    },
+    {
+      "id": "bookshelf",
+      "name": "Bookshelf",
+      "category": "storage",
+      "kind": "storage",
+      "dims": {
+        "w": 0.8,
+        "d": 0.3,
+        "h": 1.8
+      },
+      "glbUrl": "/assets/furniture/bookshelf.glb",
+      "thumbUrl": "/assets/furniture/thumbs/bookshelf.png",
+      "source": "preset",
+      "price": null,
+      "color": "#C8AB80",
+      "colors": [
+        "#C8AB80"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          0,
+          -0.25
+        ],
+        "size": [
+          0.4,
+          0.88,
+          0.25
+        ],
+        "scale": [
+          2.0,
+          2.0455,
+          1.2
+        ]
+      },
+      "materials": {
+        "wood": "#C8AB80"
+      }
+    },
+    {
+      "id": "bookshelf_low",
+      "name": "Low bookshelf",
+      "category": "storage",
+      "kind": "storage",
+      "dims": {
+        "w": 0.8,
+        "d": 0.3,
+        "h": 0.8
+      },
+      "glbUrl": "/assets/furniture/bookshelf_low.glb",
+      "thumbUrl": "/assets/furniture/thumbs/bookshelf_low.png",
+      "source": "preset",
+      "price": null,
+      "color": "#6E5140",
+      "colors": [
+        "#6E5140"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          0,
+          -0.25
+        ],
+        "size": [
+          0.4,
+          0.4,
+          0.25
+        ],
+        "scale": [
+          2.0,
+          2.0,
+          1.2
+        ]
+      },
+      "materials": {
+        "wood": "#6E5140"
+      }
+    },
+    {
+      "id": "nightstand",
+      "name": "Nightstand",
+      "category": "storage",
+      "kind": "storage",
+      "dims": {
+        "w": 0.45,
+        "d": 0.4,
+        "h": 0.6
+      },
+      "glbUrl": "/assets/furniture/nightstand.glb",
+      "thumbUrl": "/assets/furniture/thumbs/nightstand.png",
+      "source": "preset",
+      "price": null,
+      "color": "#9C7448",
+      "colors": [
+        "#9C7448",
+        "#E8E2D8"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          -0.01,
+          -0.0,
+          -0.205
+        ],
+        "size": [
+          0.266,
+          0.2632,
+          0.3813
+        ],
+        "scale": [
+          1.6917,
+          2.2796,
+          1.049
+        ]
+      },
+      "materials": {
+        "wood": "#9C7448",
+        "_defaultMat": "#E8E2D8",
+        "metal": "#8C8C8C"
+      }
+    },
+    {
+      "id": "sofa",
+      "name": "Sofa",
+      "category": "seating",
+      "kind": "seating",
+      "dims": {
+        "w": 1.8,
+        "d": 0.9,
+        "h": 0.85
+      },
+      "glbUrl": "/assets/furniture/sofa.glb",
+      "thumbUrl": "/assets/furniture/thumbs/sofa.png",
+      "source": "preset",
+      "price": null,
+      "color": "#5E7B99",
+      "colors": [
+        "#5E7B99",
+        "#5C4033"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          0,
+          -0.41
+        ],
+        "size": [
+          0.98,
+          0.46,
+          0.41
+        ],
+        "scale": [
+          1.8367,
+          1.8478,
+          2.1951
+        ]
+      },
+      "materials": {
+        "carpet": "#5E7B99",
+        "wood": "#5C4033"
+      }
+    },
+    {
+      "id": "armchair",
+      "name": "Armchair",
+      "category": "seating",
+      "kind": "seating",
+      "dims": {
+        "w": 0.9,
+        "d": 0.9,
+        "h": 0.85
+      },
+      "glbUrl": "/assets/furniture/armchair.glb",
+      "thumbUrl": "/assets/furniture/thumbs/armchair.png",
+      "source": "preset",
+      "price": null,
+      "color": "#C9A24A",
+      "colors": [
+        "#C9A24A",
+        "#6B4E3A"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          0,
+          -0.41
+        ],
+        "size": [
+          0.49,
+          0.46,
+          0.41
+        ],
+        "scale": [
+          1.8367,
+          1.8478,
+          2.1951
+        ]
+      },
+      "materials": {
+        "carpet": "#C9A24A",
+        "wood": "#6B4E3A"
+      }
+    },
+    {
+      "id": "coffee_table",
+      "name": "Coffee table",
+      "category": "table",
+      "kind": "table",
+      "dims": {
+        "w": 1.0,
+        "d": 0.6,
+        "h": 0.45
+      },
+      "glbUrl": "/assets/furniture/coffee_table.glb",
+      "thumbUrl": "/assets/furniture/thumbs/coffee_table.png",
+      "source": "preset",
+      "price": null,
+      "color": "#7B5B3F",
+      "colors": [
+        "#7B5B3F"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          -0.461,
+          -0.0,
+          -0.3
+        ],
+        "size": [
+          0.661,
+          0.23,
+          0.4
+        ],
+        "scale": [
+          1.5129,
+          1.9565,
+          1.5
+        ]
+      },
+      "materials": {
+        "wood": "#7B5B3F"
+      }
+    },
+    {
+      "id": "table",
+      "name": "Dining table",
+      "category": "table",
+      "kind": "table",
+      "dims": {
+        "w": 1.2,
+        "d": 0.75,
+        "h": 0.75
+      },
+      "glbUrl": "/assets/furniture/table.glb",
+      "thumbUrl": "/assets/furniture/thumbs/table.png",
+      "source": "preset",
+      "price": null,
+      "color": "#CDB48F",
+      "colors": [
+        "#CDB48F"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          0,
+          -0.4474
+        ],
+        "size": [
+          0.8415,
+          0.3267,
+          0.4474
+        ],
+        "scale": [
+          1.426,
+          2.2954,
+          1.6765
+        ]
+      },
+      "materials": {
+        "wood": "#CDB48F"
+      }
+    },
+    {
+      "id": "table_round",
+      "name": "Round table",
+      "category": "table",
+      "kind": "table",
+      "dims": {
+        "w": 0.9,
+        "d": 0.9,
+        "h": 0.75
+      },
+      "glbUrl": "/assets/furniture/table_round.glb",
+      "thumbUrl": "/assets/furniture/thumbs/table_round.png",
+      "source": "preset",
+      "price": null,
+      "color": "#8F6B4E",
+      "colors": [
+        "#8F6B4E"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          -0.27,
+          -0.8
+        ],
+        "size": [
+          0.6928,
+          0.3667,
+          0.8
+        ],
+        "scale": [
+          1.299,
+          2.0451,
+          1.125
+        ]
+      },
+      "materials": {
+        "wood": "#8F6B4E"
+      }
+    },
+    {
+      "id": "side_table",
+      "name": "Side table",
+      "category": "table",
+      "kind": "table",
+      "dims": {
+        "w": 0.5,
+        "d": 0.5,
+        "h": 0.6
+      },
+      "glbUrl": "/assets/furniture/side_table.glb",
+      "thumbUrl": "/assets/furniture/thumbs/side_table.png",
+      "source": "preset",
+      "price": null,
+      "color": "#D8CFC2",
+      "colors": [
+        "#D8CFC2",
+        "#EDE9E3"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          -0.01,
+          0,
+          -0.21
+        ],
+        "size": [
+          0.5345,
+          0.3844,
+          0.22
+        ],
+        "scale": [
+          0.9355,
+          1.5608,
+          2.2727
+        ]
+      },
+      "materials": {
+        "wood": "#D8CFC2",
+        "_defaultMat": "#EDE9E3"
+      }
+    },
+    {
+      "id": "tv_stand",
+      "name": "TV stand",
+      "category": "storage",
+      "kind": "storage",
+      "dims": {
+        "w": 1.2,
+        "d": 0.4,
+        "h": 0.5
+      },
+      "glbUrl": "/assets/furniture/tv_stand.glb",
+      "thumbUrl": "/assets/furniture/thumbs/tv_stand.png",
+      "source": "preset",
+      "price": null,
+      "color": "#3D3A38",
+      "colors": [
+        "#3D3A38"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          0,
+          -0.25
+        ],
+        "size": [
+          0.8,
+          0.31,
+          0.25
+        ],
+        "scale": [
+          1.5,
+          1.6129,
+          1.6
+        ]
+      },
+      "materials": {
+        "wood": "#3D3A38"
+      }
+    },
+    {
+      "id": "floor_lamp",
+      "name": "Floor lamp",
+      "category": "decor",
+      "kind": "decor",
+      "dims": {
+        "w": 0.3,
+        "d": 0.3,
+        "h": 1.6
+      },
+      "glbUrl": "/assets/furniture/floor_lamp.glb",
+      "thumbUrl": "/assets/furniture/thumbs/floor_lamp.png",
+      "source": "preset",
+      "price": null,
+      "color": "#2E2E33",
+      "colors": [
+        "#2E2E33",
+        "#F6E6B4"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          -0.016,
+          0,
+          -0.1478
+        ],
+        "size": [
+          0.152,
+          0.86,
+          0.1756
+        ],
+        "scale": [
+          1.9732,
+          1.8605,
+          1.7088
+        ]
+      },
+      "materials": {
+        "metal": "#2E2E33",
+        "lamp": "#F6E6B4"
+      }
+    },
+    {
+      "id": "plant",
+      "name": "Potted plant",
+      "category": "decor",
+      "kind": "decor",
+      "dims": {
+        "w": 0.4,
+        "d": 0.4,
+        "h": 1.0
+      },
+      "glbUrl": "/assets/furniture/plant.glb",
+      "thumbUrl": "/assets/furniture/thumbs/plant.png",
+      "source": "preset",
+      "price": null,
+      "color": "#C4B7A6",
+      "colors": [
+        "#C4B7A6",
+        "#7A6753"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          -0.0429,
+          0,
+          -0.2415
+        ],
+        "size": [
+          0.255,
+          0.5358,
+          0.291
+        ],
+        "scale": [
+          1.5689,
+          1.8664,
+          1.3746
+        ]
+      },
+      "materials": {
+        "wood": "#C4B7A6",
+        "woodDark": "#7A6753",
+        "plant": "#4F8A4B"
+      }
+    },
+    {
+      "id": "rug",
+      "name": "Rug",
+      "category": "decor",
+      "kind": "floor",
+      "dims": {
+        "w": 1.6,
+        "d": 2.3,
+        "h": 0.01
+      },
+      "glbUrl": "/assets/furniture/rug.glb",
+      "thumbUrl": "/assets/furniture/thumbs/rug.png",
+      "source": "preset",
+      "price": null,
+      "color": "#8E3B3B",
+      "colors": [
+        "#8E3B3B",
+        "#6B2A2A"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          0,
+          -0.92
+        ],
+        "size": [
+          1.57,
+          0.01,
+          0.92
+        ],
+        "scale": [
+          1.0191,
+          1.0,
+          2.5
+        ]
+      },
+      "materials": {
+        "carpet": "#8E3B3B",
+        "carpetDarker": "#6B2A2A"
+      }
+    },
+    {
+      "id": "yoga_mat",
+      "name": "Yoga mat",
+      "category": "decor",
+      "kind": "floor",
+      "dims": {
+        "w": 0.61,
+        "d": 1.83,
+        "h": 0.01
+      },
+      "glbUrl": "/assets/furniture/yoga_mat.glb",
+      "thumbUrl": "/assets/furniture/thumbs/yoga_mat.png",
+      "source": "preset",
+      "price": null,
+      "color": "#3F8F8A",
+      "colors": [
+        "#3F8F8A",
+        "#2E6B67"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          0,
+          -0.92
+        ],
+        "size": [
+          1.57,
+          0.01,
+          0.92
+        ],
+        "scale": [
+          0.3885,
+          1.0,
+          1.9891
+        ]
+      },
+      "materials": {
+        "carpet": "#3F8F8A",
+        "carpetDarker": "#2E6B67"
+      }
+    },
+    {
+      "id": "bench",
+      "name": "Bench",
+      "category": "seating",
+      "kind": "seating",
+      "dims": {
+        "w": 1.0,
+        "d": 0.4,
+        "h": 0.45
+      },
+      "glbUrl": "/assets/furniture/bench.glb",
+      "thumbUrl": "/assets/furniture/thumbs/bench.png",
+      "source": "preset",
+      "price": null,
+      "color": "#A57A4E",
+      "colors": [
+        "#A57A4E",
+        "#4A4A52"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          0,
+          -0.2
+        ],
+        "size": [
+          0.4,
+          0.46,
+          0.2
+        ],
+        "scale": [
+          2.5,
+          0.9783,
+          2.0
+        ]
+      },
+      "materials": {
+        "wood": "#A57A4E",
+        "carpet": "#4A4A52"
+      }
+    },
+    {
+      "id": "mini_fridge",
+      "name": "Mini fridge",
+      "category": "storage",
+      "kind": "storage",
+      "dims": {
+        "w": 0.5,
+        "d": 0.5,
+        "h": 0.85
+      },
+      "glbUrl": "/assets/furniture/mini_fridge.glb",
+      "thumbUrl": "/assets/furniture/thumbs/mini_fridge.png",
+      "source": "preset",
+      "price": null,
+      "color": "#ECEEEA",
+      "colors": [
+        "#ECEEEA",
+        "#3B4247"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          0,
+          -0.2819
+        ],
+        "size": [
+          0.43,
+          0.6002,
+          0.3169
+        ],
+        "scale": [
+          1.1628,
+          1.4161,
+          1.5776
+        ]
+      },
+      "materials": {
+        "metalLight": "#ECEEEA",
+        "metalDark": "#3B4247",
+        "glass": "#BFD8D2",
+        "metal": "#A7ACB1"
+      }
+    },
+    {
+      "id": "stool",
+      "name": "Stool",
+      "category": "seating",
+      "kind": "seating",
+      "dims": {
+        "w": 0.35,
+        "d": 0.35,
+        "h": 0.75
+      },
+      "glbUrl": "/assets/furniture/stool.glb",
+      "thumbUrl": "/assets/furniture/thumbs/stool.png",
+      "source": "preset",
+      "price": null,
+      "color": "#B98F63",
+      "colors": [
+        "#B98F63",
+        "#B5563C"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          0,
+          -0.2299
+        ],
+        "size": [
+          0.2654,
+          0.435,
+          0.2299
+        ],
+        "scale": [
+          1.3186,
+          1.7241,
+          1.5225
+        ]
+      },
+      "materials": {
+        "wood": "#B98F63",
+        "carpet": "#B5563C"
+      }
+    },
+    {
+      "id": "moving_box",
+      "name": "Moving box",
+      "category": "storage",
+      "kind": "storage",
+      "dims": {
+        "w": 0.45,
+        "d": 0.45,
+        "h": 0.45
+      },
+      "glbUrl": "/assets/furniture/moving_box.glb",
+      "thumbUrl": "/assets/furniture/thumbs/moving_box.png",
+      "source": "preset",
+      "price": null,
+      "color": "#C9A57A",
+      "colors": [
+        "#C9A57A",
+        "#9B7A55"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          0,
+          0,
+          -0.2125
+        ],
+        "size": [
+          0.2125,
+          0.281,
+          0.2125
+        ],
+        "scale": [
+          2.1176,
+          1.6014,
+          2.1176
+        ]
+      },
+      "materials": {
+        "wood": "#C9A57A",
+        "woodDark": "#9B7A55"
+      }
+    },
+    {
+      "id": "divider",
+      "name": "Room divider",
+      "category": "divider",
+      "kind": "decor",
+      "dims": {
+        "w": 1.5,
+        "d": 0.35,
+        "h": 1.8
+      },
+      "source": "preset",
+      "color": "#c4aa87",
+      "dimensionsConfirmed": true,
+      "estimated": false
+    },
+    {
+      "id": "desk_l",
+      "name": "L-shaped desk",
+      "category": "desk",
+      "kind": "desk",
+      "dims": {
+        "w": 1.4,
+        "d": 1.1,
+        "h": 0.75
+      },
+      "glbUrl": "/assets/furniture/desk_l.glb",
+      "thumbUrl": "/assets/furniture/thumbs/desk_l.png",
+      "source": "preset",
+      "price": null,
+      "color": "#B58B5E",
+      "colors": [
+        "#B58B5E",
+        "#4B4F55"
+      ],
+      "estimated": false,
+      "frontAxis": "+z",
+      "glb": {
+        "min": [
+          -0.01,
+          0,
+          -0.38
+        ],
+        "size": [
+          0.7345,
+          0.3844,
+          0.5563
+        ],
+        "scale": [
+          1.6338,
+          1.9511,
+          1.0786
+        ]
+      },
+      "materials": {
+        "wood": "#B58B5E",
+        "metal": "#4B4F55"
+      }
+    }
+  ]
 }

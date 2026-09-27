@@ -24,8 +24,8 @@ def test_discovers_all_bundled_furniture_assets() -> None:
     glbs = [a for a in assets if a.asset_kind == "glb"]
     thumbnails = [a for a in assets if a.asset_kind == "thumbnail"]
     manifests = [a for a in assets if a.asset_kind == "manifest"]
-    assert len(glbs) == 25
-    assert len(thumbnails) == 25
+    assert len(glbs) == 26
+    assert len(thumbnails) == 26
     assert len(manifests) == 1
     assert {a.furniture_id for a in glbs} == {a.furniture_id for a in thumbnails}
     assert all(a.local_path.exists() and a.byte_size > 0 for a in assets)

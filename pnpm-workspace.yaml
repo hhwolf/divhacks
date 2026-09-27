@@ -1,10 +1,7 @@
 packages:
   - apps/web
-  - apps/photon-relay
   - packages/*
 allowBuilds:
   esbuild: true
-  protobufjs: true
 onlyBuiltDependencies:
   - esbuild
-  - protobufjs

@@ -37,7 +37,6 @@ class Settings:
     spectrum_project_id: str
     photon_api_key: str
     photon_webhook_secret: str
-    photon_relay_secret: str
     photon_base_url: str
     photon_from: str
     demo_phone: str
@@ -71,7 +70,6 @@ class Settings:
             spectrum_project_id=_env("SPECTRUM_PROJECT_ID") or _env("PHOTON_PROJECT_ID"),
             photon_api_key=_env("PHOTON_API_KEY") or _env("SPECTRUM_PROJECT_SECRET") or _env("PHOTON_PROJECT_SECRET"),
             photon_webhook_secret=_env("PHOTON_WEBHOOK_SECRET"),
-            photon_relay_secret=_env("PHOTON_RELAY_SECRET"),
             photon_base_url=_env("PHOTON_BASE_URL", "https://spectrum.photon.codes"),
             photon_from=_env("PHOTON_FROM"),
             demo_phone=_env("DEMO_PHONE", "+15555550100"),
