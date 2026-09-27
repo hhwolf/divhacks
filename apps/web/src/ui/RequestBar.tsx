@@ -2,13 +2,18 @@ import { useMemo, useState } from 'react';
 import { useEditor } from '../store';
 import { I } from './icons';
 
-type AssistMode = 'plan' | 'clear' | 'protect' | 'compare';
+type AssistMode = 'plan' | 'add' | 'clear' | 'protect' | 'compare';
 
 const PROMPTS: Record<AssistMode, { label: string; placeholder: string; questions: string[] }> = {
   plan: {
     label: 'Plan',
     placeholder: 'Where should my desk go if the bed stays put?',
     questions: ['Where should my desk go if the bed stays put?', 'Can you create a reading corner near the window?', 'Can you make this room feel more open?'],
+  },
+  add: {
+    label: 'Add',
+    placeholder: 'Can you add a small desk where it fits best?',
+    questions: ['Can you add a small desk where it fits best?', 'Can you add a floor lamp for a reading corner?', 'Can you add a plant without blocking the door?'],
   },
   clear: {
     label: 'Clear',

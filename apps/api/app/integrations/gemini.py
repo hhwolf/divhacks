@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from typing import Any
 
 from app.catalog import FIXTURES_DIR
@@ -27,6 +28,16 @@ MOCK_DESK: dict[str, Any] = {"name": "Desk", "category": "desk", "dims": {"w": 1
 MOCK_CHAIR: dict[str, Any] = {"name": "Chair", "category": "seating", "dims": {"w": 0.5, "d": 0.5, "h": 0.9}, "price": None, "color": None, "estimated": True}
 RETRY_ALTERNATIVE = "east wall, centered"
 _UNSUPPORTED_KEYS = {"$schema", "$id", "additionalProperties", "default"}
+_EXTERNAL_ITEM_RE = re.compile(r"\b(https?://|facebook|marketplace|ikea|amazon|listing|photo|picture|image)\b")
+_ADD_VERB_RE = re.compile(r"\b(add|bring|include|insert|put|place|recommend|suggest|need|want)\b")
+_BASIC_ADDITIONS: tuple[tuple[str, tuple[str, ...], str, str, str, str | None], ...] = (
+    ("desk", ("desk", "table to work", "work table"), "Add desk", "window wall, beside window", "I recommend adding a desk beside the window while keeping the bed where it is.", "window"),
+    ("floor_lamp", ("floor lamp", "lamp", "light", "reading light"), "Add floor lamp", "corner, near window", "I recommend adding a floor lamp in the window-side corner so it supports a reading spot without blocking the door.", None),
+    ("plant", ("plant", "potted plant"), "Add plant", "corner, near window", "I recommend adding a plant in the window-side corner where it gets light and stays out of the path.", None),
+    ("armchair", ("armchair", "reading chair", "lounge chair"), "Add reading chair", "corner, near window", "I recommend adding a reading chair near the window while keeping the main walkway clear.", "window"),
+    ("bookshelf", ("bookshelf", "bookcase", "shelf"), "Add bookshelf", "west wall, centered", "I recommend adding a bookshelf on an open wall so storage improves without crowding the bed.", None),
+    ("divider", ("divider", "room divider", "partition"), "Add divider", "centered", "I recommend adding a divider centered off the open area so it defines the room without blocking the door.", None),
+)
 
 
 def strip_schema(schema: Any) -> Any:
@@ -42,9 +53,38 @@ def _plan_fixture(name: str) -> dict[str, Any]:
     return json.loads((FIXTURES_DIR / "plans" / f"{name}.json").read_text())
 
 
+def _basic_addition_plan(text: str) -> dict[str, Any] | None:
+    t = text.lower()
+    if not (_ADD_VERB_RE.search(t) or "desk" in t or "reading corner" in t):
+        return None
+    for item, terms, name, zone, reply, adjacent in _BASIC_ADDITIONS:
+        if any(term in t for term in terms):
+            plan: dict[str, Any] = {
+                "intent": "fit_item",
+                "variantName": name,
+                "actions": [{"type": "add", "item": item, "zone": zone}],
+                "reply": reply,
+            }
+            if adjacent:
+                plan["constraints"] = [{"type": "adjacent", "item": item, "feature": adjacent}]
+            return plan
+    if "reading corner" in t:
+        return {
+            "intent": "fit_item",
+            "variantName": "Add reading chair",
+            "constraints": [{"type": "adjacent", "item": "armchair", "feature": "window"}],
+            "actions": [{"type": "add", "item": "armchair", "zone": "corner, near window"}],
+            "reply": "I recommend adding a reading chair near the window while keeping the main walkway clear.",
+        }
+    return None
+
+
 def mock_plan_for(text: str, retry: bool) -> dict[str, Any]:
     t = text.lower()
-    if any(w in t for w in ("desk", "fit", "window")):
+    basic = None if _EXTERNAL_ITEM_RE.search(t) else _basic_addition_plan(text)
+    if basic:
+        plan = basic
+    elif any(w in t for w in ("desk", "fit", "window")):
         plan = _plan_fixture("marketplace-desk")
     elif any(w in t for w in ("yoga", "space")):
         plan = _plan_fixture("yoga-corner")

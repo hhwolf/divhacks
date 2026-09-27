@@ -24,7 +24,20 @@ def _bed(layout: dict) -> dict:
 def _import_desk(client: TestClient) -> dict:
     r = client.post("/furniture/from-link", json={"url": "http://testserver/fixtures/listings/desk"})
     assert r.status_code == 201
-    return r.json()
+    item = r.json()
+    confirmed = client.patch(
+        f"/furniture/{item['id']}/details",
+        json={
+            "name": item["name"],
+            "dims": item["dims"],
+            "category": item["category"],
+            "price": item["price"],
+            "sourceUrl": item["sourceUrl"],
+            "dimensionsConfirmed": True,
+        },
+    )
+    assert confirmed.status_code == 200
+    return confirmed.json()
 
 
 def test_marketplace_desk_request(client: TestClient, bedroom: dict) -> None:
@@ -52,6 +65,19 @@ def test_app_assistant_rejects_new_furniture_links(client: TestClient, bedroom: 
     assert out["status"] == "clarify" and out["layout"] is None
     assert "iMessage/Photon" in out["reply"]
     assert [l["name"] for l in client.get(f"/rooms/{bedroom['roomId']}").json()["layouts"]] == ["Current Room"]
+
+
+def test_basic_addition_recommends_preset_item(client: TestClient, bedroom: dict) -> None:
+    out = _ask(client, bedroom, "Can you add a small desk where it fits best?")
+    assert out["status"] == "ok"
+    PLAN_OK.validate(out["plan"])
+    layout = out["layout"]
+    assert layout["name"] == "Add desk" and layout["isCurrent"] is False
+    assert _bed(layout) == _bed(bedroom["current"])
+    desk = next(i for i in layout["items"] if i["furnitureId"] == "desk")
+    assert desk["rotation"] in (0, 90, 180, 270)
+    assert layout["metrics"]["conflicts"] == 0
+    assert "desk" in out["reply"].lower() and "bed" in out["reply"].lower()
 
 
 def test_yoga_request_creates_clear_zone(client: TestClient, bedroom: dict) -> None:
