@@ -26,15 +26,15 @@ export function Home() {
         <section className="landing-hero">
           <div className="landing-copy">
             <div className="landing-brand"><span className="landing-mark"><I.plant /></span><b>FitCheck</b><span className={`chip ${health}`}>API: {health}</span></div>
-            <h1>Scan your room once. Try every idea as a named variant.</h1>
-            <p>Bring Marketplace, IKEA, Amazon, or catalog furniture into a saved room, protect the pieces that cannot move, and compare layouts without overwriting your Current Room.</p>
+            <h1>Small NYC room? Check what fits before you buy.</h1>
+            <p>FitCheck maps your space, tests furniture against real dimensions, and shows layout options before a desk, divider, or bed eats the room.</p>
             <div className="landing-actions" aria-label="Start options">
-              <button className="landing-action primary" onClick={() => alert('Scanning needs the iPhone app with LiDAR. Use a sample room here or open the mobile preview.')}><span><I.camera /></span><b>Scan room</b><small>RoomPlan on iPhone Pro</small><I.chevR /></button>
-              <button className="landing-action" disabled={busy} onClick={() => create({ sample: 'nyc-bedroom' })}><span><I.bed /></span><b>Load sample room</b><small>3.4 x 3.0 m NYC bedroom</small><I.chevR /></button>
-              <button className="landing-action" disabled={busy} onClick={() => setShowDims((v) => !v)}><span><I.grid /></span><b>Enter dimensions</b><small>Length, width, height</small><I.chevR /></button>
+              <button className="landing-action primary" onClick={() => alert('Scanning needs the iPhone app with LiDAR. Use a sample room here or open the mobile preview.')}><span><I.camera /></span><b>Scan room</b><small>Capture tight corners with LiDAR</small><I.chevR /></button>
+              <button className="landing-action" disabled={busy} onClick={() => create({ sample: 'nyc-bedroom' })}><span><I.bed /></span><b>Load sample room</b><small>See a compact NYC bedroom</small><I.chevR /></button>
+              <button className="landing-action" disabled={busy} onClick={() => setShowDims((v) => !v)}><span><I.grid /></span><b>Enter dimensions</b><small>Check fit without scanning</small><I.chevR /></button>
             </div>
             <div className="landing-links">
-              <button className="link" disabled={busy} onClick={() => create({ sample: 'studio' })}>Load the studio sample</button>
+              <button className="link" disabled={busy} onClick={() => create({ sample: 'studio' })}>Try a studio layout</button>
               <a className="link" href="/device">Preview the mobile app in a phone frame -&gt;</a>
             </div>
           </div>
@@ -64,22 +64,22 @@ function LandingPreview() {
   return (
     <div className="landing-preview" aria-hidden>
       <div className="preview-card preview-scan">
-        <PreviewHead icon={<I.camera />} title="Scanning room" sub="Walk slowly along the walls" />
+        <PreviewHead icon={<I.camera />} title="Measure the room" sub="Walls, doors, windows" />
         <PreviewRow icon={<I.grid />} label="Walls" tag="4" on />
         <PreviewRow icon={<I.chevR />} label="Door" tag="1" on />
         <PreviewRow icon={<I.eye />} label="Window" tag="1" on />
         <div className="preview-progress"><span /></div>
       </div>
       <div className="preview-card preview-room">
-        <PreviewHead icon={<I.lock />} title="Current Room" sub="Only you can change it" />
+        <PreviewHead icon={<I.lock />} title="Protect what stays" sub="Do not move the bed" />
         <PreviewRow icon={<I.bed />} label="Double bed" tag="Locked" on />
         <PreviewRow icon={<I.desk />} label="Oak desk" tag="Placed" />
         <PreviewRow icon={<I.storage />} label="Dresser" tag="Placed" />
       </div>
       <div className="preview-card preview-ask">
-        <PreviewHead icon={<I.chat />} title="Marketplace Desk" sub="New variant - 2 in to spare" />
-        <div className="preview-bubble">Will this desk fit beside my window without moving my bed?</div>
-        <div className="preview-chips"><span>Current Room</span><b>Marketplace Desk</b></div>
+        <PreviewHead icon={<I.chat />} title="Ask before buying" sub="New variant - 2 in to spare" />
+        <div className="preview-bubble">Will this desk fit without blocking the closet?</div>
+        <div className="preview-chips"><span>Current room</span><b>Desk fits</b></div>
       </div>
     </div>
   );
