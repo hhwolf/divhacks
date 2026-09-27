@@ -3,9 +3,9 @@
 Pod::Spec.new do |s|
   s.name           = 'ExpoRoomPlan'
   s.version        = '0.1.0'
-  s.summary        = 'RoomPlan (LiDAR room capture) bridge for Adaptive Room Planner'
+  s.summary        = 'RoomPlan (LiDAR room capture) bridge for FitCheck'
   s.description    = 'Hosts RoomCaptureView and exports a CapturedRoom as the app skeleton JSON.'
-  s.author         = 'Adaptive Room Planner'
+  s.author         = 'FitCheck'
   s.homepage       = 'https://github.com/divhacks/adaptive-room-planner'
   s.license        = { :type => 'MIT' }
   s.platforms      = { :ios => '16.0' }
