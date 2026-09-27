@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useEditor } from '../store';
 import { I } from './icons';
+import { RentPanel } from './RentPanel';
 
 type AssistMode = 'plan' | 'add' | 'clear' | 'protect' | 'compare';
 
@@ -37,9 +38,16 @@ export function RequestBar() {
   const furnishing = useEditor((s) => s.furnishing);
   const [text, setText] = useState('');
   const [mode, setMode] = useState<AssistMode>('plan');
+  const [rentOpen, setRentOpen] = useState(() => new URLSearchParams(location.search).get('onboarding') === 'rent');
   const cfg = useMemo(() => PROMPTS[mode], [mode]);
   const send = async () => { if (!text.trim() || busy) return; await set.getState().askAgent(text.trim()); setText(''); };
-  if (!open) return <button className="sq request-fab" data-testid="request-fab" title="Ask the room" aria-label="Ask" onClick={() => set.getState().setRequestOpen(true)}><I.chat /></button>;
+  if (!open) return <>
+    <div className="utility-fabs">
+      <button className={`btn dark rent-fab ${rentOpen ? 'active' : ''}`} data-testid="rent-fab" title="Rent & costs" aria-label="Rent and costs" onClick={() => setRentOpen(true)}><I.dollar />Rent</button>
+      <button className="sq request-fab" data-testid="request-fab" title="Ask the room" aria-label="Ask" onClick={() => set.getState().setRequestOpen(true)}><I.chat /></button>
+    </div>
+    {rentOpen && <RentPanel onClose={() => setRentOpen(false)} />}
+  </>;
   return (
     <div className="request-bar" data-testid="request-bar">
       <div className="request-head"><span>Arrange the room</span><button className="sq small" aria-label="Close" onClick={() => set.getState().setRequestOpen(false)}><I.close /></button></div>
