@@ -4,7 +4,7 @@ Steps: load sample → Current Room from fixture → lock bed → simulated Phot
 variant → drag desk into the door swing → red → drag back → compare. Writes .context/designer-demo/demo-run.json with timings.
 """
 from __future__ import annotations
-import argparse, json, pathlib, sys, time, urllib.request
+import argparse, hashlib, hmac, json, os, pathlib, sys, time, urllib.request
 from playwright.sync_api import sync_playwright
 import uuid
 DEMO_SESSION = uuid.uuid4().hex
@@ -12,8 +12,31 @@ DEMO_SESSION = uuid.uuid4().hex
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 GL = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"]
 
+def _webhook_secret() -> str:
+    """PHOTON_WEBHOOK_SECRET from the environment or the repo .env (never printed)."""
+    v = os.environ.get("PHOTON_WEBHOOK_SECRET", "")
+    env = ROOT / ".env"
+    if not v and env.exists():
+        for line in env.read_text().splitlines():
+            if line.startswith("PHOTON_WEBHOOK_SECRET="):
+                v = line.split("=", 1)[1].split("#", 1)[0].strip().strip('"')
+    return v
+
+def signed_headers(raw: bytes) -> dict:
+    """Spectrum-style v0 signature when a webhook secret is configured (the API rejects unsigned webhook calls then)."""
+    secret = _webhook_secret()
+    if not secret:
+        return {}
+    ts = str(int(time.time()))
+    sig = hmac.new(secret.encode(), f"v0:{ts}:".encode() + raw, hashlib.sha256).hexdigest()
+    return {"X-Spectrum-Timestamp": ts, "X-Spectrum-Signature": f"v0={sig}"}
+
 def api(base: str, method: str, path: str, body: dict | None = None) -> dict:
-    req = urllib.request.Request(f"{base}{path}", method=method, data=json.dumps(body).encode() if body is not None else None, headers={"Content-Type": "application/json", "X-Demo-Session": DEMO_SESSION})
+    raw = json.dumps(body).encode() if body is not None else None
+    headers = {"Content-Type": "application/json", "X-Demo-Session": DEMO_SESSION}
+    if path.startswith("/webhooks/") and raw is not None:
+        headers.update(signed_headers(raw))
+    req = urllib.request.Request(f"{base}{path}", method=method, data=raw, headers=headers)
     with urllib.request.urlopen(req, timeout=60) as r: return json.loads(r.read())
 
 def step(log: list, name: str, fn):
