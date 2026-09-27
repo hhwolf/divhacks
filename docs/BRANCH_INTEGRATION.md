@@ -67,7 +67,7 @@ The utility prints stage units, axes, classified geometry and, with `--convert`,
 
 ## Verification and remaining checks
 
-Completed during integration: mobile TypeScript checks, iOS JavaScript export, Expo configuration validation and focused onboarding persistence checks; web lint, TypeScript checks, production build and 29 JavaScript tests; 33 focused furnishing tests. Exporting JavaScript does not test a native iPhone build or LiDAR capture.
+Completed during integration: mobile TypeScript checks, iOS JavaScript export, Expo configuration validation and focused onboarding persistence checks; web lint, TypeScript checks, production build and 29 JavaScript tests; 33 focused furnishing tests; the full API suite (186 passed, one skipped real-scan fixture), including local Postgres payment and synthetic USDZ conversion tests. Browser checks passed for all 14 editor interactions, the housing/payment demo, Photon imports, and L-shaped-room furnishing/restyling. Exporting JavaScript does not test a native iPhone build or LiDAR capture.
 
 Full integration-suite results and deployment verification belong in the integration PR/release report. Test counts in the historical records are not acceptance results for this combined branch. A real Gemini furnishing call, native photo picker/LiDAR capture, Supabase email delivery and an actual Stripe test charge still require their respective credentials or hardware.
 
