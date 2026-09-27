@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { BridgeMessage } from '@arp/contracts';
 import { useEditor } from '../store';
@@ -18,6 +18,7 @@ import { onHostMessage, postToHost } from '../lib/bridge';
 import { setApiBase } from '../lib/api';
 import { Backdrop } from './Backdrop';
 import { QuickActions } from './QuickActions';
+import { FurnitureImport } from './FurnitureImport';
 
 export function EditorPage() {
   const { id, sample } = useParams();
@@ -25,7 +26,12 @@ export function EditorPage() {
   const s = useEditor;
   const loading = useEditor((x) => x.loading); const room = useEditor((x) => x.room); const theme = useEditor((x) => x.theme); const night = useEditor((x) => x.night);
   const ghostId = useEditor((x) => x.ghostId); const layouts = useEditor((x) => x.layouts); const lastError = useEditor((x) => x.lastError);
+  const furniture = useEditor((x) => x.furniture);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [openedReviewId, setOpenedReviewId] = useState<string | null>(null);
   const ui = params.get('ui') !== '0';
+  const reviewFurnitureId = params.get('reviewFurniture');
+  const reviewFurniture = reviewFurnitureId ? furniture[reviewFurnitureId] : undefined;
 
   useEffect(() => {
     const units = params.get('units'); const apiUrl = params.get('api');
@@ -33,6 +39,13 @@ export function EditorPage() {
     s.getState().init({ units: units === 'metric' || units === 'imperial' ? units : undefined, embedded: params.get('embedded') === '1' || undefined });
     if (sample) void s.getState().loadFixture(sample); else if (id) void s.getState().loadLayout(id);
   }, [id, sample, params, s]);
+
+  useEffect(() => {
+    if (reviewFurniture && reviewFurnitureId !== openedReviewId) {
+      setReviewOpen(true);
+      setOpenedReviewId(reviewFurnitureId);
+    }
+  }, [openedReviewId, reviewFurniture, reviewFurnitureId]);
 
   // bridge: host → editor
   useEffect(() => {
@@ -73,6 +86,7 @@ export function EditorPage() {
           <TopLeft /><TopRight /><VariantTabs /><AnalysisTile /><RoomNeeds /><Palette /><SidePanel /><QuickActions /><BottomCenter /><RequestBar /><Drawers />
         </>
       )}
+      {reviewOpen && reviewFurniture && <FurnitureImport existing={reviewFurniture} onClose={() => setReviewOpen(false)} />}
       <Toasts />
     </div>
   );

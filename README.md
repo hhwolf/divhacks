@@ -95,12 +95,17 @@ If the camera is denied the screen shows an "Open Settings" button. Without LiDA
 
 ## Photon (iMessage) in real mode
 
-Photon and the editor’s **Import furniture** button share the same import backend. Send a supported listing or screenshot, then confirm dimensions in the editor before requesting a fit variant. For Facebook Marketplace use screenshots/manual entry and preserve the original purchase link. Live Photon requires a signed webhook and a verified phone linked to the signed-in user; see [housing setup](docs/HOUSING_PAYMENTS.md). Spatial planning requests without new furniture belong in the in-app assistant.
+Photon and the editor’s **Import furniture** button share the same import backend. Send a Facebook Marketplace listing or furniture screenshot to the Photon iMessage line; the relay imports a pending item, replies with an editor link containing `reviewFurniture=<itemId>`, and the editor opens the dimension-confirmation modal before the item can be test-placed. Spatial planning requests without new furniture belong in the in-app assistant.
+
+Live Photon runs through the Spectrum relay in `apps/photon-relay`, then forwards normalized, HMAC-signed payloads to FastAPI. Live mode requires a signed Photon/Spectrum webhook and a verified phone linked to the signed-in user; see [housing setup](docs/HOUSING_PAYMENTS.md).
 
 ```bash
-ngrok http 8000           # public URL for the webhook
-# set SPECTRUM_PROJECT_ID + SPECTRUM_PROJECT_SECRET (or PHOTON_API_KEY) plus PHOTON_WEBHOOK_SECRET
-# in the Photon dashboard: webhook → https://<ngrok>/webhooks/photon
+pnpm --filter @arp/photon-relay dev
+ngrok http 8787           # public URL for the relay
+# set SPECTRUM_PROJECT_ID + SPECTRUM_PROJECT_SECRET (or PHOTON_API_KEY),
+# PHOTON_WEBHOOK_SECRET/SPECTRUM_WEBHOOK_SECRET, PHOTON_RELAY_SECRET,
+# PUBLIC_API_URL, and PUBLIC_WEB_URL.
+# in the Photon dashboard: webhook → https://<ngrok>/spectrum/webhook
 .venv/bin/python scripts/simulate_photon.py     # posts fixtures/photon/*.json to the local webhook (works in mock mode too)
 ```
 
