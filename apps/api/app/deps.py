@@ -6,7 +6,8 @@ import uuid
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 
-from fastapi import Request
+import httpx
+from fastapi import HTTPException, Request
 
 from app.config import Settings
 from app.integrations.backboard import BackboardAdapter
@@ -45,7 +46,22 @@ class AppContext:
 
     async def demo_user(self) -> User:
         if self.principal:
-            return User(id=self.principal.id, phone=self.principal.phone, createdAt=datetime.now(UTC).isoformat())
+            owner = self.principal.id
+            saved = await self.repo.get("users", owner)
+            if saved is None:
+                user = User(id=owner, phone=self.principal.phone, createdAt=datetime.now(UTC).isoformat())
+                try:
+                    saved = await self.repo.insert("users", user.model_dump())
+                except (HTTPException, httpx.HTTPStatusError) as exc:
+                    status = exc.status_code if isinstance(exc, HTTPException) else exc.response.status_code
+                    if status != 409:
+                        raise
+                    # Another request may have created the same user. Keep its memories
+                    # and assistant id instead of replacing the winning document.
+                    saved = await self.repo.get("users", owner)
+                    if saved is None:
+                        raise
+            return User.model_validate(saved)
         return await self.user_by_phone(self.settings.demo_phone)
 
 
