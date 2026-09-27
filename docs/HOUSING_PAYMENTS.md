@@ -36,6 +36,8 @@ Every API repository access checks ownership even when its server key bypasses R
 
 Sign-in opens a separate private workspace; anonymous demo data is not automatically reassigned to an account. Legacy no-header CLI calls share only a synthetic namespace and cannot upload condition photos. Use a random `X-Demo-Session` for browser/CLI interoperability. Keep local JSON/SQLite demo storage on a trusted development machine; serverless temporary demo files are ephemeral.
 
+Room preferences and the Backboard assistant identifier are saved with the workspace user and reused across later requests. Creating another room does not reset them.
+
 For live Photon, configure the signed webhook, verify a phone number on the **same Supabase user** (Supabase phone update + OTP verification), then call authenticated `POST /session/link-phone`. The API derives the verified phone from Auth and never trusts a submitted phone/owner. Unknown senders receive no private-room information. The first MVP supports the most recent room for that linked account, with dimension confirmation in the editor.
 
 ## Stripe test checkout
@@ -85,7 +87,7 @@ Live mode has no enable switch. Before adding one, complete recipient authority 
 
 ## Tests
 
-Verified in this workspace: 104 API tests (including six Stripe/Postgres contract tests), 28 JavaScript tests, 14/14 designer pointer checks, the Photon import/variant demo, the housing browser flow and mobile-width panel check. Web/mobile type checks, lint and the production web build pass. No actual Stripe charge, Supabase email login or device LiDAR capture was executed without their credentials/hardware.
+Verified in this workspace: 108 API tests (103 credential-free cases plus five optional Postgres cases), 29 JavaScript tests, 14/14 designer pointer checks, the Photon import/variant demo, the housing browser flow and mobile-width panel check. Web/mobile type checks, lint and the production web build pass. No actual Stripe charge, Supabase email login or device LiDAR capture was executed without their credentials/hardware.
 
 ```sh
 pnpm typecheck
