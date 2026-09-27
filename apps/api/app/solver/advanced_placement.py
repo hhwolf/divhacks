@@ -22,6 +22,7 @@ from app.solver.constants import ACCESS_EDGE, ACCESS_FREE_RATIO, EPS, GRID, WIND
 from app.solver.grid import Grid, any_mask_in_rect, count_mask_in_rect, fill_rect, footprint, front_dir, item_rect, largest_free_rect, make_grid, rects_overlap
 from app.solver.skeleton import Rect, door_clearance_rect, opening_span, room_bounds, wall_dir, wall_inward_normal, wall_length, window_band
 from app.solver.validate import door_keep_clear, validate_layout
+from app.solver.units import format_length_imperial
 from app.solver.zones import wall_label
 
 DEFAULT_YOGA_ZONE = (1.8, 1.2)
@@ -639,7 +640,7 @@ class Solver:
             alt = next((w for w in fits_on if w != wall), None)
             suggestion = f"it would fit on the {wall_label(self.sk, alt)}; want me to try that?" if alt is not None else "it doesn't fit along any other wall either."
             if need is not None and need > have + EPS:
-                miss = f"it's {round((need - have) * 100)} cm too wide for the {wall_label(self.sk, wall)}; {suggestion}"
+                miss = f"it's {format_length_imperial(need - have)} too wide for the {wall_label(self.sk, wall)}; {suggestion}"
             else:
                 miss = f"there's no free spot beside the {feature} for the {fur.name.lower()}; {suggestion}"
         elif fits_on:

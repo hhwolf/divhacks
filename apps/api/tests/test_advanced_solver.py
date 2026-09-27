@@ -21,7 +21,7 @@ def _desk_plan(width: float) -> GeminiPlan:
 
 def test_rejection_suggests_a_wall_only_when_the_item_fits_there() -> None:
     miss = Solver(BLOCKED_WINDOW_WALL, PRESETS, WARDROBES).solve(_desk_plan(2.0)).nearest_miss
-    assert miss == "it's 100 cm too wide for the window wall; it would fit on the door wall; want me to try that?"
+    assert miss == "it's 3' 3\" too wide for the window wall; it would fit on the door wall; want me to try that?"
 
 
 def test_rejection_says_so_when_nothing_fits() -> None:

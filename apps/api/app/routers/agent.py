@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from app.agent import pipeline
 from app.agent.router import DEFAULT_FIT_QUESTION, route
 from app.deps import AppContext, get_ctx
-from app.imports import URL_RE, import_from_link, parse_dims
+from app.imports import IMPERIAL_RE, METRIC_RE, URL_RE, import_from_link, parse_dims
 from app.integrations.photon import Attachment
 from app.models import Channel, HousingProfile
 from app.rent import assess_rent
@@ -84,6 +84,8 @@ async def _link_fit(ctx: AppContext, user_id: str, body: AgentRequestBody) -> di
     except Exception:  # unreachable host, blocked page, not HTML
         return _plain("I couldn't open that link. Paste the item's size instead, e.g. \"desk 48 x 24 x 30 in\", and I'll check the fit.")
     typed = parse_dims(question)
+    # the size itself isn't part of the question ("48 x 24 x 30 in, will it fit?" -> "will it fit?")
+    question = re.sub(r"^[\s,.;:-]+|[\s,;:-]+$", "", METRIC_RE.sub("", IMPERIAL_RE.sub("", question)))
     dims = typed or item.dims.model_dump()
     if item.estimated and not typed:
         return _plain(f"I opened “{item.name}” but the listing doesn't state its size. Send width × depth × height (e.g. 48 x 24 x 30 in) with the link and I'll check it.")

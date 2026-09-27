@@ -22,7 +22,7 @@ export interface EditorState {
   overlays: { walkable: boolean; keepClear: boolean; lowClearance: boolean }; overlaysOpen: boolean; ghostId: string | null; ghostOpen: boolean;
   validation: ValidationResult | null; masks: OverlayMasks | null; saveState: SaveState; lastError: string | null;
   drawer: Drawer; contextTab: string | null; requestOpen: boolean; agentBusy: boolean; agentReply: string | null; agentStatus: string | null; analysisOpen: boolean;
-  palettePage: number; category: string; search: string | null; sidePage: number; toasts: { id: number; text: string; kind: 'info' | 'error' }[];
+  palettePage: number; category: string; search: string | null; sidePage: number; toasts: { id: number; text: string; kind: 'info' | 'error'; action?: { label: string; run: () => void } }[];
   shake: string | null; bounce: string | null; loading: boolean;
   // actions
   init(opts: { units?: Units; embedded?: boolean }): void;
@@ -42,7 +42,7 @@ export interface EditorState {
   setPalettePage(p: number): void; setCategory(c: string): void; setSearch(s: string | null): void; setSidePage(p: number): void;
   createVariant(name?: string, fromId?: string): Promise<Layout | null>; renameVariant(id: string, name: string): Promise<void>; deleteVariant(id: string): Promise<void>;
   askAgent(text: string, furnitureId?: string): Promise<void>; furnish(theme: string, opts?: { restyle?: boolean; photos?: File[] }): Promise<void>; addFurniture(f: FurnitureItem): void;
-  toast(text: string, kind?: 'info' | 'error'): void; dismissToast(id: number): void;
+  toast(text: string, kind?: 'info' | 'error', action?: { label: string; run: () => void }): void; dismissToast(id: number): void;
 }
 
 const snap = (v: number) => Math.round(v / GRID) * GRID;
@@ -166,7 +166,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     const s = get(); const keep = s.items.filter((i) => i.locked); const n = s.items.length - keep.length;
     if (!n) { get().toast(keep.length ? 'Everything left is locked. Unlock all first.' : 'The room is already empty'); return; }
     s.setItems(keep); set({ selectedId: null, placing: null });
-    get().toast(`Removed ${n} item${n === 1 ? '' : 's'}${keep.length ? ` · kept ${keep.length} locked` : ''}. Undo to restore.`);
+    get().toast(`Removed ${n} item${n === 1 ? '' : 's'}${keep.length ? ` · kept ${keep.length} locked` : ''}`, 'info', { label: 'Undo', run: () => get().undo() });
   },
   duplicateItem(id) { const s = get(); const item = s.items.find((i) => i.id === id); if (!item) return; const nid = s.addItem(item.furnitureId, item.x + 0.3, item.z + 0.3); if (nid) s.setItems(get().items.map((i) => (i.id === nid ? { ...i, rotation: item.rotation, color: item.color } : i)), undefined, false); },
   recolor(id, color) { const s = get(); s.setItems(s.items.map((i) => (i.id === id ? { ...i, color } : i))); },
@@ -282,7 +282,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     } catch (e) { set({ furnishing: false, entrance: null }); get().toast(`Couldn't furnish: ${(e as Error).message}`, 'error'); }
   },
   addFurniture(f) { set({ furniture: { ...get().furniture, [f.id]: f } }); },
-  toast(text, kind = 'info') { const id = ++toastId; set({ toasts: [...get().toasts, { id, text, kind }] }); setTimeout(() => get().dismissToast(id), 3200); },
+  toast(text, kind = 'info', action) { const id = ++toastId; set({ toasts: [...get().toasts, { id, text, kind, action }] }); setTimeout(() => get().dismissToast(id), action ? 6000 : 3200); },
   dismissToast(id) { set({ toasts: get().toasts.filter((t) => t.id !== id) }); },
 }));
 
