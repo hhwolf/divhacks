@@ -20,6 +20,7 @@ from app.repo.base import Repository
 
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "0.0.0.0", "testserver"}
 URL_RE = re.compile(r"https?://[^\s<>\"']+")
+MARKETPLACE_HOST_RE = re.compile(r"(^|\.)facebook\.com$|(^|\.)fb\.com$", re.I)
 _NUM = r"(\d+(?:\.\d+)?)"
 _IN = r"\s*(?:in\.?|inches|\"|″|”)?\s*(?:[WDH]\b)?\s*"
 IMPERIAL_RE = re.compile(_NUM + _IN + r"[x×]" + r"\s*" + _NUM + _IN + r"[x×]" + r"\s*" + _NUM + r"\s*(?:in\.?|inches|\"|″|”)\s*(?:[WDH]\b)?", re.I)
@@ -126,6 +127,28 @@ def build_item(listing: dict[str, Any], *, user_id: str, source: FurnitureSource
         color=listing.get("color"),
         estimated=bool(listing.get("estimated", False)),
     )
+
+
+def is_marketplace_url(url: str) -> bool:
+    u = urlparse(url)
+    host = (u.hostname or "").lower()
+    return bool(MARKETPLACE_HOST_RE.search(host) and "/marketplace" in u.path.lower())
+
+
+async def create_pending_link_item(repo: Repository, url: str, user_id: str, *, name: str = "Facebook Marketplace item") -> FurnitureItem:
+    item = build_item(
+        {
+            "name": name,
+            "category": "imported",
+            "dims": {"w": 0.5, "d": 0.5, "h": 0.5},
+            "estimated": True,
+        },
+        user_id=user_id,
+        source="link",
+        source_url=url,
+    )
+    await repo.insert("furniture", {**item.model_dump(), "createdAt": datetime.now(UTC).isoformat()})
+    return item
 
 
 async def import_from_link(repo: Repository, gemini: GeminiAdapter, url: str, user_id: str) -> FurnitureItem:

@@ -37,7 +37,7 @@ export function AnalysisTile() {
         <div className="an-fits">Room area is measured from the scan for rent checks.</div>
       </>}
     </div>
-    <button className="rent-side-button" onClick={() => setRentOpen(true)}>Rent</button>
+    <button className="rent-side-button" onClick={() => setRentOpen(true)}>Rent & costs</button>
     {rentOpen && <RentPanel onClose={() => setRentOpen(false)} />}</>
   );
 }

@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "packageManager": "pnpm@10",
   "scripts": {
-    "typecheck": "pnpm -r --filter './packages/*' --filter ./apps/web run typecheck",
-    "lint": "pnpm -r --filter './packages/*' --filter ./apps/web run lint",
-    "test": "pnpm -r --filter './packages/*' --filter ./apps/web run test",
+    "typecheck": "pnpm -r --filter './packages/*' --filter ./apps/web --filter @arp/photon-relay run typecheck",
+    "lint": "pnpm -r --filter './packages/*' --filter ./apps/web --filter @arp/photon-relay run lint",
+    "test": "pnpm -r --filter './packages/*' --filter ./apps/web --filter @arp/photon-relay run test",
     "build:web": "pnpm --filter @arp/web build"
   },
   "devDependencies": {
