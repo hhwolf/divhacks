@@ -10,9 +10,9 @@ import { useEditor } from '../store';
 
 export function Home() {
   const theme = useEditor((s) => s.theme);
-  const nav = useNavigate(); const [rooms, setRooms] = useState<Room[]>([]); const [health, setHealth] = useState<string>('...'); const [busy, setBusy] = useState(false); const [err, setErr] = useState<string | null>(null);
+  const nav = useNavigate(); const [rooms, setRooms] = useState<Room[]>([]); const [health, setHealth] = useState<string>('checking'); const [busy, setBusy] = useState(false); const [err, setErr] = useState<string | null>(null);
   const [dims, setDims] = useState({ l: '11', w: '10', h: '9' }); const [showDims, setShowDims] = useState(false);
-  useEffect(() => { api.rooms().then(setRooms).catch(() => undefined); api.health().then((h) => setHealth(h.mode)).catch(() => setHealth('offline')); }, []);
+  useEffect(() => { api.rooms().then(setRooms).catch(() => undefined); api.health().then(() => setHealth('on')).catch(() => setHealth('offline')); }, []);
   const create = async (body: unknown) => {
     setBusy(true); setErr(null);
     try { const r = await api.createRoom(body); const cur = r.currentLayout ?? r.layouts.find((l) => l.isCurrent) ?? r.layouts[0]; nav(`/layout/${cur.id}`); }
@@ -25,7 +25,7 @@ export function Home() {
       <main className="landing-shell">
         <section className="landing-hero">
           <div className="landing-copy">
-            <div className="landing-brand"><span className="landing-mark"><I.plant /></span><b>FitCheck</b><span className={`chip ${health}`}>API: {health}</span></div>
+            <div className="landing-brand"><span className="landing-mark"><I.plant /></span><b>FitCheck</b><span className={`chip ${health === 'on' ? 'live' : health}`}>API: {health}</span></div>
             <h1>Small NYC room? Check what fits before you buy.</h1>
             <p>FitCheck maps your space, tests furniture against real dimensions, and shows layout options before a desk, divider, or bed eats the room.</p>
             <div className="landing-actions" aria-label="Start options">
