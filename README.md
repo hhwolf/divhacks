@@ -36,29 +36,21 @@ make photon         # post fixtures/photon/*.json to the local webhook and print
 make fps            # drag frame rate in a headed Chromium at iPhone-landscape proportions → .data/fps.json
 make record         # re-record docs/demo/run.mp4 (browser recording of the demo at phone proportions)
 make thumbs         # re-render palette thumbnails from the GLBs
+make supabase-assets # upload GLBs/thumbnails to Supabase Storage + metadata table
 make screenshots    # docs/screenshots/iter-N (needs api + web running)
 ```
 
 Storage picks itself: `SUPABASE_URL` + `SUPABASE_SECRET_KEY` → Supabase REST/Postgres; else `BLOB_READ_WRITE_TOKEN` → Vercel Blob snapshots (what the deployed API can use so every serverless instance sees the same rooms); else a JSON file in `.data/`. `GET /health` reports which one is active.
 
-Supabase setup: create this table once in the SQL editor, then add `SUPABASE_URL` and the server-only secret key to `.env` / Vercel env.
+Supabase setup: apply `migrations/001_payment_ledger.sql`, `migrations/002_supabase_access.sql`, and `migrations/003_furniture_assets.sql` in the SQL editor, then add `SUPABASE_URL` and the server-only secret key to `.env` / Vercel env.
 
-```sql
-create table if not exists public.arp_documents (
-  collection text not null,
-  id text not null,
-  room_id text,
-  user_id text,
-  phone text,
-  doc jsonb not null,
-  seq bigint not null,
-  primary key (collection, id)
-);
-create index if not exists arp_documents_collection_seq_idx on public.arp_documents (collection, seq);
-create index if not exists arp_documents_room_idx on public.arp_documents (collection, room_id);
-create index if not exists arp_documents_phone_idx on public.arp_documents (collection, phone);
-grant select, insert, update, delete on public.arp_documents to service_role;
+```bash
+SUPABASE_URL=https://...supabase.co
+SUPABASE_SECRET_KEY=...
+make supabase-assets
 ```
+
+The furniture uploader stores GLB, thumbnail PNG and manifest bytes in the public `furniture-assets` Storage bucket and upserts queryable rows into `arp_furniture_assets` with checksums, sizes, storage paths and public URLs. It is idempotent; run `scripts/upload_furniture_assets.py --dry-run` to preview the 51 uploaded assets.
 
 ## Repository layout
 

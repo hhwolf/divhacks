@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 UVICORN := .venv/bin/uvicorn
 
-.PHONY: setup api web mobile test bench demo e2e thumbs screenshots photon fps record
+.PHONY: setup api web mobile test bench demo e2e thumbs screenshots photon fps record supabase-assets
 
 setup: .venv/.ok node_modules/.ok
 
@@ -49,3 +49,6 @@ fps: setup
 
 record: setup
 	$(PY) scripts/record_demo.py
+
+supabase-assets: setup
+	$(PY) scripts/upload_furniture_assets.py
