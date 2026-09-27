@@ -84,9 +84,9 @@ export default function Setup() {
         prefilled.current = true;
         setRoomState('ready');
       })
-      .catch((e: Error) => {
+      .catch((e: Error | null) => {
         if (cancelled) return;
-        toast(e.message, { tone: 'danger', ms: 4500 });
+        toast(e?.message ?? String(e), { tone: 'danger', ms: 4500 });
         setRoomState('missing');
       });
     return () => {
@@ -174,7 +174,7 @@ export default function Setup() {
       setRoomDraft(null);
       router.replace(`/editor/${encodeURIComponent(res.currentLayout.id)}`);
     } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
+      toast(((e as Error | null)?.message ?? String(e)), { tone: 'danger', ms: 4500 });
     } finally {
       setBusy(false);
     }

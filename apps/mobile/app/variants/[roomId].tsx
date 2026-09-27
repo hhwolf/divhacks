@@ -33,7 +33,7 @@ export default function Variants() {
       const sorted = [...res.layouts].sort((a, b) => Number(b.isCurrent) - Number(a.isCurrent) || (a.createdAt ?? '').localeCompare(b.createdAt ?? ''));
       setLayouts(sorted);
     } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
+      toast(((e as Error | null)?.message ?? String(e)), { tone: 'danger', ms: 4500 });
       setLayouts([]);
     }
   }, [roomId, toast]);
@@ -53,7 +53,7 @@ export default function Variants() {
       if (okMsg) toast(okMsg);
       await load();
     } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
+      toast(((e as Error | null)?.message ?? String(e)), { tone: 'danger', ms: 4500 });
     } finally {
       setBusyId(null);
     }

@@ -76,7 +76,7 @@ export default function Ask() {
           }
         }
       } catch (e) {
-        if (!cancelled) toast((e as Error).message, { tone: 'danger' });
+        if (!cancelled) toast(((e as Error | null)?.message ?? String(e)), { tone: 'danger' });
       }
     })();
     return () => {
@@ -106,7 +106,7 @@ export default function Ask() {
       const res = await api.agentRequest({ text: trimmed, roomId, baseLayoutId });
       updateAgentLog(entry.id, { pending: false, response: res });
     } catch (e) {
-      updateAgentLog(entry.id, { pending: false, error: (e as Error).message });
+      updateAgentLog(entry.id, { pending: false, error: ((e as Error | null)?.message ?? String(e)) });
     } finally {
       setSending(false);
     }

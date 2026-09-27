@@ -191,7 +191,7 @@ function Fallback({ capability }: { capability: RoomPlanCapability }) {
       const res = await api.createSampleRoom('nyc-bedroom');
       openEditor(res.currentLayout.id);
     } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
+      toast(((e as Error | null)?.message ?? String(e)), { tone: 'danger', ms: 4500 });
     } finally {
       setBusy(null);
     }
