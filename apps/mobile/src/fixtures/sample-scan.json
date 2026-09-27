@@ -1,0 +1,33 @@
+{
+  "name": "RoomPlan scan (fixture)",
+  "skeleton": {
+    "walls": [
+      {"x1": 0,   "z1": 0,   "x2": 3.6, "z2": 0,   "height": 2.62},
+      {"x1": 3.6, "z1": 0,   "x2": 3.6, "z2": 3.2, "height": 2.62},
+      {"x1": 3.6, "z1": 3.2, "x2": 0,   "z2": 3.2, "height": 2.62},
+      {"x1": 0,   "z1": 3.2, "x2": 0,   "z2": 0,   "height": 2.62}
+    ],
+    "doors":   [{"wall": 2, "offset": 2.35, "width": 0.86, "height": 2.03, "swing": "in", "hinge": "left"}],
+    "windows": [{"wall": 0, "offset": 1.3, "width": 1.28, "sillHeight": 0.92, "height": 1.24}],
+    "floorPolygon": [[0, 0], [3.6, 0], [3.6, 3.2], [0, 3.2]],
+    "dimensions": {"l": 3.6, "w": 3.2, "h": 2.62}
+  },
+  "objects": [
+    {"furnitureId": "bed_double", "x": 2.65, "z": 1.5,   "rotation": 270, "locked": false},
+    {"furnitureId": "table",      "x": 0.6,  "z": 0.375, "rotation": 0,   "locked": false},
+    {"furnitureId": "wardrobe",   "x": 0.3,  "z": 1.5,   "rotation": 90,  "locked": false}
+  ],
+  "meta": {
+    "source": "roomplan",
+    "convention": "x=RoomPlan.x, z=RoomPlan.z (no mirror), re-based to min corner, clockwise on screen",
+    "wallCount": 4,
+    "doorCount": 1,
+    "windowCount": 1,
+    "detected": [
+      {"category": "bed",     "furnitureId": "bed_double", "x": 2.65, "z": 1.5,   "dims": {"w": 1.42, "d": 1.93, "h": 0.58}, "yaw": 268.7},
+      {"category": "table",   "furnitureId": "table",      "x": 0.6,  "z": 0.375, "dims": {"w": 1.21, "d": 0.63, "h": 0.74}, "yaw": -2.1},
+      {"category": "storage", "furnitureId": "wardrobe",   "x": 0.3,  "z": 1.5,   "dims": {"w": 1.05, "d": 0.58, "h": 1.96}, "yaw": 91.4}
+    ],
+    "skipped": []
+  }
+}

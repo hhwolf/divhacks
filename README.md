@@ -27,6 +27,8 @@ Everything runs in **mock mode with zero env vars and no network**: the JSON sto
 
 Channel split: **Photon/iMessage brings new furniture into the room** from listing links or photos, checks it against the saved scan, and creates a layout variant. The **in-app AI assistant arranges the room**: reading corners, yoga space, window placement, locked-item rules, and other spatial changes inside the existing 3D room.
 
+To furnish a clean room, complete scan/manual setup, then describe a style or add up to four inspiration photos in the editor's empty-room card. Furnishing and Restyle create variants. Deterministic kits work offline; Gemini is optional. See [furnishing behavior and branch integration decisions](docs/BRANCH_INTEGRATION.md).
+
 ```bash
 make test           # pnpm typecheck + lint + vitest, then pytest (incl. TS/Python parity on fixtures/validation)
 make bench          # validation p95, room-load, import and agent timings → .data/bench.json
@@ -36,29 +38,21 @@ make photon         # post fixtures/photon/*.json to the local webhook and print
 make fps            # drag frame rate in a headed Chromium at iPhone-landscape proportions → .data/fps.json
 make record         # re-record docs/demo/run.mp4 (browser recording of the demo at phone proportions)
 make thumbs         # re-render palette thumbnails from the GLBs
+make supabase-assets # upload GLBs/thumbnails to Supabase Storage + metadata table
 make screenshots    # docs/screenshots/iter-N (needs api + web running)
 ```
 
 Storage picks itself: `SUPABASE_URL` + `SUPABASE_SECRET_KEY` → Supabase REST/Postgres; else `BLOB_READ_WRITE_TOKEN` → Vercel Blob snapshots (what the deployed API can use so every serverless instance sees the same rooms); else a JSON file in `.data/`. `GET /health` reports which one is active.
 
-Supabase setup: create this table once in the SQL editor, then add `SUPABASE_URL` and the server-only secret key to `.env` / Vercel env.
+Supabase setup: apply `migrations/001_payment_ledger.sql`, `migrations/002_supabase_access.sql`, and `migrations/003_furniture_assets.sql` in the SQL editor, then add `SUPABASE_URL` and the server-only secret key to `.env` / Vercel env.
 
-```sql
-create table if not exists public.arp_documents (
-  collection text not null,
-  id text not null,
-  room_id text,
-  user_id text,
-  phone text,
-  doc jsonb not null,
-  seq bigint not null,
-  primary key (collection, id)
-);
-create index if not exists arp_documents_collection_seq_idx on public.arp_documents (collection, seq);
-create index if not exists arp_documents_room_idx on public.arp_documents (collection, room_id);
-create index if not exists arp_documents_phone_idx on public.arp_documents (collection, phone);
-grant select, insert, update, delete on public.arp_documents to service_role;
+```bash
+SUPABASE_URL=https://...supabase.co
+SUPABASE_SECRET_KEY=...
+make supabase-assets
 ```
+
+The furniture uploader stores GLB, thumbnail PNG and manifest bytes in the public `furniture-assets` Storage bucket and upserts queryable rows into `arp_furniture_assets` with checksums, sizes, storage paths and public URLs. It is idempotent; run `scripts/upload_furniture_assets.py --dry-run` to preview the 53 bundled assets.
 
 ## Repository layout
 
@@ -69,7 +63,7 @@ grant select, insert, update, delete on public.arp_documents to service_role;
 | `apps/mobile` | Expo app (expo-router): Home, Scan (RoomPlan module), Editor (WebView bridge), Ask, Variants, Settings |
 | `packages/geometry` | TypeScript fit validation + metrics (source of truth; Python port in `apps/api/app/solver`) |
 | `packages/contracts` | JSON Schemas + TS types for skeleton, layout, furniture, plan, bridge, Photon |
-| `assets/furniture` | 25 Kenney Furniture Kit GLBs (CC0) + `manifest.json` (real-world dims) + thumbnails |
+| `assets/furniture` | 26 bundled furniture GLBs (CC0) + `manifest.json` (real-world dims) + thumbnails |
 | `fixtures/` | sample rooms, validation parity suite, canned plans, listing page, Photon payloads |
 | `docs/` | specs, reference images, per-iteration screenshots, demo recording |
 
@@ -100,6 +94,8 @@ The Scan screen hosts Apple's `RoomCaptureView` through the local Expo module in
 3. **Use this scan** → room setup (space types → elements) → the clean scanned room opens in the editor. Detected furniture stays on the room as `detectedObjects`.
 
 If the camera is denied the screen shows an "Open Settings" button. Without LiDAR (or in Expo Go / the Simulator) the screen falls back to sample room, typed dimensions, or pasted RoomPlan JSON — `fixtures/rooms/roomplan-export-sample.json` is a hand-authored export in exactly the shape the module produces.
+
+Optional local USDZ inspection: install `apps/api/requirements-usdz.txt` into `.venv`, then run `.venv/bin/python apps/api/scripts/inspect_usdz.py /path/to/room.usdz --convert`. This developer utility does not add a hosted upload endpoint or change the native JSON scan flow. See [USDZ setup and limitations](docs/BRANCH_INTEGRATION.md#optional-local-usdz-inspection).
 
 ## Photon (iMessage) in real mode
 

@@ -29,7 +29,7 @@ function Menu() {
       <h3>Units</h3>
       <div className="seg"><button className={units === 'imperial' ? 'on' : ''} onClick={() => set.getState().setUnits('imperial')}>feet & inches</button><button className={units === 'metric' ? 'on' : ''} onClick={() => set.getState().setUnits('metric')}>metric</button></div>
       <h3>Theme</h3>
-      <div className="seg"><button className={theme === 'peach' ? 'on' : ''} onClick={() => set.getState().setTheme('peach')}>peach</button><button className={theme === 'teal' ? 'on' : ''} onClick={() => set.getState().setTheme('teal')}>teal</button></div>
+      <div className="seg">{(['stone', 'peach', 'teal'] as const).map((t) => <button key={t} className={theme === t ? 'on' : ''} onClick={() => set.getState().setTheme(t)}>{t}</button>)}</div>
       <h3>Help</h3>
       <button className="drawer-item" onClick={() => set.getState().setDrawer('help')}>Gestures & shortcuts</button>
       {health && <div className="health">API {health.mode}{Object.entries(health).filter(([k]) => k !== 'mode').map(([k, v]) => <span key={k} className={`chip ${v}`}>{k}: {v}</span>)}</div>}

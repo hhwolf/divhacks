@@ -103,7 +103,7 @@ export function DimensionsSheet({ visible, units: initialUnits, busy, onClose, o
 const round = (v: number) => Math.round(v * 100) / 100;
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(74,51,39,0.45)', justifyContent: 'flex-end' },
+  backdrop: { flex: 1, backgroundColor: 'rgba(37,52,32,0.4)', justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: colors.tile,
     borderTopLeftRadius: radius.lg + 4,

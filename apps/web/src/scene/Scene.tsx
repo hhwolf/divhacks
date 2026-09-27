@@ -1,20 +1,74 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { Canvas, useThree, type ThreeEvent } from '@react-three/fiber';
-import { ContactShadows, OrthographicCamera } from '@react-three/drei';
+import { ContactShadows, Environment, Lightformer, OrthographicCamera } from '@react-three/drei';
+import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
 import type { Layout, LayoutItem, RoomSkeleton } from '@arp/contracts';
-import { openingSpan, wallInwardNormal } from '@arp/geometry';
+import { openingSpan, wallDir, wallInwardNormal } from '@arp/geometry';
 import { useEditor, violationLevel } from '../store';
 import { RoomMesh } from './Room';
-import { Item } from './Furniture';
+import { DECAL_LAYER, Item } from './Furniture';
 import { FloorOverlays, ZoneMarkers } from './Overlays';
 import { cameraPose, fitZoom, hiddenWalls } from './camera';
+
+RectAreaLightUniformsLib.init();
+
+/**
+ * Daylight rig: a low sun outside the (first) window wall so real sunlight falls through the opening onto the floor,
+ * a soft area light at the glass for window glow, sky/ground bounce, and a small neutral environment so metal and
+ * semi-gloss finishes pick up reflections. Night swaps to a dim moon + a warm ceiling fixture.
+ */
+function Lighting({ sk, night }: { sk: RoomSkeleton; night: boolean }) {
+  const cx = sk.dimensions.l / 2, cz = sk.dimensions.w / 2, H = sk.dimensions.h;
+  const win = sk.windows[0];
+  const rig = useMemo(() => {
+    const center = new THREE.Vector3(cx, 0, cz);
+    if (!win) return { sun: new THREE.Vector3(cx - 5, 8, cz + 4), target: center, area: null, bounce: null };
+    const { a, b } = openingSpan(sk, win); const n = wallInwardNormal(sk, win.wall); const [dx, dz] = wallDir(sk.walls[win.wall]);
+    const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2; const my = win.sillHeight + win.height / 2;
+    // sun ~35° up, coming through the window from outside and a little from the side, landing ~1.3 m into the room
+    const land = new THREE.Vector3(mx + n[0] * 1.3, 0, mz + n[1] * 1.3);
+    const dir = new THREE.Vector3(-n[0] + dx * 0.45, 0, -n[1] + dz * 0.45).normalize();
+    const sun = land.clone().addScaledVector(dir, 9).setY(9 * Math.tan((35 * Math.PI) / 180));
+    const areaPos = new THREE.Vector3(mx + n[0] * 0.09, my, mz + n[1] * 0.09);
+    // sunlight bouncing off the floor patch back onto the window wall (which is otherwise only sky-lit)
+    const bounce = new THREE.Vector3(mx + n[0] * 4, 1.2, mz + n[1] * 4);
+    return { sun, target: land, bounce, area: { pos: areaPos, look: new THREE.Vector3(mx + n[0] * 2, my - 0.4, mz + n[1] * 2), w: win.width, h: win.height } };
+  }, [sk, win, cx, cz]);
+  const target = useMemo(() => new THREE.Object3D(), []);
+  useEffect(() => { target.position.copy(rig.target); target.updateMatrixWorld(); }, [rig, target]);
+  const areaRef = useRef<THREE.RectAreaLight>(null);
+  useEffect(() => { if (areaRef.current && rig.area) areaRef.current.lookAt(rig.area.look); }, [rig]);
+  return (
+    <>
+      <primitive object={target} />
+      {/* neutral, slightly cool daylight: keeps the tonal palette from drifting warm/orange */}
+      <hemisphereLight args={[night ? '#4a4845' : '#e6e9ec', night ? '#2e2620' : '#bdb4a8', night ? 0.3 : 1.35]} />
+      <ambientLight intensity={night ? 0.12 : 0.28} color={night ? '#c8bcae' : '#f7f5f2'} />
+      {rig.bounce && !night && <directionalLight position={rig.bounce} target={target} intensity={0.55} color="#ece6de" />}
+      <directionalLight target={target} position={rig.sun} intensity={night ? 0.35 : 3.4} color={night ? '#9fb2e6' : '#fff6ea'}
+        castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0004} shadow-normalBias={0.02} shadow-radius={4}>
+        <orthographicCamera attach="shadow-camera" args={[-7, 7, 7, -7, 0.5, 40]} />
+      </directionalLight>
+      {/* camera-side fill so the faces toward the viewer don't go flat in the iso view */}
+      <directionalLight position={[cx + 6, 5, cz + 7]} intensity={night ? 0.06 : 0.7} color="#f3eee8" />
+      {rig.area && <rectAreaLight ref={areaRef} position={rig.area.pos} width={rig.area.w} height={rig.area.h} intensity={night ? 0.5 : 9} color={night ? '#6f82b0' : '#eef4ff'} />}
+      {/* warm ceiling fixture at night */}
+      {night && <pointLight position={[cx, H - 0.35, cz]} intensity={16} distance={10} decay={2} color="#ffd7a8" />}
+      <Environment resolution={64} frames={1} environmentIntensity={night ? 0.12 : 0.35}>
+        <Lightformer form="rect" intensity={2} color="#ffffff" position={[0, 5, -6]} scale={[10, 5, 1]} />
+        <Lightformer form="rect" intensity={0.8} color="#ffe8cc" position={[6, 2, 4]} rotation={[0, -Math.PI / 2, 0]} scale={[8, 3, 1]} />
+        <Lightformer form="rect" intensity={0.5} color="#cfd8e0" position={[0, 8, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[10, 10, 1]} />
+      </Environment>
+    </>
+  );
+}
 
 function Rig({ sk }: { sk: RoomSkeleton }) {
   const orbit = useEditor((s) => s.orbit); const viewMode = useEditor((s) => s.viewMode);
   const { camera, size, gl } = useThree();
   useEffect(() => {
-    const cam = camera as THREE.OrthographicCamera; const pose = cameraPose(sk, orbit, viewMode);
+    const cam = camera as THREE.OrthographicCamera; const pose = cameraPose(sk, orbit, viewMode); cam.layers.enable(DECAL_LAYER);
     cam.position.copy(pose.position); cam.up.copy(pose.up); cam.lookAt(pose.target);
     const halfH = fitZoom(sk, size.width / size.height); const aspect = size.width / size.height;
     cam.left = -halfH * aspect; cam.right = halfH * aspect; cam.top = halfH; cam.bottom = -halfH; cam.near = 0.1; cam.far = 200; cam.zoom = cam.zoom || 1; cam.updateProjectionMatrix();
@@ -110,28 +164,6 @@ function PlacingPreview() {
   return <Item item={it} f={f} selected={false} level={null} shake={false} bounce={false} ghost units={units} interactive={false} showPill={false} />;
 }
 
-/** Directional light positioned outside the room's first window, pointing along its inward normal (falls back to a high key light). */
-function WindowLight({ sk, night }: { sk: RoomSkeleton; night: boolean }) {
-  const w = sk.windows[0];
-  const target = useMemo(() => new THREE.Object3D(), []);
-  const cx = sk.dimensions.l / 2, cz = sk.dimensions.w / 2;
-  let pos: [number, number, number] = [cx - 6, 9, cz + 4];
-  if (w) {
-    const { a, b } = openingSpan(sk, w); const n = wallInwardNormal(sk, w.wall);
-    const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
-    pos = [mx - n[0] * 7, w.sillHeight + w.height + 4.5, mz - n[1] * 7];
-    target.position.set(mx + n[0] * 2.2, 0, mz + n[1] * 2.2);
-  } else target.position.set(cx, 0, cz);
-  return (
-    <>
-      <primitive object={target} />
-      <directionalLight position={pos} target={target} intensity={night ? 0.55 : 2.1} color={night ? '#9fb2e6' : '#ffe2b8'} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0004} shadow-normalBias={0.02}>
-        <orthographicCamera attach="shadow-camera" args={[-8, 8, 8, -8, 0.5, 40]} />
-      </directionalLight>
-    </>
-  );
-}
-
 export function RoomScene({ interactive = true, ghostLayout = null, className, itemsOverride = null, hideOverlays = false }: { interactive?: boolean; ghostLayout?: Layout | null; className?: string; itemsOverride?: LayoutItem[] | null; hideOverlays?: boolean }) {
   const room = useEditor((s) => s.room); const orbit = useEditor((s) => s.orbit); const viewMode = useEditor((s) => s.viewMode);
   const wallColor = useEditor((s) => s.wallColor); const floorStyle = useEditor((s) => s.floorStyle); const floorColor = useEditor((s) => s.floorColor); const night = useEditor((s) => s.night); const theme = useEditor((s) => s.theme);
@@ -143,17 +175,15 @@ export function RoomScene({ interactive = true, ghostLayout = null, className, i
   if (!sk) return null;
   const cx = sk.dimensions.l / 2, cz = sk.dimensions.w / 2;
   return (
-    <Canvas className={className} shadows dpr={[1, 2]} gl={{ preserveDrawingBuffer: true, antialias: true, alpha: true }} onCreated={({ gl }) => { glRef.current = gl; gl.toneMapping = THREE.NoToneMapping; }} style={{ touchAction: 'none' }}>
+    <Canvas className={className} shadows="soft" dpr={[1, 2]} gl={{ preserveDrawingBuffer: true, antialias: true, alpha: true }}
+      onCreated={({ gl }) => { glRef.current = gl; gl.toneMapping = THREE.NeutralToneMapping; gl.toneMappingExposure = 1.0; }} style={{ touchAction: 'none' }}>
       <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={1} />
       <Rig sk={sk} /><Controls />
-      <ambientLight intensity={night ? 0.45 : 0.85} color={night ? '#8fa0c8' : '#f6efe6'} />
-      <hemisphereLight intensity={night ? 0.25 : 0.55} color="#fff6ea" groundColor="#8a6a52" />
-      {/* key light through the first window: warm, strong, casts the long soft shadows */}
-      <WindowLight sk={sk} night={night} />
-      <directionalLight position={[cx + 5, 7, cz + 6]} intensity={night ? 0.25 : 0.45} color={night ? '#9fb2e6' : '#ffe3c8'} />
-      <ContactShadows position={[cx, 0.02, cz]} scale={Math.max(sk.dimensions.l, sk.dimensions.w) * 1.6} blur={2.4} far={2.5} opacity={night ? 0.3 : 0.42} resolution={1024} color="#3b2418" frames={1} />
+      <Lighting sk={sk} night={night} />
       <Suspense fallback={null}>
         <RoomMesh sk={sk} hidden={hidden} viewMode={viewMode} wallColor={wallColor} floorStyle={floorStyle} floorColor={floorColor} night={night} theme={theme} />
+        {/* soft contact shadows where furniture meets the floor (decals/overlays are on DECAL_LAYER, so they don't cast) */}
+        <ContactShadows position={[cx, 0.014, cz]} scale={[sk.dimensions.l + 0.3, sk.dimensions.w + 0.3]} resolution={512} far={0.9} blur={2.4} opacity={night ? 0.45 : 0.6} color="#1f1a16" />
         {!hideOverlays && <FloorOverlays masks={masks} show={overlays} />}
         {!hideOverlays && <ZoneMarkers zones={zones} />}
         <Items interactive={interactive} override={itemsOverride} />

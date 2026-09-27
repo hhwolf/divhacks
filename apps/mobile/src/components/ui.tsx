@@ -141,7 +141,7 @@ export function Field(props: TextInputProps & { label?: string }) {
     <View style={{ marginBottom: spacing.md }}>
       {label ? <Text style={styles.fieldLabel}>{label}</Text> : null}
       <TextInput
-        placeholderTextColor="#A08B7C"
+        placeholderTextColor="#9AA392"
         autoCapitalize="none"
         autoCorrect={false}
         {...rest}
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     ...shadow.soft,
   },
-  bigIcon: { width: 56, height: 56, borderRadius: radius.md, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  bigIcon: { width: 56, height: 56, borderRadius: radius.md, backgroundColor: colors.forest, alignItems: 'center', justifyContent: 'center' },
   bigTitle: { fontSize: 18, fontWeight: '700', color: colors.ink, marginBottom: 2 },
   pressed: { opacity: 0.75, transform: [{ scale: 0.99 }] },
   button: {
@@ -215,5 +215,5 @@ const styles = StyleSheet.create({
     borderColor: colors.tileMuted,
   },
   sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
-  iconButton: { width: 44, height: 44, borderRadius: radius.sm, backgroundColor: 'rgba(74,51,39,0.85)', alignItems: 'center', justifyContent: 'center' },
+  iconButton: { width: 44, height: 44, borderRadius: radius.sm, backgroundColor: colors.forest, alignItems: 'center', justifyContent: 'center' },
 });

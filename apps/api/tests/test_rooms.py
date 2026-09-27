@@ -59,6 +59,48 @@ def test_missing_shape_rejected(client: TestClient) -> None:
     assert client.post("/rooms", json={"name": "nothing"}).status_code == 422
 
 
+def test_scan_with_profile_and_clean_base(client: TestClient) -> None:
+    scan = load_fixture("rooms", "roomplan-export-sample.json")
+    body = client.post(
+        "/rooms",
+        json={"name": "Study nook", "skeleton": scan["skeleton"], "objects": [], "spaceTypes": ["Bedroom", "Study"], "elements": [{"id": "desk", "label": "Desk", "furnitureIds": ["desk"]}, {"id": "yoga", "label": "Yoga zone", "furnitureIds": ["yoga_mat"]}]},
+    ).json()
+    room = body["room"]
+    assert room["spaceTypes"] == ["Bedroom", "Study"] and [e["label"] for e in room["elements"]] == ["Desk", "Yoga zone"]
+    assert room["skeleton"]["doors"] == scan["skeleton"]["doors"] and room["skeleton"]["windows"] == scan["skeleton"]["windows"]
+    assert body["currentLayout"]["items"] == []  # clean base: the user places their real furniture
+
+
+def test_rename_room_keeps_skeleton(client: TestClient) -> None:
+    created = client.post("/rooms", json={"sample": "nyc-bedroom"}).json()["room"]
+    r = client.patch(f"/rooms/{created['id']}", json={"name": "  Bushwick bedroom ", "elements": [{"id": "reading", "label": "Reading corner", "furnitureIds": []}]})
+    assert r.status_code == 200
+    got = client.get(f"/rooms/{created['id']}").json()["room"]
+    assert got["name"] == "Bushwick bedroom" and got["elements"][0]["label"] == "Reading corner" and got["skeleton"] == created["skeleton"]
+    assert client.patch(f"/rooms/{created['id']}", json={"skeleton": created["skeleton"]}).status_code == 422
+    assert client.patch(f"/rooms/{created['id']}", json={"name": "   "}).status_code == 422
+    assert client.patch("/rooms/nope", json={"name": "x"}).status_code == 404
+    listed = next(x for x in client.get("/rooms").json() if x["id"] == created["id"])
+    assert listed["layoutCount"] == 1
+
+
+def test_l_shaped_sample_is_clean(client: TestClient) -> None:
+    body = client.post("/rooms", json={"sample": "l-shaped"}).json()
+    assert len(body["room"]["skeleton"]["floorPolygon"]) == 6 and len(body["room"]["skeleton"]["walls"]) == 6
+    assert body["currentLayout"]["metrics"]["conflicts"] == 0
+    assert client.get(f"/layouts/{body['currentLayout']['id']}").json()["validation"]["violations"] == []
+
+
+def test_delete_room_removes_layouts(client: TestClient) -> None:
+    created = client.post("/rooms", json={"sample": "nyc-bedroom"}).json()
+    rid, lid = created["room"]["id"], created["currentLayout"]["id"]
+    fork = client.post(f"/layouts/{lid}/fork", json={"name": "Try"}).json()
+    assert client.delete(f"/rooms/{rid}").status_code == 204
+    assert client.get(f"/rooms/{rid}").status_code == 404
+    assert client.get(f"/layouts/{lid}").status_code == 404 and client.get(f"/layouts/{fork['id']}").status_code == 404
+    assert client.delete(f"/rooms/{rid}").status_code == 404
+
+
 def test_get_and_list_rooms(client: TestClient) -> None:
     created = client.post("/rooms", json={"sample": "nyc-bedroom"}).json()
     got = client.get(f"/rooms/{created['room']['id']}").json()

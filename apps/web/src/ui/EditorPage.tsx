@@ -17,6 +17,7 @@ import { Toasts } from './Toasts';
 import { onHostMessage, postToHost } from '../lib/bridge';
 import { setApiBase } from '../lib/api';
 import { Backdrop } from './Backdrop';
+import { FurnishCard } from './FurnishCard';
 import { QuickActions } from './QuickActions';
 
 export function EditorPage() {
@@ -70,7 +71,7 @@ export function EditorPage() {
       {!loading && !room && lastError && <div className="loading error">Couldn’t load this layout.<br /><small>{lastError}</small></div>}
       {ui && room && (
         <>
-          <TopLeft /><TopRight /><VariantTabs /><AnalysisTile /><RoomNeeds /><Palette /><SidePanel /><QuickActions /><BottomCenter /><RequestBar /><Drawers />
+          <TopLeft /><TopRight /><VariantTabs /><AnalysisTile /><RoomNeeds /><Palette /><SidePanel /><QuickActions /><FurnishCard /><BottomCenter /><RequestBar /><Drawers />
         </>
       )}
       <Toasts />

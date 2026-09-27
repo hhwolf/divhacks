@@ -34,6 +34,7 @@ const PROMPTS: Record<AssistMode, { label: string; placeholder: string; question
 
 export function RequestBar() {
   const open = useEditor((s) => s.requestOpen); const busy = useEditor((s) => s.agentBusy); const reply = useEditor((s) => s.agentReply); const set = useEditor;
+  const furnishing = useEditor((s) => s.furnishing);
   const [text, setText] = useState('');
   const [mode, setMode] = useState<AssistMode>('plan');
   const cfg = useMemo(() => PROMPTS[mode], [mode]);
@@ -46,10 +47,11 @@ export function RequestBar() {
       <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={cfg.placeholder} rows={2} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }} />
       <div className="request-hint">Send furniture links or photos over iMessage; use this assistant for layout changes.</div>
       <div className="request-actions">
+        <button className="btn dark small" disabled={busy || furnishing || !text.trim()} onClick={() => { void set.getState().furnish(text.trim(), { restyle: true }); setText(''); }}>Restyle</button>
         <div className="suggestions">{cfg.questions.map((s) => <button key={s} className="suggestion" onClick={() => setText(s)}>{s}</button>)}</div>
         <button className="btn primary small" disabled={busy || !text.trim()} onClick={() => void send()}>{busy ? <span className="spinner small" /> : <I.send />} Send</button>
       </div>
-      {(reply || busy) && <div className="reply" data-testid="agent-reply">{busy ? 'Thinking about your room…' : reply}</div>}
+      {(reply || busy || furnishing) && <div className="reply" data-testid="agent-reply">{busy ? 'Thinking about your room…' : furnishing ? 'Furnishing your room…' : reply}</div>}
     </div>
   );
 }
