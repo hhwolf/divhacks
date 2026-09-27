@@ -140,6 +140,30 @@ a { color: inherit; }
 .request-bar textarea { border: 0; border-radius: var(--r); background: #fff; padding: calc(8 * var(--u)) calc(10 * var(--u)); font: inherit; font-size: calc(13 * var(--u)); resize: none; color: var(--ink); }
 .request-actions { display: flex; gap: calc(6 * var(--u)); align-items: center; } .attached { flex: 1; font-size: calc(11 * var(--u)); color: #6b5040; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .reply { background: rgba(74, 51, 39, .08); border-radius: var(--r); padding: calc(8 * var(--u)) calc(10 * var(--u)); font-size: calc(13 * var(--u)); line-height: 1.4; border-left: calc(4 * var(--u)) solid var(--green); }
+/* Empty-room card: laid out like the native app's home (hero mark, eyebrow, row card with icon square + chevron, pill CTA,
+   soft shadows, 20–24 radii) in the editor's own palette. Sizes floor at px values so it stays readable when --u is tiny (phone). */
+.furnish-card { --fu: max(var(--u), 0.72px); position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(calc(440 * var(--fu)), calc(100vw - 32px)); max-height: calc(100vh - 24px); overflow-y: auto; box-sizing: border-box; background: var(--tile); border-radius: calc(24 * var(--fu)); padding: calc(22 * var(--fu)); display: flex; flex-direction: column; gap: calc(12 * var(--fu)); box-shadow: 0 calc(6 * var(--fu)) calc(28 * var(--fu)) rgba(40, 28, 20, 0.16); z-index: 5; color: var(--ink); }
+.furnish-hero { display: flex; align-items: center; gap: calc(12 * var(--fu)); }
+.furnish-mark { flex: none; width: calc(44 * var(--fu)); height: calc(44 * var(--fu)); border-radius: calc(12 * var(--fu)); background: var(--ink-85); color: #fff; display: grid; place-items: center; }
+.furnish-mark svg { width: calc(22 * var(--fu)); height: calc(22 * var(--fu)); }
+.furnish-eyebrow { font-size: calc(11 * var(--fu)); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: .6; }
+.furnish-title { font-weight: 700; font-size: calc(21 * var(--fu)); letter-spacing: -0.02em; line-height: 1.2; }
+.furnish-sub { font-size: calc(14 * var(--fu)); line-height: 1.45; opacity: .75; }
+.furnish-card textarea { border: 1px solid rgba(74, 51, 39, .12); border-radius: calc(14 * var(--fu)); background: #fff; padding: calc(12 * var(--fu)) calc(14 * var(--fu)); font: inherit; font-size: calc(15 * var(--fu)); resize: none; color: var(--ink); }
+.furnish-row { display: flex; align-items: center; gap: calc(12 * var(--fu)); width: 100%; border: 1px solid rgba(74, 51, 39, .12); border-radius: calc(20 * var(--fu)); background: #fff; padding: calc(12 * var(--fu)) calc(14 * var(--fu)); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.furnish-row:disabled { opacity: .55; cursor: default; } .furnish-row > svg { width: calc(18 * var(--fu)); height: calc(18 * var(--fu)); opacity: .5; }
+.furnish-row-icon { flex: none; width: calc(40 * var(--fu)); height: calc(40 * var(--fu)); border-radius: calc(12 * var(--fu)); background: rgba(74, 51, 39, .08); display: grid; place-items: center; }
+.furnish-row-icon svg { width: calc(20 * var(--fu)); height: calc(20 * var(--fu)); }
+.furnish-row-text { flex: 1; display: flex; flex-direction: column; gap: 2px; } .furnish-row-text b { font-size: calc(15 * var(--fu)); } .furnish-row-text small { font-size: calc(13 * var(--fu)); opacity: .65; }
+.furnish-ideas { display: flex; flex-wrap: wrap; gap: calc(8 * var(--fu)); }
+.furnish-idea { display: inline-flex; align-items: center; gap: calc(6 * var(--fu)); border: 0; border-radius: 999px; background: rgba(74, 51, 39, .07); padding: calc(7 * var(--fu)) calc(12 * var(--fu)); font: inherit; font-size: calc(13 * var(--fu)); font-weight: 600; color: var(--ink); cursor: pointer; }
+.furnish-idea svg { width: calc(15 * var(--fu)); height: calc(15 * var(--fu)); opacity: .7; } .furnish-idea:disabled { opacity: .5; cursor: default; }
+.furnish-photos { display: flex; gap: calc(10 * var(--fu)); flex-wrap: wrap; }
+.furnish-thumb { position: relative; width: calc(64 * var(--fu)); height: calc(64 * var(--fu)); border-radius: calc(14 * var(--fu)); background: center / cover no-repeat #fff; box-shadow: 0 calc(3 * var(--fu)) calc(10 * var(--fu)) rgba(40, 28, 20, .14); }
+.furnish-thumb button { position: absolute; top: calc(-6 * var(--fu)); right: calc(-6 * var(--fu)); width: calc(22 * var(--fu)); height: calc(22 * var(--fu)); border: 0; border-radius: 50%; background: var(--ink); color: #fff; padding: 0; display: grid; place-items: center; cursor: pointer; }
+.furnish-thumb button svg { width: calc(12 * var(--fu)); height: calc(12 * var(--fu)); }
+.furnish-cta { display: flex; align-items: center; justify-content: center; gap: calc(8 * var(--fu)); width: 100%; border: 0; border-radius: 999px; background: var(--ink-85); color: #fff; padding: calc(13 * var(--fu)) calc(18 * var(--fu)); font: inherit; font-size: calc(15 * var(--fu)); font-weight: 700; cursor: pointer; }
+.furnish-cta svg { width: calc(16 * var(--fu)); height: calc(16 * var(--fu)); } .furnish-cta:disabled { opacity: .45; cursor: default; }
 .btn { border: 0; border-radius: var(--r); padding: calc(10 * var(--u)) calc(16 * var(--u)); font-weight: 800; font-size: calc(14 * var(--u)); display: inline-flex; align-items: center; gap: calc(6 * var(--u)); text-decoration: none; }
 .btn.small { padding: calc(6 * var(--u)) calc(10 * var(--u)); font-size: calc(12 * var(--u)); } .btn svg { width: calc(16 * var(--u)); height: calc(16 * var(--u)); }
 .btn.dark { background: var(--ink-85); color: #fff; } .btn.primary { background: var(--green); color: #fff; } .btn:disabled { opacity: .5; }
@@ -189,6 +213,65 @@ a { color: inherit; }
 
 /* Landscape phone: same proportions via --u, tighten a few margins */
 @media (max-height: 520px) { :root { --u: calc(100vmin / 1080 * 1.35); } .variant-tabs { max-width: 46vw; } }
+
+/* Stone theme (default): a calm, near-monochrome warm grey that reads as an interior-design tool rather than a game.
+   Same layout and controls as peach/teal; flatter surfaces (soft shadows instead of hard "lips"), muted status colors,
+   no hill silhouettes, and a regular (non-rounded) UI face. */
+.theme-stone {
+  --ink: #33302D; --ink-85: rgba(44, 41, 38, 0.88); --tile: #F7F6F3; --tile-lip: #DAD5CD; --tile-shadow: rgba(35, 32, 28, 0.12);
+  --red: #B95A4D; --yellow: #CFAE66; --green: #6F9A80; --blue: #8EA3B3;
+  --stone-bg: #D6D1C9; --stone-bg-dark: #BDB7AD; --hair: 0 0 0 1px rgba(40, 36, 32, 0.07);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
+  font-family: var(--font); color: var(--ink);
+}
+.theme-stone .backdrop { background: radial-gradient(ellipse 85% 75% at 50% 42%, #E3DFD8 0%, var(--stone-bg) 55%, var(--stone-bg-dark) 100%); }
+.theme-stone .hills { display: none; }
+.theme-stone .corner { opacity: 0.5; }
+.theme-stone .corner::before, .theme-stone .corner::after { background: rgba(50, 46, 42, 0.35); } .theme-stone .corner i { border-color: rgba(50, 46, 42, 0.35); }
+.theme-stone .sq { box-shadow: 0 calc(1 * var(--u)) calc(2 * var(--u)) rgba(0, 0, 0, 0.14), 0 calc(6 * var(--u)) calc(14 * var(--u)) rgba(30, 28, 25, 0.12); }
+.theme-stone .sq:active { box-shadow: 0 calc(1 * var(--u)) calc(2 * var(--u)) rgba(0, 0, 0, 0.18); }
+.theme-stone .sq:disabled, .theme-stone .sq.dim { background: rgba(80, 76, 72, 0.32); color: rgba(255, 255, 255, 0.8); box-shadow: none; }
+.theme-stone .sq.active { box-shadow: var(--hair), 0 calc(4 * var(--u)) calc(10 * var(--u)) var(--tile-shadow); }
+.theme-stone .tile { background: #FBFAF8; box-shadow: var(--hair), 0 calc(4 * var(--u)) calc(10 * var(--u)) var(--tile-shadow); }
+.theme-stone .tile.active, .theme-stone .tile.tool.active, .theme-stone .tab.active { background: var(--ink-85); box-shadow: 0 calc(4 * var(--u)) calc(10 * var(--u)) rgba(20, 18, 16, 0.22); }
+.theme-stone .tile.empty { box-shadow: none; }
+.theme-stone .tab, .theme-stone .analysis { box-shadow: var(--hair), 0 calc(4 * var(--u)) calc(10 * var(--u)) var(--tile-shadow); }
+.theme-stone .pill, .theme-stone .pill::after { background: rgba(44, 41, 38, 0.9); } .theme-stone .dot { border-color: #2A2826; }
+.theme-stone .page-num { color: var(--ink); text-shadow: none; }
+.theme-stone .divider { background: rgba(44, 41, 38, 0.3); }
+.theme-stone .drawer-scrim { background: rgba(30, 28, 25, 0.12); }
+.theme-stone .an-tabs button:not(.on), .theme-stone .seg, .theme-stone .chip:not(.live):not(.mock):not(.json) { background: rgba(44, 41, 38, 0.08); }
+.theme-stone .reply { background: rgba(44, 41, 38, 0.05); } .theme-stone .context-menu button:hover { background: rgba(44, 41, 38, 0.07); }
+.theme-stone .attached { color: #6A655F; }
+.theme-stone .loading { color: var(--ink); text-shadow: none; } .theme-stone .spinner { border-color: rgba(44, 41, 38, 0.2); border-top-color: var(--ink); }
+.theme-stone.home { color: var(--ink); } .theme-stone.home h1 { text-shadow: none; font-weight: 700; letter-spacing: -0.01em; }
+.theme-stone .card { box-shadow: var(--hair), 0 calc(6 * var(--u)) calc(16 * var(--u)) var(--tile-shadow); }
+.theme-stone .card-icon { filter: grayscale(1) contrast(0.9); opacity: 0.75; }
+.theme-stone .link { color: var(--ink); } .theme-stone .err { color: var(--red); }
+.theme-stone .recent-row { background: rgba(255, 255, 255, 0.55); color: var(--ink); box-shadow: var(--hair); }
+.theme-stone .compare-head { color: var(--ink); } .theme-stone .compare-head h1 { text-shadow: none; }
+.theme-stone .side { background: rgba(255, 255, 255, 0.25); box-shadow: inset 0 0 0 1px rgba(40, 36, 32, 0.08); }
+
+/* /device — mobile app preview in a phone frame (testing aid) */
+.device-page { position: fixed; inset: 0; display: flex; flex-direction: column; background: radial-gradient(ellipse 80% 70% at 50% 45%, #E3DFD8, #C9C3B9); color: #33302D; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif; }
+.device-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 20px; background: rgba(255, 255, 255, 0.6); border-bottom: 1px solid rgba(40, 36, 32, 0.08); backdrop-filter: blur(8px); }
+.device-brand { display: flex; flex-direction: column; margin-right: auto; } .device-brand b { font-size: 15px; } .device-brand span { font-size: 12px; opacity: 0.65; }
+.device-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.device-page .seg { display: inline-flex; background: rgba(44, 41, 38, 0.08); border-radius: 10px; padding: 3px; } .device-page .seg button { border: 0; background: transparent; padding: 6px 10px; border-radius: 8px; font-weight: 600; font-size: 12.5px; } .device-page .seg .on { background: #33302D; color: #fff; }
+.device-page .btn.small { background: #fff; color: #33302D; box-shadow: 0 0 0 1px rgba(40, 36, 32, 0.12); font-size: 12.5px; padding: 7px 11px; border-radius: 9px; font-weight: 700; }
+.device-url { display: flex; gap: 6px; } .device-url input { width: 200px; border: 0; border-radius: 9px; padding: 7px 10px; font: inherit; font-size: 12.5px; box-shadow: 0 0 0 1px rgba(40, 36, 32, 0.12); }
+.device-stage { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.device-frame { flex: none; background: #1B1B1D; padding: 12px; box-shadow: 0 0 0 2px #3A3A3D, 0 30px 80px rgba(20, 18, 16, 0.35); transform-origin: center; }
+.device-screen { position: relative; overflow: hidden; background: #fff; } .device-screen iframe { border: 0; display: block; }
+.device-island { position: absolute; top: 11px; left: 50%; width: 124px; height: 36px; margin-left: -62px; border-radius: 20px; background: #000; pointer-events: none; }
+.device-island.side { top: 50%; left: 11px; width: 36px; height: 124px; margin: -62px 0 0 0; }
+.device-status { position: absolute; top: 0; left: 0; right: 0; height: 24px; padding: 0 22px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 700; color: #111; pointer-events: none; }
+.device-status.island { height: 54px; padding: 0 34px 0 44px; font-size: 15px; }
+.device-status-icons { display: inline-flex; gap: 5px; align-items: center; } .device-status-icons i { display: inline-block; background: #111; border-radius: 2px; }
+.device-status-icons .sig { width: 16px; height: 10px; clip-path: polygon(0 100%, 100% 0, 100% 100%); } .device-status-icons .wifi { width: 14px; height: 10px; border-radius: 10px 10px 2px 2px; } .device-status-icons .batt { width: 24px; height: 11px; border-radius: 3px; }
+.device-home { position: absolute; bottom: 8px; left: 50%; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: #111; opacity: 0.85; pointer-events: none; }
+.device-home.land { bottom: 6px; }
+.device-hint { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 12px; opacity: 0.6; margin: 0; } .device-hint code { font-size: 11.5px; }
 
 /* Keep the request bubble clear of the side panel's details block */
 .editor:has(.side-panel) .request-fab, .editor:has(.side-panel) .request-bar { right: calc(300 * var(--u)); }

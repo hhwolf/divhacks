@@ -58,7 +58,9 @@ export interface Layout {
   updatedAt?: string;
 }
 
-export interface Room { id: string; userId?: string | null; name: string; skeleton: RoomSkeleton; source: 'scan' | 'manual' | 'sample'; createdAt?: string }
+/** Set in the post-scan setup: what the space is for and what it needs (see src/spaces.ts). */
+export interface RoomProfile { spaceTypes?: string[]; elements?: string[]; suggestedFurniture?: string[] }
+export interface Room extends RoomProfile { id: string; userId?: string | null; name: string; skeleton: RoomSkeleton; source: 'scan' | 'manual' | 'sample'; createdAt?: string; updatedAt?: string }
 
 export type Intent = 'fit_item' | 'make_space' | 'keep_clear' | 'compare' | 'clarify';
 export interface PlanConstraint { type: 'lock' | 'adjacent' | 'keep_clear' | 'clear_zone'; item?: string; feature?: 'window' | 'door' | 'outlet' | 'wall'; w_m?: number; d_m?: number; label?: string; optional?: boolean }

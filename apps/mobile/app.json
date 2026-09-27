@@ -19,7 +19,7 @@
     "android": {
       "package": "dev.roomplanner.app",
       "adaptiveIcon": {
-        "backgroundColor": "#D9A56E",
+        "backgroundColor": "#3E5A2B",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -40,11 +40,10 @@
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "16.0"
+            "deploymentTarget": "16.4"
           }
         }
       ],
-      "./plugins/withXcode16Podfile",
       [
         "expo-image-picker",
         {
@@ -63,7 +62,7 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#D9A56E"
+          "backgroundColor": "#3E5A2B"
         }
       ]
     ],

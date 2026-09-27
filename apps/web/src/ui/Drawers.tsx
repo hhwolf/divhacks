@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useEditor } from '../store';
+import { useEditor, type FloorStyle } from '../store';
 import { I } from './icons';
 import { api } from '../lib/api';
 
-const WALLS = ['#F3DEC2', '#F7F2EA', '#5A845E', '#8FBDB0', '#D9A56E', '#C9B7E8', '#F2C7C0', '#B8CDE0', '#6B6E80', '#3E4A48'];
-const FLOORS: { style: 'brick' | 'herringbone' | 'plank'; color: string; label: string }[] = [
-  { style: 'brick', color: '#B0684C', label: 'Terracotta brick' }, { style: 'herringbone', color: '#BA7A57', label: 'Herringbone oak' }, { style: 'plank', color: '#8E5A3C', label: 'Walnut plank' }, { style: 'plank', color: '#D6B48A', label: 'Pale plank' }, { style: 'brick', color: '#7F7F86', label: 'Concrete' },
+// Believable interior paints: warm white, greige, putty, soft clay, pale sage, blue-grey, dusty rose, deep green, navy, charcoal.
+const WALLS = ['#E6E1D8', '#D6CEC2', '#C7BDAE', '#D4BFAE', '#C3CABB', '#B8C2C8', '#D3BCB4', '#56685A', '#3F4A5A', '#55585C'];
+const FLOORS: { style: FloorStyle; color: string; label: string }[] = [
+  { style: 'plank', color: '#B39673', label: 'Natural oak plank' }, { style: 'herringbone', color: '#A5825E', label: 'Herringbone oak' }, { style: 'plank', color: '#6B5041', label: 'Walnut plank' },
+  { style: 'plank', color: '#CDBB9E', label: 'Pale ash plank' }, { style: 'tile', color: '#BEB9B1', label: 'Stone tile' }, { style: 'brick', color: '#9C6B58', label: 'Terracotta brick' },
 ];
 export function Drawers() {
   const drawer = useEditor((s) => s.drawer); const set = useEditor;
@@ -29,7 +31,7 @@ function Menu() {
       <h3>Units</h3>
       <div className="seg"><button className={units === 'imperial' ? 'on' : ''} onClick={() => set.getState().setUnits('imperial')}>feet & inches</button><button className={units === 'metric' ? 'on' : ''} onClick={() => set.getState().setUnits('metric')}>metric</button></div>
       <h3>Theme</h3>
-      <div className="seg"><button className={theme === 'peach' ? 'on' : ''} onClick={() => set.getState().setTheme('peach')}>peach</button><button className={theme === 'teal' ? 'on' : ''} onClick={() => set.getState().setTheme('teal')}>teal</button></div>
+      <div className="seg">{(['stone', 'peach', 'teal'] as const).map((t) => <button key={t} className={theme === t ? 'on' : ''} onClick={() => set.getState().setTheme(t)}>{t}</button>)}</div>
       <h3>Help</h3>
       <button className="drawer-item" onClick={() => set.getState().setDrawer('help')}>Gestures & shortcuts</button>
       {health && <div className="health">API {health.mode}{Object.entries(health).filter(([k]) => k !== 'mode').map(([k, v]) => <span key={k} className={`chip ${v}`}>{k}: {v}</span>)}</div>}

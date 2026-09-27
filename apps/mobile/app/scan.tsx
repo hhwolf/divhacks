@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -14,6 +14,7 @@ import {
   RoomPlanView,
 } from '../modules/roomplan';
 import { api } from '../src/api';
+import sampleScan from '../src/fixtures/sample-scan.json';
 import { DimensionsSheet } from '../src/components/DimensionsSheet';
 import { useToast } from '../src/components/Toast';
 import { Button, Chip, Screen, Tile } from '../src/components/ui';
@@ -37,7 +38,7 @@ function LiveScan() {
   const units = useStore((s) => s.units);
   const [progress, setProgress] = useState<CaptureProgress>({ status: 'idle' });
   const [scan, setScan] = useState<RoomPlanExport | null>(null);
-  const [busy, setBusy] = useState<'stop' | 'save' | null>(null);
+  const [busy, setBusy] = useState<'stop' | null>(null);
   const mod = getRoomPlanModule();
   const status: CaptureStatus = progress.status;
 
@@ -78,17 +79,13 @@ function LiveScan() {
     }
   };
 
-  const useScan = async () => {
+  // Hand the scan to the setup flow (space type → needs → review), which creates the clean base room.
+  const setPendingSetup = useStore((s) => s.setPendingSetup);
+  const useScan = () => {
     if (!scan) return;
-    setBusy('save');
-    try {
-      const res = await api.createScannedRoom(scan, 'Scanned room');
-      router.replace(`/editor/${encodeURIComponent(res.currentLayout.id)}`);
-    } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
-    } finally {
-      setBusy(null);
-    }
+    const { meta: _meta, ...clean } = scan;
+    setPendingSetup({ kind: 'scan', scan: clean });
+    router.replace('/setup');
   };
 
   const chipLabel =
@@ -128,7 +125,7 @@ function LiveScan() {
           {status === 'done' && scan ? (
             <>
               <Button label="Rescan" icon="refresh" onPress={start} variant="secondary" style={{ flex: 1 }} disabled={busy !== null} />
-              <Button label="Use this scan" icon="arrow-right-bold" onPress={useScan} busy={busy === 'save'} style={{ flex: 2 }} />
+              <Button label="Use this scan" icon="arrow-right-bold" onPress={useScan} style={{ flex: 2 }} />
             </>
           ) : (
             <>
@@ -157,14 +154,20 @@ function Fallback() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const units = useStore((s) => s.units);
-  const [busy, setBusy] = useState<'sample' | 'manual' | 'paste' | null>(null);
+  const [busy, setBusy] = useState<'sample' | 'paste' | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasted, setPasted] = useState('');
+  const setPendingSetup = useStore((s) => s.setPendingSetup);
 
-  const reason = isRoomPlanAvailable()
-    ? 'This device has no LiDAR sensor, so RoomPlan cannot run here.'
-    : 'You are running in Expo Go or the Simulator, where the RoomPlan native module is not linked.';
+  /** A recorded RoomPlan export (fixtures/rooms/roomplan-export-sample.json), so the post-scan flow works without LiDAR. */
+  const trySampleScan = () => {
+    const { meta: _meta, name, ...scan } = sampleScan as unknown as RoomPlanExport & { name: string };
+    setPendingSetup({ kind: 'scan', scan, name });
+    router.push('/setup');
+  };
+
+  const reason = isRoomPlanAvailable() ? 'This iPhone has no LiDAR sensor.' : 'LiDAR scanning needs the Room Planner app build (not Expo Go).';
 
   const openEditor = useCallback(
     (layoutId: string) => router.replace(`/editor/${encodeURIComponent(layoutId)}`),
@@ -174,7 +177,7 @@ function Fallback() {
   const loadSample = async () => {
     setBusy('sample');
     try {
-      const res = await api.createSampleRoom('nyc-bedroom');
+      const res = await api.createSampleRoom('l-shaped');
       openEditor(res.currentLayout.id);
     } catch (e) {
       toast((e as Error).message, { tone: 'danger', ms: 4500 });
@@ -183,17 +186,10 @@ function Fallback() {
     }
   };
 
-  const createManual = async (dims: Dimensions, name: string) => {
-    setBusy('manual');
-    try {
-      const res = await api.createManualRoom(dims, name);
-      setSheetOpen(false);
-      openEditor(res.currentLayout.id);
-    } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
-    } finally {
-      setBusy(null);
-    }
+  const createManual = (dims: Dimensions, name: string) => {
+    setSheetOpen(false);
+    setPendingSetup({ kind: 'manual', dims, name });
+    router.push('/setup');
   };
 
   const submitPasted = async () => {
@@ -205,11 +201,18 @@ function Fallback() {
       toast('That is not valid JSON. Paste a RoomPlan export or our {skeleton, objects} JSON.', { tone: 'danger', ms: 4000 });
       return;
     }
+    const name = typeof parsed.name === 'string' ? parsed.name : 'Scanned room';
+    // Only the fields POST /rooms understands; `meta` from exportSkeleton() is debug-only.
+    const { meta: _meta, name: _name, ...payload } = parsed;
+    // Our {skeleton, objects} export goes through setup like a live scan; anything else is sent to the API as-is.
+    const sk = payload.skeleton as RoomPlanExport['skeleton'] | undefined;
+    if (sk && Array.isArray(sk.walls) && sk.dimensions) {
+      setPendingSetup({ kind: 'scan', scan: { skeleton: sk, objects: Array.isArray(payload.objects) ? (payload.objects as RoomPlanExport['objects']) : [] }, name });
+      router.push('/setup');
+      return;
+    }
     setBusy('paste');
     try {
-      const name = typeof parsed.name === 'string' ? parsed.name : 'Scanned room';
-      // Only the fields POST /rooms understands; `meta` from exportSkeleton() is debug-only.
-      const { meta: _meta, name: _name, ...payload } = parsed;
       const res = await api.createRoomFromJson(payload, name);
       openEditor(res.currentLayout.id);
     } catch (e) {
@@ -227,35 +230,27 @@ function Fallback() {
             <View style={styles.heroIcon}>
               <MaterialCommunityIcons name="cube-scan" size={40} color={colors.tile} />
             </View>
-            <Text style={[type.h2, { textAlign: 'center' }]}>RoomPlan needs a LiDAR iPhone and the dev-client build</Text>
-            <Text style={[type.body, { textAlign: 'center', color: colors.inkSoft }]}>{reason}</Text>
-            <Text style={[type.small, { textAlign: 'center' }]}>
-              Run <Text style={styles.mono}>npx expo run:ios --device</Text> on an iPhone Pro to scan for real. Meanwhile, pick another way in:
-            </Text>
+            <Text style={[type.h2, { textAlign: 'center' }]}>Scanning isn't available here</Text>
+            <Text style={[type.small, { textAlign: 'center' }]}>{reason}</Text>
           </Tile>
 
           <View style={{ gap: spacing.sm, marginTop: spacing.lg }}>
-            <Button label="Load sample room" icon="bed-king-outline" onPress={loadSample} busy={busy === 'sample'} />
+            <Button label="Try with a sample scan" icon="cube-scan" onPress={trySampleScan} />
+            <Button label="Load sample room" icon="bed-outline" variant="secondary" onPress={loadSample} busy={busy === 'sample'} />
             <Button label="Enter dimensions" icon="ruler-square" variant="secondary" onPress={() => setSheetOpen(true)} />
-            <Button
-              label={pasteOpen ? 'Hide JSON box' : 'Paste RoomPlan JSON'}
-              icon="code-json"
-              variant="secondary"
-              onPress={() => setPasteOpen((v) => !v)}
-            />
           </View>
+          <Pressable onPress={() => setPasteOpen((v) => !v)} style={{ alignSelf: 'center', marginTop: spacing.lg }} accessibilityRole="button">
+            <Text style={[type.small, { textDecorationLine: 'underline' }]}>{pasteOpen ? 'Hide scan JSON' : 'Paste scan JSON'}</Text>
+          </Pressable>
 
           {pasteOpen ? (
             <Tile style={{ marginTop: spacing.lg }}>
-              <Text style={[type.small, { marginBottom: spacing.sm }]}>
-                Paste a RoomPlan export (walls / doors / windows / objects) or our skeleton JSON. It is sent to POST /rooms unchanged.
-              </Text>
               <TextInput
                 multiline
                 value={pasted}
                 onChangeText={setPasted}
                 placeholder='{"skeleton":{"walls":[...],"doors":[],"windows":[],"floorPolygon":[...],"dimensions":{"l":3.4,"w":3,"h":2.7}},"objects":[]}'
-                placeholderTextColor="#A08B7C"
+                placeholderTextColor="#9AA392"
                 autoCapitalize="none"
                 autoCorrect={false}
                 style={styles.textarea}
@@ -266,7 +261,7 @@ function Fallback() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <DimensionsSheet visible={sheetOpen} units={units} busy={busy === 'manual'} onClose={() => setSheetOpen(false)} onSubmit={createManual} />
+      <DimensionsSheet visible={sheetOpen} units={units} onClose={() => setSheetOpen(false)} onSubmit={createManual} />
     </Screen>
   );
 }
@@ -291,7 +286,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     padding: spacing.lg,
-    backgroundColor: 'rgba(74,51,39,0.85)',
+    backgroundColor: 'rgba(62,90,43,0.94)',
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
   },

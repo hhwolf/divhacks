@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FurnitureItem } from '@arp/contracts';
 import { useEditor } from '../store';
 import { I } from './icons';
@@ -16,20 +16,30 @@ export function thumbUrl(f: FurnitureItem): string | null {
 export function Palette() {
   const furniture = useEditor((s) => s.furniture); const placing = useEditor((s) => s.placing); const page = useEditor((s) => s.palettePage); const category = useEditor((s) => s.category); const search = useEditor((s) => s.search);
   const set = useEditor; const [showCats, setShowCats] = useState(false);
+  const room = useEditor((s) => s.room);
+  const suggested = useMemo(() => new Set(room?.suggestedFurniture ?? []), [room]);
+  const cats = useMemo(() => (suggested.size ? [{ key: 'room', label: 'For this room', icon: 'tree' as const }, ...CATS] : CATS), [suggested]);
+  // A room set up in the app ("what is this space for?") opens on its own suggestions, once per room.
+  const openedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!room || openedFor.current === room.id) return; openedFor.current = room.id;
+    if (suggested.size && category === 'All') set.getState().setCategory('room');
+  }, [room, suggested, category, set]);
   const list = useMemo(() => {
     let items = Object.values(furniture);
-    if (category !== 'All') items = items.filter((f) => (category === 'imported' ? f.source !== 'preset' : f.category === category));
+    if (category === 'room') items = items.filter((f) => suggested.has(f.id));
+    else if (category !== 'All') items = items.filter((f) => (category === 'imported' ? f.source !== 'preset' : f.category === category));
     if (search) items = items.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()));
     return items.sort((a, b) => (a.source === 'preset' ? 0 : 1) - (b.source === 'preset' ? 0 : 1) || a.name.localeCompare(b.name));
-  }, [furniture, category, search]);
+  }, [furniture, category, search, suggested]);
   const pages = Math.max(1, Math.ceil(list.length / PER_PAGE)); const p = Math.min(page, pages - 1); const slice = list.slice(p * PER_PAGE, (p + 1) * PER_PAGE);
   return (
     <div className="palette" data-testid="palette">
       <div className="cat-row">
         <button className={`sq small ${search !== null ? 'active' : ''}`} title="Search" aria-label="Search" onClick={() => { set.getState().setSearch(search === null ? '' : null); }}><I.search /></button>
-        <button className={`sq small ${showCats ? 'active' : ''}`} title="Categories" aria-label="Categories" onClick={() => setShowCats((v) => !v)}>{(() => { const Icon = I[CATS.find((c) => c.key === category)?.icon ?? 'grid']; return <Icon />; })()}</button>
+        <button className={`sq small ${showCats ? 'active' : ''}`} title="Categories" aria-label="Categories" onClick={() => setShowCats((v) => !v)}>{(() => { const Icon = I[cats.find((c) => c.key === category)?.icon ?? 'grid']; return <Icon />; })()}</button>
         {showCats && (
-          <div className="cat-menu">{CATS.map((c) => { const Icon = I[c.icon]; return <button key={c.key} className={`cat ${category === c.key ? 'active' : ''}`} onClick={() => { set.getState().setCategory(c.key); setShowCats(false); }}><Icon /><span>{c.label}</span></button>; })}</div>
+          <div className="cat-menu">{cats.map((c) => { const Icon = I[c.icon]; return <button key={c.key} className={`cat ${category === c.key ? 'active' : ''}`} onClick={() => { set.getState().setCategory(c.key); setShowCats(false); }}><Icon /><span>{c.label}</span></button>; })}</div>
         )}
       </div>
       {search !== null && <input className="search" autoFocus placeholder="Search furniture…" value={search} onChange={(e) => set.getState().setSearch(e.target.value)} />}

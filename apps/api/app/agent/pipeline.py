@@ -10,7 +10,7 @@ from typing import Any, Literal
 from jsonschema import Draft202012Validator
 from pydantic import ValidationError
 
-from app.agent.prompts import build_system_prompt
+from app.agent.prompts import build_system_prompt, room_purpose
 from app.catalog import all_furniture
 from app.deps import AppContext
 from app.integrations.gemini import PLAN_SCHEMA
@@ -95,7 +95,7 @@ async def run(
     catalog = await all_furniture(ctx.repo)
     memories = await ctx.backboard.get_context(user_id)
     imported = catalog.get(furniture_id) if furniture_id else None
-    system = build_system_prompt(room.skeleton, base, catalog, memories, imported)
+    system = build_system_prompt(room.skeleton, base, catalog, memories, imported, room_purpose(room_doc))
     solver = Solver(room.skeleton, catalog, base.items, furniture_id)
 
     plan_or_err = parse_plan(await ctx.gemini.plan(system, request_text))
@@ -137,6 +137,7 @@ async def run(
         metrics=result.validation.metrics,
         createdBy="agent",
         requestText=request_text,
+        style=base.style,
         createdAt=now_iso(),
         updatedAt=now_iso(),
     )

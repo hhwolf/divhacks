@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,7 +15,8 @@ import type { HealthResponse } from '../src/types';
 export default function Settings() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
-  const { units, apiUrl, webUrl, setUnits, setUrls, resetUrls } = useStore();
+  const { units, apiUrl, webUrl, setUnits, setUrls, resetUrls, setOnboarded } = useStore();
+  const router = useRouter();
 
   const [apiDraft, setApiDraft] = useState(apiUrl);
   const [webDraft, setWebDraft] = useState(webUrl);
@@ -112,6 +114,7 @@ export default function Settings() {
               beside the window or how to clear space for yoga. Every answer is a new, named variant you can compare side by side; the
               planner never moves what you have locked.
             </Text>
+            <Button label="Show the intro again" icon="play-circle-outline" variant="ghost" onPress={() => { setOnboarded(false); router.replace('/welcome'); }} style={{ marginTop: spacing.md }} />
             <Text style={[type.small, { marginTop: spacing.md }]}>
               DivHacks 2026 · Live Better track · v{Constants.expoConfig?.version ?? '1.0.0'} · Expo SDK {Constants.expoConfig?.sdkVersion ?? '57'}
             </Text>

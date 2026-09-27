@@ -155,7 +155,7 @@ export default function Ask() {
               value={text}
               onChangeText={setText}
               placeholder={PLACEHOLDER}
-              placeholderTextColor="#A08B7C"
+              placeholderTextColor="#9AA392"
               style={styles.input}
               editable={!sending}
             />

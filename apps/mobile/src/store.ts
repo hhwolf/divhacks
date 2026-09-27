@@ -1,7 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
-import type { AgentRequestResponse, Units } from './types';
+import type { AgentRequestResponse, Dimensions, RoomPlanExport, Units } from './types';
+
+/** A room waiting for the setup flow (app/setup.tsx): a finished scan, or typed dimensions. Too large for route params. */
+export type PendingSetup = { kind: 'scan'; scan: RoomPlanExport; name?: string } | { kind: 'manual'; dims: Dimensions; name: string };
 
 const STORAGE_KEY = 'arp.settings.v1';
 
@@ -20,11 +23,15 @@ export interface AgentLogEntry {
   response?: AgentRequestResponse;
 }
 
-interface PersistedSettings { units: Units; apiUrl: string; webUrl: string }
+interface PersistedSettings { units: Units; apiUrl: string; webUrl: string; onboarded?: boolean }
 
 interface AppState extends PersistedSettings {
   hydrated: boolean;
   agentLog: AgentLogEntry[];
+  pendingSetup: PendingSetup | null;
+  setPendingSetup: (p: PendingSetup | null) => void;
+  /** First-launch welcome flow (app/welcome.tsx) has been seen. */
+  setOnboarded: (v: boolean) => void;
   hydrate: () => Promise<void>;
   setUnits: (units: Units) => void;
   setUrls: (urls: Partial<Pick<PersistedSettings, 'apiUrl' | 'webUrl'>>) => void;
@@ -51,6 +58,14 @@ export const useStore = create<AppState>((set, get) => ({
   webUrl: DEFAULT_WEB_URL,
   hydrated: false,
   agentLog: [],
+  onboarded: false,
+  pendingSetup: null,
+  setPendingSetup: (pendingSetup) => set({ pendingSetup }),
+  setOnboarded: (onboarded) => {
+    set({ onboarded });
+    const { units, apiUrl, webUrl } = get();
+    void persist({ units, apiUrl, webUrl, onboarded });
+  },
 
   hydrate: async () => {
     try {
@@ -61,6 +76,7 @@ export const useStore = create<AppState>((set, get) => ({
           units: saved.units === 'metric' ? 'metric' : 'imperial',
           apiUrl: saved.apiUrl ? stripSlash(saved.apiUrl) : DEFAULT_API_URL,
           webUrl: saved.webUrl ? stripSlash(saved.webUrl) : DEFAULT_WEB_URL,
+          onboarded: saved.onboarded === true,
         });
       }
     } catch (e) {
@@ -73,7 +89,7 @@ export const useStore = create<AppState>((set, get) => ({
   setUnits: (units) => {
     set({ units });
     const { apiUrl, webUrl } = get();
-    void persist({ units, apiUrl, webUrl });
+    void persist({ units, apiUrl, webUrl, onboarded: get().onboarded });
   },
 
   setUrls: (urls) => {
@@ -82,12 +98,12 @@ export const useStore = create<AppState>((set, get) => ({
       webUrl: urls.webUrl !== undefined ? stripSlash(urls.webUrl) || DEFAULT_WEB_URL : get().webUrl,
     };
     set(next);
-    void persist({ units: get().units, ...next });
+    void persist({ units: get().units, onboarded: get().onboarded, ...next });
   },
 
   resetUrls: () => {
     set({ apiUrl: DEFAULT_API_URL, webUrl: DEFAULT_WEB_URL });
-    void persist({ units: get().units, apiUrl: DEFAULT_API_URL, webUrl: DEFAULT_WEB_URL });
+    void persist({ units: get().units, onboarded: get().onboarded, apiUrl: DEFAULT_API_URL, webUrl: DEFAULT_WEB_URL });
   },
 
   pushAgentLog: (entry) => set((s) => ({ agentLog: [entry, ...s.agentLog] })),

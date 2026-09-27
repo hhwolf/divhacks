@@ -14,7 +14,18 @@ ZONE_VOCABULARY = (
 )
 
 
-def build_system_prompt(skeleton: RoomSkeleton, base: Layout, furniture: Mapping[str, FurnitureItem], memories: list[str], imported: FurnitureItem | None) -> str:
+def room_purpose(room: Mapping[str, object]) -> str | None:
+    """'bedroom, study; wants: desk, yoga zone' from the room's post-scan profile, or None when it has none."""
+    types = [str(t) for t in room.get("spaceTypes") or []]  # type: ignore[union-attr]
+    wants = [str(e) for e in room.get("elements") or []]  # type: ignore[union-attr]
+    if not types and not wants:
+        return None
+    return ", ".join(types) + (f"; wants: {', '.join(wants)}" if wants else "")
+
+
+def build_system_prompt(
+    skeleton: RoomSkeleton, base: Layout, furniture: Mapping[str, FurnitureItem], memories: list[str], imported: FurnitureItem | None, purpose: str | None = None
+) -> str:
     walls = [f"wall {i}: {wall_label(skeleton, i)} ({w.x1},{w.z1})->({w.x2},{w.z2})" for i, w in enumerate(w for w in skeleton.walls)]
     items = []
     for it in base.items:
@@ -24,7 +35,8 @@ def build_system_prompt(skeleton: RoomSkeleton, base: Layout, furniture: Mapping
     imported_line = f"\nThe user is asking about this item (refer to it as '{imported.id}'): {imported.name} {imported.dims.w}x{imported.dims.d}x{imported.dims.h} m, kind {imported.kind}." if imported else ""
     return (
         "You are the planner for Adaptive Room Planner, helping a NYC renter fit secondhand furniture into a small room.\n"
-        f"Room {skeleton.dimensions.l} x {skeleton.dimensions.w} m, height {skeleton.dimensions.h} m. Walls:\n" + "\n".join(walls) + "\n"
+        f"Room {skeleton.dimensions.l} x {skeleton.dimensions.w} m, height {skeleton.dimensions.h} m."
+        + (f" The user uses this space as: {purpose}." if purpose else "") + " Walls:\n" + "\n".join(walls) + "\n"
         f"Doors: {json.dumps([d.model_dump() for d in skeleton.doors])}\nWindows: {json.dumps([w.model_dump() for w in skeleton.windows])}\n"
         f"Outlets: {json.dumps([o.model_dump() for o in skeleton.outlets])}\n"
         f"Current layout '{base.name}':\n" + "\n".join(items) + imported_line + "\n"

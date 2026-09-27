@@ -10,6 +10,7 @@ import type {
   RoomDetailResponse,
   RoomListEntry,
   RoomPlanExport,
+  RoomProfile,
 } from './types';
 
 export class ApiError extends Error {
@@ -77,11 +78,18 @@ export const api = {
       method: 'POST',
       body: json({ dimensions, doors: [], windows: [], name }),
     }),
-  createScannedRoom: (scan: RoomPlanExport, name = 'Scanned room') =>
+  createScannedRoom: (scan: RoomPlanExport, name = 'Scanned room', profile: RoomProfile = {}, objects: RoomPlanExport['objects'] = scan.objects) =>
     request<CreateRoomResponse>('/rooms', {
       method: 'POST',
-      body: json({ skeleton: scan.skeleton, objects: scan.objects, name }),
+      body: json({ skeleton: scan.skeleton, objects, name, ...profile }),
     }),
+  createManualRoomWithProfile: (dimensions: Dimensions, name: string, profile: RoomProfile) =>
+    request<CreateRoomResponse>('/rooms', { method: 'POST', body: json({ dimensions, doors: [], windows: [], name, ...profile }) }),
+  /** Removes the room and every layout in it. */
+  deleteRoom: (id: string) => request<unknown>(`/rooms/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  /** Name / profile only; the API rejects skeleton edits. */
+  updateRoom: (id: string, patch: { name?: string } & RoomProfile) =>
+    request<{ room: Room }>(`/rooms/${encodeURIComponent(id)}`, { method: 'PATCH', body: json(patch) }),
   /** Accepts either our {skeleton, objects} export or a raw RoomPlan JSON export the API knows how to parse. */
   createRoomFromJson: (payload: Record<string, unknown>, name = 'Scanned room') =>
     request<CreateRoomResponse>('/rooms', { method: 'POST', body: json({ name, ...payload }) }),

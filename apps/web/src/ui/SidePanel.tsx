@@ -3,7 +3,13 @@ import { useEditor, violationLevel } from '../store';
 import { I } from './icons';
 
 // 8 rows × 3 columns like ref3: row 0 = ✕ (outside the grid) + rotate + lock, row 1 = duplicate + delete + first swatch, then swatches.
-const SWATCHES = ['#5CB78E', '#9679D3', '#6F7BE0', '#F08CB4', '#7ED0E8', '#9FD3F0', '#E85A4F', '#4FC2B8', '#F2925E', '#F4C542', '#8BC34A', '#B9E08C', '#F6E6A2', '#C9A6E8', '#F2C7C0', '#EAD6C8', '#FFFFFF', '#B6B8C8', '#4B4E5E', '#2B2B33', '#8A5A3C', '#D9B48F', '#3E3E46', '#6B4A34', '#A8553C', '#7FA8C9', '#F1E3C6', '#C97A5B', '#5C3B2A', '#2E7D5B', '#F7B531', '#9A9A9A', '#E5DCCB', '#B98860', '#D68A5C', '#6FA36B', '#C8A176', '#F1F1F1'];
+// Real-world finishes, not a candy palette: page 1 = whites/greiges/greys and fabrics, page 2 = woods, muted accents, metals.
+const SWATCHES = [
+  '#F4F2EE', '#E7E2D8', '#D8D0C4', '#C9BDA9', '#B7AC9C', '#A39A8E', '#8C8984', '#6F6C68', '#55565A', '#3A3B3D', '#2A2A2B',
+  '#848A92', '#6F7884', '#8A8C80', '#6F7D68', '#B2A286', '#A8927A', '#9C8A86', '#B8A99A',
+  '#D2BC98', '#C2A887', '#A98459', '#9A7148', '#7C5A3E', '#5E4333', '#3F2E25', '#8E8173', '#2F2A27',
+  '#7C4D31', '#A06E55', '#B09A8A', '#5E6B52', '#7A8584', '#566273', '#A8844F', '#A7ABAE', '#4A4D52', '#E3E0DA',
+];
 const PER_PAGE = 19;
 export function SidePanel() {
   const selectedId = useEditor((s) => s.selectedId); const items = useEditor((s) => s.items); const furniture = useEditor((s) => s.furniture); const room = useEditor((s) => s.room);

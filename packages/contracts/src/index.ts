@@ -43,6 +43,8 @@ export interface Zone { label: string; x: number; z: number; w: number; d: numbe
 export type Walkability = 'Good' | 'Tight' | 'Blocked';
 export interface FreeRect { x: number; z: number; w: number; d: number; areaM2: number; fits: string }
 export interface LayoutMetrics { openFloor: number; conflicts: number; walkability: Walkability; reachableStorage: number; largestFreeRect: FreeRect | null }
+export type FurnishStyle = 'japandi' | 'industrial' | 'boho' | 'minimal' | 'cozy';
+
 export interface Layout {
   id: string;
   roomId: string;
@@ -54,11 +56,17 @@ export interface Layout {
   metrics?: LayoutMetrics | null;
   createdBy?: 'user' | 'agent' | 'system';
   requestText?: string | null;
+  /** material palette the editor renders this layout with (set by POST /rooms/{id}/furnish) */
+  style?: FurnishStyle | null;
   createdAt?: string;
   updatedAt?: string;
 }
 
-export interface Room { id: string; userId?: string | null; name: string; skeleton: RoomSkeleton; source: 'scan' | 'manual' | 'sample'; createdAt?: string }
+export interface Room {
+  id: string; userId?: string | null; name: string; skeleton: RoomSkeleton; source: 'scan' | 'manual' | 'sample'; createdAt?: string; updatedAt?: string;
+  /** Post-scan profile set in the app: what the space is for, the elements the user wants, and catalog ids to suggest. */
+  spaceTypes?: string[]; elements?: string[]; suggestedFurniture?: string[];
+}
 
 export type Intent = 'fit_item' | 'make_space' | 'keep_clear' | 'compare' | 'rent_check' | 'payment_check' | 'housing_quality' | 'clarify';
 export interface PlanConstraint { type: 'lock' | 'adjacent' | 'keep_clear' | 'clear_zone'; item?: string; feature?: 'window' | 'door' | 'outlet' | 'wall'; w_m?: number; d_m?: number; label?: string; optional?: boolean }

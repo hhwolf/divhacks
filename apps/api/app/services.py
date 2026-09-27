@@ -12,7 +12,7 @@ from app.deps import AppContext
 from app.models import Dimensions, Door, Layout, LayoutItem, Room, RoomSkeleton, ValidationResult, WallSegment, Window, Zone
 from app.solver.validate import validate_layout
 
-SAMPLES = {"nyc-bedroom": "sample-nyc-bedroom.json", "studio": "sample-studio.json"}
+SAMPLES = {"nyc-bedroom": "sample-nyc-bedroom.json", "studio": "sample-studio.json", "l-shaped": "sample-l-shaped.json"}
 
 
 def now_iso() -> str:
@@ -45,8 +45,10 @@ async def validate_for_room(ctx: AppContext, room: Room, items: list[LayoutItem]
     return validate_layout(room.skeleton, catalog, items, zones, base.items if base else None)
 
 
-async def create_room(ctx: AppContext, *, name: str, skeleton: RoomSkeleton, source: str, objects: list[dict[str, Any]], user_id: str) -> tuple[Room, Layout]:
-    room = Room(id=new_id(), userId=user_id, name=name, skeleton=skeleton, source=source, createdAt=now_iso())  # type: ignore[arg-type]
+async def create_room(
+    ctx: AppContext, *, name: str, skeleton: RoomSkeleton, source: str, objects: list[dict[str, Any]], user_id: str, profile: dict[str, Any] | None = None
+) -> tuple[Room, Layout]:
+    room = Room(id=new_id(), userId=user_id, name=name, skeleton=skeleton, source=source, createdAt=now_iso(), **(profile or {}))  # type: ignore[arg-type]
     items = seed_items(objects)
     validation = await validate_for_room(ctx, room, items, [])
     layout = Layout(

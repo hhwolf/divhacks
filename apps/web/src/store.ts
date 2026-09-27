@@ -1,13 +1,13 @@
 import { create } from 'zustand';
-import type { FurnitureItem, Layout, LayoutItem, Room, Rotation, Units, ValidationResult, Zone } from '@arp/contracts';
+import type { FurnishStyle, FurnitureItem, Layout, LayoutItem, Room, Rotation, Units, ValidationResult, Zone } from '@arp/contracts';
 import { GRID, footprint, memoizedValidate, overlayMasks, roomBounds, type OverlayMasks } from '@arp/geometry';
 import { api, unwrapLayout } from './lib/api';
 import { isEmbedded, postToHost } from './lib/bridge';
 import { thunk } from './lib/sound';
 
 export type ViewMode = 'cutaway' | 'half' | 'plan';
-export type Theme = 'peach' | 'teal';
-export type FloorStyle = 'brick' | 'herringbone' | 'plank';
+export type Theme = 'stone' | 'peach' | 'teal';
+export type FloorStyle = 'brick' | 'herringbone' | 'plank' | 'tile';
 export type Drawer = null | 'menu' | 'paint' | 'help' | 'context';
 export type SaveState = 'saved' | 'saving' | 'dirty' | 'blocked' | 'error' | 'readonly';
 interface Snapshot { items: LayoutItem[]; zones: Zone[] }
@@ -15,7 +15,9 @@ interface Snapshot { items: LayoutItem[]; zones: Zone[] }
 export interface EditorState {
   embedded: boolean; units: Units; theme: Theme; night: boolean; sound: boolean; viewMode: ViewMode; orbit: 0 | 1 | 2 | 3;
   wallColor: string; floorStyle: FloorStyle; floorColor: string;
-  room: Room | null; layouts: Layout[]; activeId: string | null; furniture: Record<string, FurnitureItem>;
+  room: Room | null; layouts: Layout[]; activeId: string | null; furniture: Record<string, FurnitureItem>; style: FurnishStyle | null; furnishing: boolean;
+  /** drop-in animation after a furnish: start time + stagger index per new item id */
+  entrance: { at: number; order: Record<string, number> } | null;
   items: LayoutItem[]; zones: Zone[]; history: Snapshot[]; future: Snapshot[];
   selectedId: string | null; placing: { furnitureId: string } | null; dragging: string | null; hoverId: string | null;
   overlays: { walkable: boolean; keepClear: boolean; lowClearance: boolean }; overlaysOpen: boolean; ghostId: string | null; ghostOpen: boolean;
@@ -40,11 +42,12 @@ export interface EditorState {
   setDrawer(d: Drawer, contextTab?: string | null): void; setRequestOpen(v: boolean): void; setAnalysisOpen(v: boolean): void;
   setPalettePage(p: number): void; setCategory(c: string): void; setSearch(s: string | null): void; setSidePage(p: number): void;
   createVariant(name?: string, fromId?: string): Promise<Layout | null>; renameVariant(id: string, name: string): Promise<void>; deleteVariant(id: string): Promise<void>;
-  askAgent(text: string, furnitureId?: string): Promise<void>; addFurniture(f: FurnitureItem): void;
+  askAgent(text: string, furnitureId?: string): Promise<void>; furnish(theme: string, opts?: { restyle?: boolean; photos?: File[] }): Promise<void>; addFurniture(f: FurnitureItem): void;
   toast(text: string, kind?: 'info' | 'error'): void; dismissToast(id: number): void;
 }
 
 const snap = (v: number) => Math.round(v / GRID) * GRID;
+export const ENTRANCE_STAGGER = 140; // ms between furnished pieces dropping in
 const clone = (s: Snapshot): Snapshot => ({ items: s.items.map((i) => ({ ...i })), zones: s.zones.map((z) => ({ ...z })) });
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let dragSnapshot: Snapshot | null = null; // items as they were when the current drag started (for a single undo step)
@@ -53,9 +56,9 @@ const ls = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k)
 const lsSet = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } };
 
 export const useEditor = create<EditorState>((set, get) => ({
-  embedded: false, units: ls('arp.units', 'imperial'), theme: ls('arp.theme', 'peach'), night: false, sound: false, viewMode: 'cutaway', orbit: 0,
-  wallColor: ls('arp.wallColor', '#F3DEC2'), floorStyle: ls('arp.floorStyle', 'brick'), floorColor: ls('arp.floorColor', '#B0684C'),
-  room: null, layouts: [], activeId: null, furniture: {}, items: [], zones: [], history: [], future: [],
+  embedded: false, units: ls('arp.units', 'imperial'), theme: ls('arp.theme', 'stone'), night: false, sound: false, viewMode: 'cutaway', orbit: 0,
+  wallColor: ls('arp.wallColor', '#E6E1D8'), floorStyle: ls('arp.floorStyle', 'plank'), floorColor: ls('arp.floorColor', '#B39673'),
+  room: null, layouts: [], activeId: null, furniture: {}, style: null, furnishing: false, entrance: null, items: [], zones: [], history: [], future: [],
   selectedId: null, placing: null, dragging: null, hoverId: null,
   overlays: { walkable: false, keepClear: false, lowClearance: false }, overlaysOpen: false, ghostId: null, ghostOpen: false,
   validation: null, masks: null, saveState: 'saved', lastError: null,
@@ -73,7 +76,7 @@ export const useEditor = create<EditorState>((set, get) => ({
       const room = res.room ?? (await api.room(layout.roomId)).room;
       const catalogItems = Array.isArray(catalog) ? catalog : catalog.items;
       const furniture = { ...get().furniture, ...Object.fromEntries(catalogItems.map((f) => [f.id, f])), ...(res.furniture ?? {}) };
-      set({ room, activeId: layout.id, items: layout.items.map((i) => ({ ...i })), zones: (layout.zones ?? []).map((z) => ({ ...z })), furniture, history: [], future: [], selectedId: null, placing: null, saveState: 'saved', loading: false });
+      set({ room, activeId: layout.id, style: layout.style ?? null, items: layout.items.map((i) => ({ ...i })), zones: (layout.zones ?? []).map((z) => ({ ...z })), furniture, history: [], future: [], selectedId: null, placing: null, saveState: 'saved', loading: false });
       get().revalidate();
       void get().loadRoomLayouts(layout.roomId);
     } catch (e) { set({ loading: false, lastError: (e as Error).message }); get().toast(`Couldn't load layout: ${(e as Error).message}`, 'error'); }
@@ -86,7 +89,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     const room: Room = { id: `fixture-${sample}`, name: fx.name, skeleton: fx.skeleton, source: 'sample' };
     const items: LayoutItem[] = (fx.objects as LayoutItem[]).map((o, i) => ({ ...o, id: `${o.furnitureId}_${i + 1}` }));
     const layout: Layout = { id: 'fixture', roomId: room.id, name: 'Current Room', isCurrent: true, items, zones: [] };
-    set({ room, furniture, layouts: [layout], activeId: 'fixture', items, zones: [], history: [], future: [], selectedId: null, saveState: 'readonly', loading: false });
+    set({ room, furniture, layouts: [layout], activeId: 'fixture', style: null, items, zones: [], history: [], future: [], selectedId: null, saveState: 'readonly', loading: false });
     get().revalidate();
   },
   async loadRoomLayouts(roomId) {
@@ -240,6 +243,28 @@ export const useEditor = create<EditorState>((set, get) => ({
       postToHost('editor:agentReply', { reply: res.reply, layoutId: res.layout?.id ?? null, status: res.status });
       if (res.layout) { await get().loadRoomLayouts(s.room.id); await get().switchLayout(res.layout.id); }
     } catch (e) { set({ agentBusy: false, agentReply: `Something went wrong: ${(e as Error).message}` }); }
+  },
+  async furnish(theme, opts) {
+    // Theme → a new furnished variant (server picks pieces and places them), then open it and show what was made.
+    // Restyle starts over from the Current Room (the real room) and keeps what the shown variant was for ("industrial" stays a bedroom).
+    const s = get(); if (!s.room || !s.activeId || s.activeId === 'fixture' || s.furnishing) return;
+    set({ furnishing: true });
+    try {
+      if (s.saveState === 'dirty') await s.saveNow();
+      const active = s.layouts.find((l) => l.id === s.activeId);
+      const base = opts?.restyle ? s.layouts.find((l) => l.isCurrent)?.id ?? s.activeId : s.activeId;
+      const body = { theme, baseLayoutId: base, purposeHint: opts?.restyle ? active?.requestText ?? null : null };
+      const res = opts?.photos?.length ? await api.furnishPhotos(s.room.id, opts.photos, body) : await api.furnish(s.room.id, body);
+      set({ furnishing: false, agentReply: res.reply, requestOpen: true });
+      postToHost('editor:agentReply', { reply: res.reply, layoutId: res.layout.id, status: 'ok' });
+      // new pieces drop in one after another (anything that was already in the base stays put); armed before the switch so they never flash
+      const kept = new Set((s.layouts.find((l) => l.id === base)?.items ?? []).map((i) => i.id));
+      const order = Object.fromEntries(res.layout.items.filter((i) => !kept.has(i.id)).map((i, k) => [i.id, k]));
+      set({ entrance: { at: Number.POSITIVE_INFINITY, order } });
+      await get().loadRoomLayouts(s.room.id); await get().switchLayout(res.layout.id);
+      set({ entrance: { at: performance.now(), order } }); setTimeout(() => set({ entrance: null }), 700 + Object.keys(order).length * ENTRANCE_STAGGER);
+      if (get().sound) thunk();
+    } catch (e) { set({ furnishing: false, entrance: null }); get().toast(`Couldn't furnish: ${(e as Error).message}`, 'error'); }
   },
   addFurniture(f) { set({ furniture: { ...get().furniture, [f.id]: f } }); },
   toast(text, kind = 'info') { const id = ++toastId; set({ toasts: [...get().toasts, { id, text, kind }] }); setTimeout(() => get().dismissToast(id), 3200); },

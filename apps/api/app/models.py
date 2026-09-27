@@ -158,6 +158,7 @@ class Layout(Loose):
     metrics: LayoutMetrics | None = None
     createdBy: Literal["user", "agent", "system"] = "user"
     requestText: str | None = None
+    style: str | None = None
     createdAt: str
     updatedAt: str
 

@@ -2,6 +2,7 @@
   "$schema": "https://json.schemastore.org/eas.json",
   "cli": { "version": ">= 12.0.0", "appVersionSource": "remote" },
   "build": {
+    "development": { "developmentClient": true, "distribution": "internal", "ios": { "resourceClass": "m-medium" } },
     "simulator": { "distribution": "internal", "ios": { "simulator": true }, "env": { "EXPO_PUBLIC_API_URL": "https://adaptive-room-planner-api.vercel.app", "EXPO_PUBLIC_WEB_URL": "https://adaptive-room-planner.vercel.app" } },
     "preview": { "distribution": "internal", "env": { "EXPO_PUBLIC_API_URL": "https://adaptive-room-planner-api.vercel.app", "EXPO_PUBLIC_WEB_URL": "https://adaptive-room-planner.vercel.app" } },
     "production": { "distribution": "store", "autoIncrement": true, "env": { "EXPO_PUBLIC_API_URL": "https://adaptive-room-planner-api.vercel.app", "EXPO_PUBLIC_WEB_URL": "https://adaptive-room-planner.vercel.app" } }
