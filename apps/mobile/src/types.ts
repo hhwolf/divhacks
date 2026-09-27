@@ -15,7 +15,7 @@ export interface RoomSkeleton {
   outlets?: Outlet[];
 }
 
-export type FurnitureCategory = 'bed' | 'desk' | 'seating' | 'storage' | 'table' | 'decor' | 'imported';
+export type FurnitureCategory = 'bed' | 'desk' | 'seating' | 'storage' | 'table' | 'decor' | 'divider' | 'imported';
 export type FurnitureKind = 'bed' | 'desk' | 'wardrobe' | 'dresser' | 'storage' | 'seating' | 'table' | 'decor' | 'floor';
 export type FurnitureSource = 'preset' | 'link' | 'photo' | 'manual' | 'scan';
 export interface Dims { w: number; d: number; h: number }
@@ -32,7 +32,7 @@ export interface FurnitureItem {
   sourceUrl?: string | null;
   price?: number | null;
   color?: string | null;
-  estimated?: boolean;
+  estimated?: boolean; dimensionsConfirmed?: boolean; deliveryCost?: number;
   frontAxis?: '+z' | '-z' | '+x' | '-x';
   colors?: string[];
 }

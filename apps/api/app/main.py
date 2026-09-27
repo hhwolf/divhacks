@@ -21,6 +21,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         raise ValueError("PAYMENTS_MODE supports demo or stripe_test only; live payments are disabled")
     if settings.stripe_secret_key and not settings.stripe_secret_key.startswith("sk_test_"):
         raise ValueError("Only Stripe test secret keys are accepted; live payments are disabled")
+    if any(o.strip() == "*" for o in settings.allowed_origins.split(",")):
+        raise ValueError("ALLOWED_ORIGINS must list explicit web origins")
     app = FastAPI(title="Adaptive Room Planner API", version=health.VERSION)
     app.state.ctx = AppContext.build(settings)
     app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in settings.allowed_origins.split(",") if o.strip()], allow_methods=["*"], allow_headers=["*"])

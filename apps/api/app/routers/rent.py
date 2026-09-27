@@ -22,6 +22,8 @@ async def ensure_room(ctx: AppContext, room_id: str) -> dict:
 
 async def validate_photos(ctx: AppContext, profile: HousingProfile) -> None:
     for condition in profile.conditions:
+        if condition.source == "public_record":
+            raise HTTPException(422, "Your observations must be user reports or photos. Public records are fetched separately.")
         for photo_id in condition.photoIds:
             photo = await ctx.repo.get("evidence", photo_id)
             if not photo or photo["roomId"] != profile.roomId:

@@ -13,7 +13,7 @@ async def public_target(url: str) -> tuple[httpx.URL, str]:
     host = target.host.rstrip(".").lower()
     if host == "facebook.com" or host.endswith(".facebook.com") or host in ("fb.com", "fb.me"):
         raise ValueError("For Facebook Marketplace, upload a screenshot or enter the item details; open the original listing to purchase")
-    addresses = await asyncio.get_running_loop().getaddrinfo(host, target.port or (443 if target.scheme == "https" else 80), type=socket.SOCK_STREAM)
+    addresses = await asyncio.wait_for(asyncio.get_running_loop().getaddrinfo(host, target.port or (443 if target.scheme == "https" else 80), type=socket.SOCK_STREAM), timeout=5)
     ips = {row[4][0] for row in addresses}
     if not ips or any(not ipaddress.ip_address(ip).is_global for ip in ips):
         raise ValueError("Private, local and metadata network addresses are not allowed")

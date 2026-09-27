@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Account } from '../src/components/Account';
 import { api } from '../src/api';
 import { useToast } from '../src/components/Toast';
 import { Button, Chip, Field, Screen, SectionTitle, Tile } from '../src/components/ui';
@@ -50,6 +51,7 @@ export default function Settings() {
     <Screen>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + spacing.xl }]} keyboardShouldPersistTaps="handled">
+          <SectionTitle>Account</SectionTitle><Account />
           <SectionTitle>Units</SectionTitle>
           <Tile style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
             <Chip icon="ruler" label="Feet & inches" tone={units === 'imperial' ? 'ink' : 'tile'} onPress={() => setUnits('imperial')} style={styles.chipOutline} />

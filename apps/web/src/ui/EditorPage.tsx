@@ -49,7 +49,7 @@ export function EditorPage() {
   // keyboard
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const st = s.getState(); const tag = (e.target as HTMLElement)?.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const st = s.getState(); const tag = (e.target as HTMLElement)?.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.querySelector('dialog[open]')) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey) st.redo(); else st.undo(); return; }
       if (e.key === 'Escape') { st.cancelPlacing(); st.select(null); st.setDrawer(null); return; }
       if (!st.selectedId) return;

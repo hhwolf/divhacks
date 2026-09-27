@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 
 from app.config import REPO_ROOT, Settings
+from app.dates import nyc_today
 from app.housing_models import BuildingRecord, HousingProfile, RentalComparable, SourceInfo
 
 HPD_URL = "https://data.cityofnewyork.us/Housing-Development/Housing-Maintenance-Code-Violations/wvxf-dwi5"
@@ -59,7 +60,7 @@ async def addresses(query: str, demo: bool) -> dict:
 
 def demo_comparables() -> list[RentalComparable]:
     data = json.loads((REPO_ROOT / "fixtures/housing/comparables.json").read_text())
-    today = date.today()
+    today = nyc_today()
     results = []
     for row in data["comparables"]:
         doc = dict(row)
@@ -105,7 +106,7 @@ async def rental_candidates(settings: Settings, profile: HousingProfile) -> tupl
 
 async def building_records(profile: HousingProfile) -> tuple[list[BuildingRecord], list[SourceInfo]]:
     if profile.dataMode == "demo":
-        now = date.today().isoformat()
+        now = nyc_today().isoformat()
         return [BuildingRecord(id="demo-violation", kind="violation", scope="building", summary="Synthetic report: water leak in common hallway", status="Open", severity="B", observedAt=now, sourceUrl=HPD_URL, bbl="1000010001", demo=True),
                 BuildingRecord(id="demo-rodent", kind="inspection", scope="building", summary="Synthetic rodent inspection: signs observed on property", status="Rat activity", severity="inspection finding", observedAt=now, sourceUrl=RODENT_URL, bbl="1000010001", demo=True)], [source("NYC records", "demo", HPD_URL, "Synthetic property records; no claim about a real building.")]
     if not profile.bbl:

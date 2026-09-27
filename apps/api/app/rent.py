@@ -6,6 +6,7 @@ import re
 from datetime import date
 
 from app.deps import AppContext
+from app.dates import nyc_today
 from app.housing_models import HousingProfile, RentalComparable, RentAssessment, RentRange, SpaceQuality
 from app.integrations.housing import benchmarks, building_records, rental_candidates, source
 from app.models import Layout, Room
@@ -25,7 +26,7 @@ def distance_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 
 def eligible_comparables(profile: HousingProfile, candidates: list[RentalComparable], area: float, today: date | None = None) -> list[RentalComparable]:
-    today = today or date.today()
+    today = today or nyc_today()
     if not profile.measurementConfirmed or profile.latitude is None or profile.longitude is None:
         return []
     if profile.occupancyType in ("studio", "whole_apartment") and profile.scanCoverage != "whole_apartment":
@@ -56,7 +57,7 @@ def eligible_comparables(profile: HousingProfile, candidates: list[RentalCompara
 
 
 def condition_signature(conditions: list, today: date | None = None) -> set[tuple[str, str]]:
-    today = today or date.today()
+    today = today or nyc_today()
     return {(c.category, c.severity) for c in conditions if c.scope == "unit" and c.status == "ongoing" and c.severity != "unknown" and 0 <= (today - c.observedAt).days <= 90}
 
 
@@ -92,7 +93,10 @@ async def assess_rent(ctx: AppContext, profile: HousingProfile, layout_id: str |
         profile = profile.model_copy(update={"latitude": 40.811, "longitude": -73.954})
     comps = eligible_comparables(profile, profile.comparables + candidates, area)
     signature = condition_signature(profile.conditions)
-    matched = [c for c in comps if c.conditionsDocumented and signature and condition_signature(c.conditions) == signature]
+    def sufficient(conditions):
+        ongoing = [c for c in conditions if c.scope == "unit" and c.status != "resolved"]
+        return all(c.status == "ongoing" and c.severity != "unknown" and 0 <= (nyc_today() - c.observedAt).days <= 90 for c in ongoing)
+    matched = [c for c in comps if c.conditionsDocumented and signature and sufficient(profile.conditions) and sufficient(c.conditions) and condition_signature(c.conditions) == signature]
     base, condition = comparison_range(comps), comparison_range(matched)
     records, sources = await building_records(profile)
     _, context_sources = benchmarks(profile)

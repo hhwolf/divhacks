@@ -159,6 +159,6 @@ async def stripe_webhook(request: Request, ctx: AppContext = Depends(raw_ctx)) -
         if session.get("client_reference_id") != p["id"] or session.get("amount_total") != p["amountCents"] or session.get("currency") != "usd":
             raise HTTPException(400, "Session mismatch")
         if session.get("status") == "expired" and status == "pending":
-            status = "expired"
+            status = "failed" if intent and intent.get("last_payment_error") else "expired"
     result = await run_in_threadpool(db.apply_event, event["id"], p["id"], status, intent_id=intent_id, refunded=refunded)
     return {"received": True, "status": result["status"]}

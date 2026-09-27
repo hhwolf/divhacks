@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import type { PaymentPurpose, PaymentQuote, PaymentRecord, Tenancy } from '@arp/contracts';
 import { api } from '../lib/api';
+import { nycDate } from '../lib/dates';
 
 export const dollars = (cents: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
 
 export function PaymentPanel({ roomId }: { roomId: string }) {
   const [tenancy, setTenancy] = useState<Tenancy | null>(null); const [quote, setQuote] = useState<PaymentQuote | null>(null);
-  const [purpose, setPurpose] = useState<PaymentPurpose>('deposit'); const [amount, setAmount] = useState('500'); const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7));
+  const [purpose, setPurpose] = useState<PaymentPurpose>('deposit'); const [amount, setAmount] = useState('500'); const [period, setPeriod] = useState(nycDate().slice(0, 7));
   const [records, setRecords] = useState<PaymentRecord[]>([]); const [confirmed, setConfirmed] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
   useEffect(() => { void api.payments(roomId).then((r) => setRecords(r.payments)).catch((e: Error) => setError(e.message)); }, [roomId]);
   const run = async (fn: () => Promise<void>) => { setBusy(true); setError(''); try { await fn(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };

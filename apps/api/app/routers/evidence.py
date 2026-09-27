@@ -4,7 +4,7 @@ import warnings
 
 import httpx
 from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from app.deps import AppContext, get_ctx
 from app.routers.rent import ensure_room
@@ -22,6 +22,7 @@ def sanitize_image(raw: bytes) -> bytes:
                 if image.format not in ("JPEG", "PNG", "WEBP") or image.width * image.height > 20_000_000:
                     raise ValueError("Unsupported image or dimensions")
                 image.load()
+                image = ImageOps.exif_transpose(image)
                 image.thumbnail((2000, 2000))
                 # A new image strips EXIF, GPS, ICC and arbitrary embedded metadata.
                 clean = Image.new("RGB", image.size, "white")

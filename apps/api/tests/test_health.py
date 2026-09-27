@@ -5,7 +5,7 @@ def test_health_mock_mode(client: TestClient) -> None:
     body = client.get("/health").json()
     assert body["status"] == "ok"
     assert body["mode"] == "mock"
-    assert body["integrations"] == {"gemini": "mock", "backboard": "mock", "photon": "mock", "supabase": "json", "payments": "record-only"}
+    assert body["integrations"] == {"gemini": "mock", "backboard": "mock", "photon": "mock", "supabase": "json", "payments": "demo", "housing": "demo", "rentcast": "unavailable", "auth": "demo", "livePayments": "disabled"}
 
 
 def test_openapi_and_docs_render(client: TestClient) -> None:

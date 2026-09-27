@@ -31,7 +31,7 @@ KIND_WORDS: list[tuple[str, FurnitureKind]] = [
     ("chair", "seating"), ("sofa", "seating"), ("couch", "seating"), ("stool", "seating"), ("bench", "seating"),
     ("table", "table"), ("rug", "floor"), ("mat", "floor"), ("lamp", "decor"), ("plant", "decor"),
 ]
-CATEGORY_KIND: dict[str, FurnitureKind] = {"bed": "bed", "desk": "desk", "seating": "seating", "storage": "storage", "table": "table", "decor": "decor"}
+CATEGORY_KIND: dict[str, FurnitureKind] = {"bed": "bed", "desk": "desk", "seating": "seating", "storage": "storage", "table": "table", "decor": "decor", "divider": "decor"}
 
 
 def local_fixture_path(url: str) -> Path | None:
@@ -115,11 +115,11 @@ def build_item(listing: dict[str, Any], *, user_id: str, source: FurnitureSource
         id=f"imp_{uuid.uuid4().hex[:8]}",
         userId=user_id,
         name=name,
-        category="imported",
+        category=listing.get("category") if source == "manual" and listing.get("category") in CATEGORY_KIND else "imported",
         kind=kind,
         dims=dims,
-        glbUrl=preset.glbUrl if preset else None,
-        thumbUrl=preset.thumbUrl if preset else None,
+        glbUrl=preset.glbUrl if preset and listing.get("category") != "divider" else None,
+        thumbUrl=preset.thumbUrl if preset and listing.get("category") != "divider" else None,
         source=source,
         sourceUrl=source_url,
         price=listing.get("price"),

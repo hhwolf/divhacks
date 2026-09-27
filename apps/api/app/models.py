@@ -7,7 +7,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 Rotation = Literal[0, 90, 180, 270]
-FurnitureCategory = Literal["bed", "desk", "seating", "storage", "table", "decor", "imported"]
+FurnitureCategory = Literal["bed", "desk", "seating", "storage", "table", "decor", "divider", "imported"]
 FurnitureKind = Literal["bed", "desk", "wardrobe", "dresser", "storage", "seating", "table", "decor", "floor"]
 FurnitureSource = Literal["preset", "link", "photo", "manual", "scan"]
 Walkability = Literal["Good", "Tight", "Blocked"]
@@ -91,6 +91,7 @@ class Room(Loose):
     name: str
     skeleton: RoomSkeleton
     source: Literal["scan", "manual", "sample"]
+    supersedesRoomId: str | None = None
     createdAt: str
     spaceTypes: list[str] = []
     elements: list[RoomElement] = []
@@ -122,6 +123,8 @@ class FurnitureItem(FurnitureRef):
     price: float | None = None
     color: str | None = None
     estimated: bool = False
+    dimensionsConfirmed: bool = False
+    deliveryCost: float = Field(default=0, ge=0)
     frontAxis: Literal["+z", "-z", "+x", "-x"] = "+z"
 
 

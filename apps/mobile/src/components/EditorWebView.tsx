@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 import { EditorMessage, editorRouteUrl, hostInjection, HostMessage, parseEditorMessage } from '../bridge';
+import { editorSessionScript, nativeAuth } from '../auth';
 import { useStore } from '../store';
 import { colors, radius, shadow } from '../theme';
 import type { LayoutMetrics } from '../types';
@@ -63,6 +64,10 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp, fpsProbe }:
   const chipOpacity = useRef(new Animated.Value(0)).current;
   const chipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [sessionScript, setSessionScript] = useState<string | null>(null);
+  useEffect(() => { void editorSessionScript(webUrl, apiUrl).then(setSessionScript).catch(() => setLoadError('Could not load account session')); }, [webUrl, apiUrl]);
+  useFocusEffect(useCallback(() => { void editorSessionScript(webUrl, apiUrl).then(setSessionScript); }, [webUrl, apiUrl]));
+  useEffect(() => { const subscription = nativeAuth?.auth.onAuthStateChange(() => { setTimeout(() => { void editorSessionScript(webUrl, apiUrl).then(setSessionScript); }, 0); }); return () => subscription?.data.subscription.unsubscribe(); }, [webUrl, apiUrl]);
   const url = editorRouteUrl(webUrl, route, units);
 
   // Landscape while focused; every other screen is portrait, so lock back explicitly on blur/unmount (a plain
@@ -206,9 +211,12 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp, fpsProbe }:
 
   return (
     <View style={[styles.root, { paddingLeft: insets.left, paddingRight: insets.right }]}>
-      <WebView
+      {sessionScript && <WebView
+        key={sessionScript}
         ref={webRef}
         source={{ uri: url }}
+        injectedJavaScriptBeforeContentLoaded={sessionScript}
+        injectedJavaScriptBeforeContentLoadedForMainFrameOnly
         style={styles.web}
         originWhitelist={['*']}
         javaScriptEnabled
@@ -227,8 +235,8 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp, fpsProbe }:
         }}
         onError={(e) => setLoadError(e.nativeEvent.description || 'Failed to load editor')}
         onHttpError={(e) => setLoadError(`HTTP ${e.nativeEvent.statusCode} from ${webUrl}`)}
-        webviewDebuggingEnabled
-      />
+        webviewDebuggingEnabled={__DEV__}
+      />}
 
       {loading && !loadError ? (
         <View style={styles.center} pointerEvents="none">

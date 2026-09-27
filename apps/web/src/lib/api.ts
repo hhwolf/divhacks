@@ -2,11 +2,12 @@ import { sessionHeaders } from './auth';
 
 import type { FurnitureItem, HousingProfile, Layout, PaymentQuote, PaymentRecord, QuoteRequest, Tenancy, EvidencePhoto, AddressCandidate, SourceInfo, RentalComparable, RentAssessment, Room, ValidationResult } from '@arp/contracts';
 
-let base = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000';
+const nativeApi = (window as unknown as { __ARP_NATIVE_API_URL?: string }).__ARP_NATIVE_API_URL;
+let base = nativeApi ?? (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000';
 export function setApiBase(url: string) {
   const target = new URL(url); const configured = new URL((import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000');
   const local = ['localhost', '127.0.0.1'].includes(target.hostname);
-  if (target.origin !== configured.origin && !(import.meta.env.DEV && local)) throw new Error('Untrusted API origin');
+  if (target.origin !== configured.origin && target.origin !== (nativeApi ? new URL(nativeApi).origin : null) && !(import.meta.env.DEV && local)) throw new Error('Untrusted API origin');
   base = target.origin;
 }
 export function apiBase() { return base; }
@@ -51,7 +52,7 @@ export const api = {
     return res.json() as Promise<FurnitureItem | { item: FurnitureItem }>;
   },
   agent: (body: { text: string; roomId: string; baseLayoutId: string; furnitureId?: string; channel: 'app' }) => req<AgentResponse>('/agent/request', { method: 'POST', body: JSON.stringify(body) }),
-  assessRent: (body: RentAssessBody) => req<{ assessment: RentAssessment }>('/rent/assess', { method: 'POST', body: JSON.stringify(body) }),
+  assessRent: (body: RentAssessBody) => req<{ assessment: RentAssessment; benchmarks: { source: string; value: number; label: string; observedAt: string; sourceUrl: string }[] }>('/rent/assess', { method: 'POST', body: JSON.stringify(body) }),
   housingProfile: (id: string) => req<{ profile: HousingProfile | null }>(`/rooms/${id}/housing-profile`),
   saveHousingProfile: (body: HousingProfile) => req<{ profile: HousingProfile }>(`/rooms/${body.roomId}/housing-profile`, { method: 'PUT', body: JSON.stringify(body) }),
   latestAssessment: (id: string) => req<{ assessment: RentAssessment | null; status?: string }>(`/rooms/${id}/rent-assessment`),

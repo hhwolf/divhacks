@@ -14,6 +14,7 @@ export function Account() {
       if (sent) location.assign('/'); else { setSent(true); setMessage('Check your email for the sign-in code.'); }
     } catch (e) { setMessage((e as Error).message); } finally { setBusy(false); }
   };
+  if ('__ARP_NATIVE_SESSION' in window) return <section className="account">Manage your account in the iPhone app’s Settings.</section>;
   return <section className="account" aria-label="Account">
     <b>{signedIn ? 'Private workspace' : 'Demo workspace'}</b>
     {!auth && <small>Sign-in is not configured. Demo sessions are separate; use sample data.</small>}

@@ -6,11 +6,13 @@ Usage: .venv/bin/python scripts/e2e_editor.py [--web http://localhost:5173] [--a
 from __future__ import annotations
 import argparse, json, sys, time, urllib.request
 from playwright.sync_api import sync_playwright
+import uuid
+DEMO_SESSION = uuid.uuid4().hex
 
 GL = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"]
 
 def api(base: str, method: str, path: str, body=None):
-    req = urllib.request.Request(f"{base}{path}", method=method, data=json.dumps(body).encode() if body is not None else None, headers={"Content-Type": "application/json"})
+    req = urllib.request.Request(f"{base}{path}", method=method, data=json.dumps(body).encode() if body is not None else None, headers={"Content-Type": "application/json", "X-Demo-Session": DEMO_SESSION})
     with urllib.request.urlopen(req, timeout=30) as r: return json.loads(r.read())
 
 def main() -> int:
@@ -20,6 +22,7 @@ def main() -> int:
     def check(name: str, ok: bool, info: str = "") -> None: results.append((name, ok, info)); print(("  ✓ " if ok else "  ✗ ") + name, info)
     with sync_playwright() as p:
         b = p.chromium.launch(args=GL); pg = b.new_page(viewport={"width": 1920, "height": 1080})
+        pg.add_init_script("localStorage.setItem('arp-demo-session', " + json.dumps(DEMO_SESSION) + ");")
         pg.goto(f"{a.web}/layout/{cur['id']}", wait_until="networkidle"); pg.wait_for_function("() => window.__arpStore && window.__arpStore.getState().items.length > 0 && window.__arpProject", timeout=30000); time.sleep(1.2)
         state = lambda: pg.evaluate("() => { const s = window.__arpStore.getState(); return { items: s.items, sel: s.selectedId, v: s.validation, save: s.saveState, placing: s.placing, hist: s.history.length }; }")
         proj = lambda x, z, y=0: pg.evaluate(f"() => window.__arpProject({x}, {z}, {y})")

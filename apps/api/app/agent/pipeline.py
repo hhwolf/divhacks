@@ -95,6 +95,8 @@ async def run(
     catalog = await all_furniture(ctx.repo)
     memories = await ctx.backboard.get_context(user_id)
     imported = catalog.get(furniture_id) if furniture_id else None
+    if imported and imported.source in ("photo", "link") and not imported.dimensionsConfirmed:
+        return await _finish(ctx, request_id, user_id, room_id, base_layout_id, channel, request_text, PipelineResult("clarify", "Imported the item. Open Imported furniture in the editor and confirm its dimensions before I recommend a fit.", request_id, links=[f"{ctx.settings.public_web_url}/layout/{base.id}"]))
     system = build_system_prompt(room.skeleton, base, catalog, memories, imported)
     solver = Solver(room.skeleton, catalog, base.items, furniture_id)
 

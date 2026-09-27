@@ -1,3 +1,4 @@
+import { nativeHeaders } from './auth';
 import { useStore } from './store';
 import type {
   AgentRequestResponse,
@@ -28,7 +29,7 @@ function baseUrl(): string {
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const url = `${baseUrl()}${path}`;
-  const headers: Record<string, string> = { Accept: 'application/json', ...(init.headers as Record<string, string> | undefined) };
+  const headers: Record<string, string> = { Accept: 'application/json', ...(await nativeHeaders()), ...(init.headers as Record<string, string> | undefined) };
   const isForm = typeof FormData !== 'undefined' && init.body instanceof FormData;
   if (init.body && !isForm && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
 

@@ -11,7 +11,7 @@ export function Home() {
   useEffect(() => { api.rooms().then(setRooms).catch(() => undefined); api.health().then((h) => setHealth(h.mode)).catch(() => setHealth('offline')); }, []);
   const create = async (body: unknown) => {
     setBusy(true); setErr(null);
-    try { const r = await api.createRoom(body); const cur = r.currentLayout ?? r.layouts.find((l) => l.isCurrent) ?? r.layouts[0]; nav(`/layout/${cur.id}`); }
+    try { const r = await api.createRoom(body); const cur = r.currentLayout ?? r.layouts.find((l) => l.isCurrent) ?? r.layouts[0]; nav(`/layout/${cur.id}?onboarding=rent`); }
     catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   };
   const ft = (v: string) => (parseFloat(v) || 0) * 0.3048;
@@ -37,7 +37,7 @@ export function Home() {
       {err && <p className="err">{err}</p>}
       {rooms.length > 0 && (
         <section className="recent"><h2>Recent rooms</h2>
-          {rooms.slice().reverse().slice(0, 6).map((r) => <button key={r.id} className="recent-row" onClick={async () => { const rr = await api.room(r.id); const cur = rr.layouts.find((l) => l.isCurrent) ?? rr.layouts[0]; if (cur) nav(`/layout/${cur.id}`); }}><b>{r.name}</b><span>{r.skeleton.dimensions.l.toFixed(1)} × {r.skeleton.dimensions.w.toFixed(1)} m</span></button>)}
+          {rooms.slice().reverse().slice(0, 6).map((r) => <button key={r.id} className="recent-row" onClick={async () => { const rr = await api.room(r.id); const cur = rr.layouts.find((l) => l.isCurrent) ?? rr.layouts[0]; if (cur) nav(`/layout/${cur.id}?onboarding=rent`); }}><b>{r.name}</b><span>{r.skeleton.dimensions.l.toFixed(1)} × {r.skeleton.dimensions.w.toFixed(1)} m</span></button>)}
         </section>
       )}
     </div>

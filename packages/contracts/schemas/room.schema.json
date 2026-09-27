@@ -90,6 +90,12 @@
         "type": "object"
       },
       "description": "RoomPlan-detected furniture kept aside when the room was created clean (seed:false)"
+    },
+    "supersedesRoomId": {
+      "type": [
+        "string",
+        "null"
+      ]
     }
   }
 }

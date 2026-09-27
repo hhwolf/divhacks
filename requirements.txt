@@ -9,3 +9,6 @@ pillow>=10.4
 python-multipart>=0.0.9
 google-genai>=1.0
 backboard-sdk
+
+stripe>=12,<15
+psycopg[binary]>=3.2,<4

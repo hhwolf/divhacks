@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { ConditionCategory, ConditionObservation, EvidencePhoto } from '@arp/contracts';
 import { api } from '../lib/api';
+import { nycDate } from '../lib/dates';
 
 export const conditionLabels: Record<ConditionCategory, string> = { insects: 'Bugs / insects', rodents: 'Rats / rodents', leaks: 'Leaks / water damage', plumbing: 'Plumbing', heat_hot_water: 'Heating / hot water', other: 'Other problem' };
-export const newCondition = (category: ConditionCategory): ConditionObservation => ({ category, status: 'ongoing', severity: 'moderate', observedAt: new Date().toISOString().slice(0, 10), source: 'user', scope: 'unit', note: '', photoIds: [] });
+export const newCondition = (category: ConditionCategory): ConditionObservation => ({ category, status: 'ongoing', severity: 'moderate', observedAt: nycDate(), source: 'user', scope: 'unit', note: '', photoIds: [] });
 
 function Photo({ photo, onDelete }: { photo: EvidencePhoto; onDelete: () => void }) {
   const [url, setUrl] = useState('');
@@ -26,7 +27,7 @@ export function ConditionsPanel({ roomId, value, onChange }: { roomId: string; v
     {value.map((c, i) => <fieldset key={i} disabled={busy}><legend>{conditionLabels[c.category]} · User reported</legend><div className="housing-grid">
       <label>Status<select value={c.status} onChange={(e) => change(i, { status: e.target.value as ConditionObservation['status'] })}><option value="ongoing">Ongoing</option><option value="resolved">Resolved</option><option value="unknown">Unknown</option></select></label>
       <label>Severity<select value={c.severity} onChange={(e) => change(i, { severity: e.target.value as ConditionObservation['severity'] })}><option value="minor">Minor</option><option value="moderate">Moderate</option><option value="severe">Severe</option><option value="unknown">Unknown</option></select></label>
-      <label>Observed on<input type="date" max={new Date().toISOString().slice(0, 10)} value={c.observedAt} onChange={(e) => change(i, { observedAt: e.target.value })} /></label>
+      <label>Observed on<input type="date" max={nycDate()} value={c.observedAt} onChange={(e) => change(i, { observedAt: e.target.value })} /></label>
       <label>Where observed<select value={c.scope} onChange={(e) => change(i, { scope: e.target.value as ConditionObservation['scope'] })}><option value="unit">Inside my unit / room</option><option value="building">Elsewhere in the building</option><option value="area">Surrounding area</option></select></label>
     </div><label>Notes<textarea maxLength={1000} value={c.note} onChange={(e) => change(i, { note: e.target.value })} placeholder="What happened, where, and whether repairs were attempted" /></label>
       <label>Optional photo (JPEG, PNG, WebP; up to 5 MB)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => { void upload(i, e.target.files?.[0]); e.target.value = ''; }} /></label>

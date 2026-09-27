@@ -1,5 +1,6 @@
 import { formatDims, formatLength, gapToNearestWall, itemRect, roomBounds } from '@arp/geometry';
 import { useEditor, violationLevel } from '../store';
+import { externalUrl } from '../lib/auth';
 import { I } from './icons';
 
 // 8 rows × 3 columns like ref3: row 0 = ✕ (outside the grid) + rotate + lock, row 1 = duplicate + delete + first swatch, then swatches.
@@ -35,7 +36,9 @@ export function SidePanel() {
         <div className="details-row">{formatDims(f.dims, units)}</div>
         <div className="details-row">Rotation: <b>{item.rotation}°</b></div>
         <div className="details-row">Gap to wall: <b>{formatLength(gap, units)}</b></div>
-        {(f.price != null || f.sourceUrl) && <div className="details-row">{f.price != null && <b>${f.price}</b>} {f.sourceUrl && <a href={f.sourceUrl} target="_blank" rel="noreferrer">source</a>}</div>}
+        {(f.price != null || f.sourceUrl) && <div className="details-row">{f.price != null && <b>${f.price}</b>} {externalUrl(f.sourceUrl) && <a href={externalUrl(f.sourceUrl)} target="_blank" rel="noreferrer">Open original listing</a>}</div>}
+        {f.deliveryCost != null && f.deliveryCost > 0 && <div className="details-row">Delivery: ${f.deliveryCost}</div>}
+        {f.sourceUrl && <div className="details-row">Seller checkout; this app does not process or protect the purchase.</div>}
         {problems.map((v, k) => <div key={k} className={`details-row problem ${v.severity}`}>{v.message}</div>)}
       </div>
     </aside>
