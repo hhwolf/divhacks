@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 UVICORN := .venv/bin/uvicorn
 
-.PHONY: setup api web mobile mobile-web test bench demo e2e thumbs screenshots photon fps record supabase-assets
+.PHONY: setup api web mobile mobile-web test bench demo e2e thumbs screenshots photon fps record supabase-assets designer-check
 
 setup: .venv/.ok node_modules/.ok
 
@@ -44,6 +44,10 @@ demo: setup
 
 e2e: setup
 	$(PY) scripts/e2e_editor.py
+
+# Interior-designer merge check: skill copy, 3D scene round-trip, rule agreement, GLB models, designer behavior (+ live Gemini quiz with a key)
+designer-check: setup
+	$(PY) apps/api/scripts/check_designer.py
 
 photon: setup
 	$(PY) scripts/simulate_photon.py

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import re
 from typing import Any
 
@@ -27,6 +28,7 @@ LISTING_SCHEMA: dict[str, Any] = {
 MOCK_DESK: dict[str, Any] = {"name": "Desk", "category": "desk", "dims": {"w": 1.2, "d": 0.6, "h": 0.75}, "price": 80, "color": "oak", "estimated": False}
 MOCK_CHAIR: dict[str, Any] = {"name": "Chair", "category": "seating", "dims": {"w": 0.5, "d": 0.5, "h": 0.9}, "price": None, "color": None, "estimated": True}
 RETRY_ALTERNATIVE = "east wall, centered"
+log = logging.getLogger(__name__)
 _UNSUPPORTED_KEYS = {"$schema", "$id", "additionalProperties", "default"}
 _EXTERNAL_ITEM_RE = re.compile(r"\b(https?://|facebook|marketplace|ikea|amazon|listing|photo|picture|image)\b")
 _ADD_VERB_RE = re.compile(r"\b(add|bring|include|insert|put|place|recommend|suggest|need|want)\b")
@@ -40,12 +42,18 @@ _BASIC_ADDITIONS: tuple[tuple[str, tuple[str, ...], str, str, str, str | None], 
 )
 
 
-def strip_schema(schema: Any) -> Any:
-    """Drop JSON Schema keywords Gemini's response_schema rejects."""
+def strip_schema(schema: Any, root: Any = None) -> Any:
+    """Drop JSON Schema keywords Gemini's response_schema rejects and inline local '#/...' refs, which it doesn't follow."""
+    root = schema if root is None else root
     if isinstance(schema, dict):
-        return {k: strip_schema(v) for k, v in schema.items() if k not in _UNSUPPORTED_KEYS}
+        if isinstance(ref := schema.get("$ref"), str) and ref.startswith("#/"):
+            target = root
+            for key in ref[2:].split("/"):
+                target = target[key]
+            return strip_schema(target, root)
+        return {k: strip_schema(v, root) for k, v in schema.items() if k not in _UNSUPPORTED_KEYS}
     if isinstance(schema, list):
-        return [strip_schema(v) for v in schema]
+        return [strip_schema(v, root) for v in schema]
     return schema
 
 
@@ -91,36 +99,88 @@ def mock_plan_for(text: str, retry: bool) -> dict[str, Any]:
     else:
         return _plan_fixture("clarify")
     if retry:
-        for action in plan.get("actions", []):
+        for action in [*plan.get("actions", []), *(a for o in plan.get("options", []) for a in o["actions"])]:
             if action.get("zone"):
                 action["zone"] = f"{action['zone']} or {RETRY_ALTERNATIVE}"
     return plan
+
+
+# Busy (503/500/504), out of quota (429; the free tier allows 20 requests a day per model) or retired/unknown (404):
+# go straight to the next model. Retrying the same one was almost always busy again, and a 429 retry only burns quota.
+NEXT_MODEL = (404, 429, 500, 503, 504)
+CALL_TIMEOUT_MS = 30_000
+# The designer is a chat: low reasoning answers in a few seconds instead of 10+ and still plans well.
+THINKING_LEVEL = "LOW"
 
 
 class GeminiAdapter:
     def __init__(self, settings: Settings) -> None:
         self.live = settings.gemini_live
         self.model = settings.gemini_model
+        self.models = list(dict.fromkeys([settings.gemini_model, *settings.gemini_fallback_models]))
         self._client: Any = None
         if self.live:
             from google import genai
+            from google.genai import types
 
-            self._client = genai.Client(api_key=settings.gemini_api_key)
+            # a hung call must not hold the request: time out and move on to the next model
+            self._client = genai.Client(api_key=settings.gemini_api_key, http_options=types.HttpOptions(timeout=CALL_TIMEOUT_MS))
 
     async def _generate(self, system: str, contents: list[Any], schema: dict[str, Any]) -> dict[str, Any]:
+        import httpx
+        from google.genai import errors, types
+
+        config = types.GenerateContentConfig(system_instruction=system, response_mime_type="application/json", response_schema=strip_schema(schema),
+                                             thinking_config=types.ThinkingConfig(thinking_level=THINKING_LEVEL))
+        last: Exception | None = None
+        for model in self.models:
+            try:
+                try:
+                    resp = await asyncio.to_thread(self._client.models.generate_content, model=model, contents=contents, config=config)
+                except errors.ClientError as exc:
+                    if exc.code != 400 or "thinking" not in str(exc).lower():
+                        raise
+                    # a model that doesn't take a thinking level: ask it once more without one
+                    plain = config.model_copy(update={"thinking_config": None})
+                    resp = await asyncio.to_thread(self._client.models.generate_content, model=model, contents=contents, config=plain)
+            except errors.APIError as exc:
+                last = exc
+                if exc.code not in NEXT_MODEL:
+                    raise
+                log.warning("gemini %s: %s, trying the next model", model, exc.code)
+                continue
+            except httpx.TransportError as exc:  # timeout or connection reset
+                last = exc
+                log.warning("gemini %s: %s, trying the next model", model, type(exc).__name__)
+                continue
+            if model != self.model:
+                log.warning("gemini: answered by fallback model %s", model)
+            return json.loads(resp.text or "{}")
+        assert last is not None
+        raise last
+
+    async def plan(self, system_prompt: str, user_text: str, violations: list[str] | None = None,
+                   history: list[tuple[str, str]] | None = None) -> dict[str, Any]:
+        """Return a raw plan dict (schema validation happens in the pipeline). `violations` marks the single retry call.
+
+        `history` is the room's earlier conversation as (person's message, designer's reply as plan JSON), oldest first.
+        """
+        if not self.live:
+            from app.agent import mock_designer
+
+            if (designed := mock_designer.plan(system_prompt, user_text, retry=violations is not None)) is not None:
+                return designed
+            return mock_plan_for(user_text, retry=violations is not None)
         from google.genai import types
 
-        config = types.GenerateContentConfig(system_instruction=system, response_mime_type="application/json", response_schema=strip_schema(schema))
-        resp = await asyncio.to_thread(self._client.models.generate_content, model=self.model, contents=contents, config=config)
-        return json.loads(resp.text or "{}")
-
-    async def plan(self, system_prompt: str, user_text: str, violations: list[str] | None = None) -> dict[str, Any]:
-        """Return a raw plan dict (schema validation happens in the pipeline). `violations` marks the single retry call."""
-        if not self.live:
-            return mock_plan_for(user_text, retry=violations is not None)
-        contents: list[Any] = [user_text]
+        contents: list[Any] = []
+        for said, answered in history or []:
+            contents += [types.Content(role="user", parts=[types.Part.from_text(text=said)]),
+                         types.Content(role="model", parts=[types.Part.from_text(text=answered)])]
+        text = user_text
         if violations:
-            contents.append("The previous plan was rejected by the fit validator:\n- " + "\n- ".join(violations) + "\nPropose a different placement.")
+            text += "\n\nYour previous plan for this message was rejected by the fit check:\n- " + "\n- ".join(violations) + "\nPropose a different arrangement."
+        contents.append(types.Content(role="user", parts=[types.Part.from_text(text=text)]))
         return await self._generate(system_prompt, contents, PLAN_SCHEMA)
 
     async def furnish(self, system_prompt: str, theme: str, photos: list[tuple[bytes, str]] | None = None) -> dict[str, Any]:

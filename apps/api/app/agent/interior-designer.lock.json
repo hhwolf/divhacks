@@ -1,0 +1,17 @@
+{
+  "skill": "interior-designer",
+  "source": "Claude skill interior-designer (~/.claude/skills/.../interior-designer), copied byte-for-byte; refresh with scripts/check_designer.py --sync <dir>",
+  "files": {
+    "README.md": "013ee4d18b17263983f22f77118763d3c37219e938f35361e369571fb1745f31",
+    "SKILL.md": "28f7eedb513d486c433325aed641c33a3a1a2eb939ea95da4e1aa7ad2ac418c4",
+    "assets/sample_room.json": "75c02b4dea2e5bd3b3b8106efbfe6ec1ebfb2b82c70c020c233b2aa2cc8ec9fe",
+    "references/accessible-design.md": "5306af2e84dd16b35f48e4a65aa7556ebf6e3ef8648358e3dbe327100cac25b6",
+    "references/options-output.md": "5f2c33ebd321f70b742370e6a8c17097b119aadb5aebf99de5bb148653653483",
+    "references/room-data.md": "d09100d6a314db5ac821c59c1f1ec20c795e0fd7e1c0f6dc034f2c97c94d6567",
+    "references/space-planning.md": "ede67891ccdfe68826337dd2de6bb02de823ba5059cff9418447ac777db3dafd",
+    "references/style-and-color.md": "23b372da556c5f1e175b2986ebecae4edd09a45f3a9659ea75ea72c0fa22e33f",
+    "scripts/inspect_glb.py": "8f766e087f84110a02eb6cd7638c2996cf6e5c86f2bc5b021493382d7bda255d",
+    "scripts/roomplan_to_room.py": "0d656085ea9ae5158222e7edf9d911eb459141a25af0c23981d469be26915fd0",
+    "scripts/validate_layout.py": "4271c414d73d3f0812000bb3ff193399502c3d7dd669fa9a8221565106f2c59b"
+  }
+}

@@ -16,7 +16,7 @@ from typing import Any, Literal, get_args
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.catalog import PRESETS
+from app.catalog import PRESETS, all_furniture
 from app.deps import AppContext
 from app.models import AgentPlan, FurnitureItem, Layout, LayoutItem, PlanAction, Room, Rotation, ValidationResult, Zone
 from app.solver.grid import front_dir
@@ -196,7 +196,9 @@ def _companion_spots(anchor: LayoutItem, af: FurnitureItem, f: FurnitureItem, mo
         gap = 0.05 if f.id == "chair_desk" else 0.35
         dist = af.dims.d / 2 + f.dims.d / 2 + gap
         rot = _rot(anchor.rotation + 180) if f.id == "chair_desk" else anchor.rotation
-        return [(anchor.x + fx * dist, anchor.z + fz * dist, rot)]
+        # centred first; a desk chair may also slide to either end of the desk when something stands in front of the middle
+        slide = max(0.0, af.dims.w / 2 - f.dims.w / 2) if f.id == "chair_desk" else 0.0
+        return [(anchor.x + fx * dist + s * rx * slide, anchor.z + fz * dist + s * rz * slide, rot) for s in ((0, -1, 1) if slide else (0,))]
     if mode == "under":
         dist = af.dims.d / 2 + (0.35 if af.kind == "bed" else 0.45)
         return [(anchor.x + fx * dist, anchor.z + fz * dist, anchor.rotation), (anchor.x + fx * dist * 0.6, anchor.z + fz * dist * 0.6, anchor.rotation)]
@@ -228,8 +230,30 @@ def _place_center(room: Room, catalog: Mapping[str, FurnitureItem], items: list[
     return cand if _ok(room, catalog, [*items, cand], zones) else None
 
 
+# companions that make no sense alone: a desk chair with no desk, a coffee table with no sofa
+_NEEDS_ANCHOR = {"chair_desk", "coffee_table"}
+_ANCHOR_KINDS = {"bed", "desk", "wardrobe", "dresser"}
+
+
+def _order(pieces: list[dict[str, Any]], catalog: Mapping[str, FurnitureItem]) -> list[dict[str, Any]]:
+    """Big pieces first, then their companions, then everything else (stable), so a nightstand never takes the desk's wall."""
+    def rank(piece: dict[str, Any]) -> int:
+        first = next((o.strip() for o in str(piece.get("item", "")).split("|") if o.strip() in catalog), "")
+        if not first:
+            return 3
+        if catalog[first].kind in _ANCHOR_KINDS or first == "sofa":
+            return 0
+        return 1 if first in _COMPANIONS else 2
+    return sorted(pieces, key=rank)
+
+
 def place_pieces(room: Room, catalog: Mapping[str, FurnitureItem], base_items: list[LayoutItem], pieces: list[dict[str, Any]], zones: list[Zone] | None = None) -> tuple[list[LayoutItem], list[str], list[str]]:
+    pieces = _order(pieces, catalog)
     items = list(base_items)
+    # a plan may list the whole room, pieces already standing in it included: those are kept, not added a second time
+    already: dict[str, int] = {}
+    for it in base_items:
+        already[it.furnitureId] = already.get(it.furnitureId, 0) + 1
     protected = zones or []
     coarse = _FurnishSolver(room.skeleton, catalog, items, step=PLACE_STEP, protected_zones=protected)
     fine = _FurnishSolver(room.skeleton, catalog, items, protected_zones=protected)
@@ -240,7 +264,13 @@ def place_pieces(room: Room, catalog: Mapping[str, FurnitureItem], base_items: l
         options = [o.strip() for o in str(piece.get("item", "")).split("|") if o.strip() in catalog]
         if not options or catalog[options[0]].kind in existing & UNIQUE_KINDS:
             continue  # the room already has its bed / desk / wardrobe
+        present = next((o for o in options if already.get(o, 0) > 0), None)
+        if present:
+            already[present] -= 1
+            continue
         done = None
+        if options[0] in _NEEDS_ANCHOR and not any(it.furnitureId == a for a, _ in _COMPANIONS[options[0]] for it in items):
+            continue  # its desk / sofa didn't make it in
         for fid in options:
             f = catalog[fid]
             cand = _place_companion(room, catalog, items, f, protected)
@@ -251,12 +281,17 @@ def place_pieces(room: Room, catalog: Mapping[str, FurnitureItem], base_items: l
                 break
             if f.kind == "floor":
                 continue
-            plan = AgentPlan(intent="fit_item", actions=[PlanAction(type="add", item=fid, zone=piece.get("zone") or None)], reply="")
-            for solver in (coarse, fine) if f.kind != "decor" else (coarse,):
-                solver.base_items = items
-                res = solver.solve(plan)
-                if res.ok:
-                    done = res.items
+            # the asked-for zone first; the room's big pieces (desk, wardrobe...) then anywhere they fit rather than not at all
+            zones_to_try = [piece.get("zone") or None] + ([None] if piece.get("zone") and f.kind in _ANCHOR_KINDS | {"storage"} else [])
+            for zone in zones_to_try:
+                plan = AgentPlan(intent="fit_item", actions=[PlanAction(type="add", item=fid, zone=zone)], reply="")
+                for solver in (coarse, fine) if f.kind != "decor" else (coarse,):
+                    solver.base_items = items
+                    res = solver.solve(plan)
+                    if res.ok:
+                        done = res.items
+                        break
+                if done is not None:
                     break
             if done is not None:
                 break
@@ -383,11 +418,14 @@ def photo_plan(theme: str, purpose: str | None, floor_m2: float, photos: list[Ph
     return plan
 
 
-async def plan_for(ctx: AppContext, room: Room, theme: str, purpose: str | None, photos: list[Photo] | None = None) -> dict[str, Any]:
+async def plan_for(ctx: AppContext, room: Room, theme: str, purpose: str | None, photos: list[Photo] | None = None, base: Layout | None = None) -> dict[str, Any]:
     if not ctx.gemini.live:
         return photo_plan(theme, purpose, floor_area(room), photos) if photos else canned_plan(theme, purpose, floor_area(room))
     try:
-        system = furnish_prompt(room, PRESETS, purpose) + (PHOTO_PROMPT if photos else "")
+        from app.agent.prompts import build_furnish_prompt
+
+        current = base or Layout(id="empty", roomId=room.id, name="Current Room", isCurrent=True, items=[], createdAt=_now(), updatedAt=_now())
+        system = build_furnish_prompt(room.skeleton, current, await all_furniture(ctx.repo), purpose, theme) + "\n\n" + furnish_prompt(room, PRESETS, purpose) + (PHOTO_PROMPT if photos else "")
         raw = await ctx.gemini.furnish(system, theme or "Match the inspiration photos.", photos or [])
         plan = FurnishPlan.model_validate(raw).model_dump()
         items = []
@@ -414,7 +452,7 @@ async def furnish_room(
     photos: list[Photo] | None = None,
 ) -> FurnishResult:
     room, base = Room.model_validate(room_doc), Layout.model_validate(base_doc)
-    plan = await plan_for(ctx, room, theme, purpose, photos)
+    plan = await plan_for(ctx, room, theme, purpose, photos, base)
     items, placed, skipped = place_pieces(room, catalog, base.items, plan["items"], base.zones)
     validation = validate_layout(room.skeleton, catalog, items, base.zones, base.items)
     taken = {l["name"] for l in await ctx.repo.list_by_room("layouts", room.id)}

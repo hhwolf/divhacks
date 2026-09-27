@@ -330,21 +330,49 @@ class Solver:
         return max(0.0, round(gap, 3))
 
     def _clear_zones(self, plan: AgentPlan, items: list[LayoutItem]) -> tuple[list[Zone], list[str]]:
-        """Each clear_zone constraint becomes a zone at the largest free rectangle; if the request doesn't fit, the largest found is reported."""
+        """Each clear_zone constraint becomes a zone on free floor outside the door's swing and clearance.
+
+        A zone that doesn't fit is not saved at a smaller size: it becomes a short zone flagged in `notes` and the
+        interior-designer review (validate_layout.py) rejects the option, so the reply says how far off it is.
+        """
         zones: list[Zone] = []
         notes: list[str] = []
+        taken = [*items]
         for c in plan.constraints:
             if c.type != "clear_zone" or not c.w_m or not c.d_m:
+                continue
+            label = c.label or "Clear zone"
+            spot = self._free_spot(taken, c.w_m, c.d_m) or self._free_spot(taken, c.d_m, c.w_m)
+            if spot is not None:
+                zones.append(Zone(label=label, x=spot[0], z=spot[1], w=spot[2], d=spot[3]))
                 continue
             lfr = self._validate(items).metrics.largestFreeRect
             if lfr is None:
                 continue
-            label = c.label or "Clear zone"
-            if lfr.w + EPS >= c.w_m and lfr.d + EPS >= c.d_m:
-                zones.append(Zone(label=label, x=lfr.x, z=lfr.z, w=c.w_m, d=c.d_m))
-            elif lfr.w + EPS >= c.d_m and lfr.d + EPS >= c.w_m:
-                zones.append(Zone(label=label, x=lfr.x, z=lfr.z, w=c.d_m, d=c.w_m))
-            else:
-                zones.append(Zone(label=label, x=lfr.x, z=lfr.z, w=lfr.w, d=lfr.d))
-                notes.append(f"the largest clear stretch is {lfr.w:.1f} x {lfr.d:.1f} m, short of {c.w_m:.1f} x {c.d_m:.1f}")
+            zones.append(Zone(label=label, x=lfr.x, z=lfr.z, w=lfr.w, d=lfr.d))
+            notes.append(f"the largest clear stretch is {lfr.w:.1f} x {lfr.d:.1f} m, short of {c.w_m:.1f} x {c.d_m:.1f}")
         return zones, notes
+
+    def _free_spot(self, items: list[LayoutItem], w: float, d: float) -> tuple[float, float, float, float] | None:
+        """First w x d rectangle (grid-aligned, scanning from the room's far corner away from the door) clear of furniture, walls and the door."""
+        g = self.grid
+        blocked = self._blocked_mask(items)
+        kw, kd = math.ceil(w / GRID - 1e-6), math.ceil(d / GRID - 1e-6)
+        if kw > g.nx or kd > g.nz:
+            return None
+        sat = [[0] * (g.nx + 1) for _ in range(g.nz + 1)]
+        for j in range(g.nz):
+            for i in range(g.nx):
+                sat[j + 1][i + 1] = sat[j][i + 1] + sat[j + 1][i] - sat[j][i] + blocked[j * g.nx + i]
+        door = [opening_span(self.sk, dr)[0] for dr in self.sk.doors]
+        spots = []
+        for j in range(g.nz - kd + 1):
+            for i in range(g.nx - kw + 1):
+                if sat[j + kd][i + kw] - sat[j][i + kw] - sat[j + kd][i] + sat[j][i] == 0:
+                    x, z = g.ox + i * GRID, g.oz + j * GRID
+                    far = min((math.hypot(x + w / 2 - p[0], z + d / 2 - p[1]) for p in door), default=0.0)
+                    spots.append((-round(far, 3), j, i, x, z))
+        if not spots:
+            return None
+        _, _, _, x, z = min(spots)
+        return round(x, 3), round(z, 3), w, d

@@ -13,7 +13,7 @@ FurnitureSource = Literal["preset", "link", "photo", "manual", "scan"]
 Walkability = Literal["Good", "Tight", "Blocked"]
 Severity = Literal["error", "warning"]
 RuleId = Literal["bounds", "overlap", "locked", "door_clearance", "window_keep_clear", "access_edge", "clear_zone", "walkable_path"]
-Intent = Literal["fit_item", "make_space", "keep_clear", "compare", "rent_check", "payment_check", "housing_quality", "clarify"]
+Intent = Literal["fit_item", "make_space", "keep_clear", "compare", "redesign", "answer", "rent_check", "payment_check", "housing_quality", "clarify"]
 Channel = Literal["app", "imessage"]
 OccupancyType = Literal["whole_apartment", "studio", "private_room", "shared_room"]
 FloorMaterial = Literal["hardwood", "engineered_wood", "tile", "laminate", "concrete", "carpet", "vinyl", "unknown"]
@@ -209,11 +209,25 @@ class PlanAction(Strict):
     rotation: float | None = None
 
 
+class PlanOption(Strict):
+    """One arrangement from the interior-designer skill's options (references/options-output.md), zone-level like the plan itself."""
+
+    variantName: str
+    actions: list[PlanAction]
+    constraints: list[PlanConstraint] = []
+    explanation: str | None = None
+    tradeoff: str | None = None
+
+
 class AgentPlan(Strict):
     intent: Intent
     variantName: str | None = None
+    theme: str | None = None
     constraints: list[PlanConstraint] = []
     actions: list[PlanAction] = []
+    roomSummary: str | None = None
+    options: list[PlanOption] = Field(default=[], max_length=3)
+    recommended: str | None = None
     reply: str
     clarifyingQuestion: str | None = None
     preferencesLearned: list[str] = []
@@ -239,6 +253,7 @@ class AgentRequestLog(Loose):
     layoutId: str | None = None
     reply: str
     violations: list[Violation] = []
+    layoutIds: list[str] = []
     createdAt: str
 
 

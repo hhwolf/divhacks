@@ -56,6 +56,12 @@ From the repository root, after normal setup:
 
 The utility prints stage units, axes, classified geometry and, with `--convert`, a canonical skeleton, detected objects and conversion report. Review the output before using it. Use trusted local exports; the CLI is not a sandbox for arbitrary USD assets. Tests requiring `usd-core` skip when it is absent, and the real-scan case requires an actual export at `fixtures/rooms/real_scan.usdz`. Synthetic conversion tests do not establish compatibility with every real RoomPlan export.
 
+## Interior-designer skill for Gemini
+
+The `backend` branch prompted Gemini with its own designer notes (`app/agent/designer.md`) and a separate narration stage. Neither was adopted. Instead, Gemini now receives an unedited copy of the `interior-designer` skill (`apps/api/app/agent/interior-designer/`, pinned by `interior-designer.lock.json`). It also receives the room as the 3D editor shows it, in the skill's own room format.
+
+Each request can return up to 3 options. Each option is placed by the existing solver and checked by both the app's validator and the skill's `validate_layout.py`. Clear zones now stay out of the door's swing area. See [the interior-designer integration](INTERIOR_DESIGNER.md). `make designer-check` is the merge check; it includes a live Gemini comprehension quiz when `GEMINI_API_KEY` is set.
+
 ## Deferred backend changes
 
 | Change not adopted | Reason and work needed before adoption |

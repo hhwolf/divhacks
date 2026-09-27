@@ -55,7 +55,8 @@ def test_marketplace_desk_request(client: TestClient, bedroom: dict) -> None:
     assert "window" in out["reply"] and "to spare" in out["reply"]
     assert out["links"] == [f"roomplanner://layout/{layout['id']}", f"http://localhost:5173/layout/{layout['id']}"]
     names = [l["name"] for l in client.get(f"/rooms/{bedroom['roomId']}").json()["layouts"]]
-    assert names == ["Current Room", "Marketplace Desk"]
+    assert names == ["Current Room", "Marketplace Desk", "Desk by the Dresser"]  # the designer's options, favorite first
+    assert [o["variantName"] for o in out["options"]] == names[1:] and out["recommended"] == "Marketplace Desk"
     current = client.get(f"/layouts/{bedroom['currentId']}").json()["layout"]
     assert current["items"] == bedroom["current"]["items"]
 
@@ -100,10 +101,10 @@ def test_variant_names_dedupe(client: TestClient, bedroom: dict) -> None:
     assert _ask(client, bedroom, YOGA_Q)["layout"]["name"] == "Yoga corner (2)"
 
 
-def test_unknown_request_clarifies(client: TestClient, bedroom: dict) -> None:
+def test_small_talk_gets_an_answer_without_changing_the_room(client: TestClient, bedroom: dict) -> None:
     out = _ask(client, bedroom, "what's the weather like")
-    assert out["status"] == "clarify" and out["layout"] is None
-    assert out["reply"].endswith("?")
+    assert out["status"] == "ok" and out["layout"] is None and out["plan"]["intent"] == "answer"
+    assert "window" in out["reply"] and "add a sofa" in out["reply"]  # says the room back and offers concrete next steps
     assert len(client.get(f"/rooms/{bedroom['roomId']}").json()["layouts"]) == 1
 
 
@@ -120,7 +121,7 @@ def _bad_then(good: dict) -> list[dict]:
 def _patch_gemini(client: TestClient, plans: list[dict]) -> list[list[str] | None]:
     calls: list[list[str] | None] = []
 
-    async def fake_plan(system_prompt: str, user_text: str, violations: list[str] | None = None) -> dict:
+    async def fake_plan(system_prompt: str, user_text: str, violations: list[str] | None = None, history: list | None = None) -> dict:
         calls.append(violations)
         return json.loads(json.dumps(plans[min(len(calls) - 1, len(plans) - 1)]))
 

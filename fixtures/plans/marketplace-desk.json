@@ -8,6 +8,25 @@
   "actions": [
     {"type": "add", "item": "desk_mkt", "zone": "window wall, beside window"}
   ],
-  "reply": "It fits on the window wall beside the window; the bed didn't move.",
+  "options": [
+    {
+      "variantName": "Marketplace Desk",
+      "actions": [{"type": "add", "item": "desk_mkt", "zone": "window wall, beside window"}],
+      "constraints": [{"type": "adjacent", "item": "desk_mkt", "feature": "window"}],
+      "explanation": "The desk goes on the window wall right beside the window, so daylight comes from the side while you work, and nothing else moves.",
+      "tradeoff": "The dresser corner sits close to where the chair pulls out."
+    },
+    {
+      "variantName": "Desk by the Dresser",
+      "actions": [
+        {"type": "move", "item": "dresser", "zone": "window wall, corner"},
+        {"type": "add", "item": "desk_mkt", "zone": "east wall"}
+      ],
+      "explanation": "The dresser slides into the window corner and the desk takes the east wall, so you sit side-on to the window and can see the door.",
+      "tradeoff": "The desk ends up in front of the dresser, so the lower drawers are hard to open."
+    }
+  ],
+  "recommended": "Marketplace Desk",
+  "reply": "Yes, it fits on the window wall beside the window, and your bed doesn't move.",
   "preferencesLearned": ["never move the bed"]
 }

@@ -7,8 +7,9 @@
   "required": ["intent", "reply"],
   "additionalProperties": false,
   "properties": {
-    "intent": {"type": "string", "enum": ["fit_item", "make_space", "keep_clear", "compare", "rent_check", "payment_check", "housing_quality", "clarify"]},
+    "intent": {"type": "string", "enum": ["fit_item", "make_space", "keep_clear", "compare", "redesign", "answer", "rent_check", "payment_check", "housing_quality", "clarify"]},
     "variantName": {"type": "string"},
+    "theme": {"type": "string", "description": "redesign only: the new design in a few words ('cozy japandi study'); the server furnishes it from the catalog"},
     "constraints": {
       "type": "array",
       "items": {
@@ -35,6 +36,22 @@
         }
       }
     },
+    "roomSummary": {"type": "string", "description": "the designer's one-sentence say-back of the room (interior-designer skill, step 1)"},
+    "options": {
+      "type": "array", "maxItems": 3,
+      "description": "1-3 genuinely different arrangements, favorite first; the top-level variantName/actions/constraints repeat the favorite",
+      "items": {
+        "type": "object", "required": ["variantName", "actions"], "additionalProperties": false,
+        "properties": {
+          "variantName": {"type": "string"},
+          "actions": {"$ref": "#/properties/actions"},
+          "constraints": {"$ref": "#/properties/constraints"},
+          "explanation": {"type": "string"},
+          "tradeoff": {"type": "string"}
+        }
+      }
+    },
+    "recommended": {"type": "string", "description": "variantName of the favorite option"},
     "reply": {"type": "string"},
     "clarifyingQuestion": {"type": "string"},
     "preferencesLearned": {"type": "array", "items": {"type": "string"}}

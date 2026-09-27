@@ -72,10 +72,12 @@ export interface Room {
   spaceTypes?: SpaceType[] | string[]; elements?: RoomElement[]; detectedObjects?: LayoutItem[];
 }
 
-export type Intent = 'fit_item' | 'make_space' | 'keep_clear' | 'compare' | 'rent_check' | 'payment_check' | 'housing_quality' | 'clarify';
+export type Intent = 'fit_item' | 'make_space' | 'keep_clear' | 'compare' | 'redesign' | 'answer' | 'rent_check' | 'payment_check' | 'housing_quality' | 'clarify';
 export interface PlanConstraint { type: 'lock' | 'adjacent' | 'keep_clear' | 'clear_zone'; item?: string; feature?: 'window' | 'door' | 'outlet' | 'wall'; w_m?: number; d_m?: number; label?: string; optional?: boolean }
 export interface PlanAction { type: 'add' | 'move' | 'remove' | 'rotate'; item: string; zone?: string; rotation?: number }
-export interface AgentPlan { intent: Intent; variantName?: string; constraints?: PlanConstraint[]; actions?: PlanAction[]; reply: string; clarifyingQuestion?: string; preferencesLearned?: string[] }
+/** One arrangement proposed by the interior-designer skill (zone-level; the server places and validates it). */
+export interface PlanOption { variantName: string; actions: PlanAction[]; constraints?: PlanConstraint[]; explanation?: string; tradeoff?: string }
+export interface AgentPlan { intent: Intent; variantName?: string; theme?: string; constraints?: PlanConstraint[]; actions?: PlanAction[]; roomSummary?: string; options?: PlanOption[]; recommended?: string; reply: string; clarifyingQuestion?: string; preferencesLearned?: string[] }
 
 // ---- Validation results (shared TS/Python shape; see fixtures/validation) ----
 export type Severity = 'error' | 'warning';

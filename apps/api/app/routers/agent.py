@@ -62,6 +62,9 @@ async def agent_request(body: AgentRequestBody, ctx: AppContext = Depends(get_ct
         "links": out.links,
         "requestId": out.request_id,
         "violations": [v.model_dump() for v in out.violations],
+        "options": out.options,
+        "recommended": out.recommended,
+        "roomSummary": out.room_summary,
     }
 
 

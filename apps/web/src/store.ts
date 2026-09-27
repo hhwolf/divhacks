@@ -6,6 +6,8 @@ import { isEmbedded, postToHost } from './lib/bridge';
 import { thunk } from './lib/sound';
 
 export type ViewMode = 'cutaway' | 'half' | 'plan';
+/** One message in the designer chat; a designer turn can carry the layouts it saved (options open as tabs). */
+export interface ChatTurn { role: 'you' | 'designer'; text: string; options?: { name: string; layoutId: string; tradeoff?: string }[] }
 export type Theme = 'stone' | 'peach' | 'teal';
 export type FloorStyle = 'brick' | 'herringbone' | 'plank' | 'tile';
 export type Drawer = null | 'menu' | 'paint' | 'help' | 'context';
@@ -23,6 +25,8 @@ export interface EditorState {
   overlays: { walkable: boolean; keepClear: boolean; lowClearance: boolean }; overlaysOpen: boolean; ghostId: string | null; ghostOpen: boolean;
   validation: ValidationResult | null; masks: OverlayMasks | null; saveState: SaveState; lastError: string | null;
   drawer: Drawer; contextTab: string | null; requestOpen: boolean; agentBusy: boolean; agentReply: string | null; analysisOpen: boolean;
+  /** The conversation with the designer for the open room (the server keeps its own copy for Gemini's context). */
+  agentThread: ChatTurn[]; threadRoomId: string | null;
   palettePage: number; category: string; search: string | null; sidePage: number; toasts: { id: number; text: string; kind: 'info' | 'error' }[];
   shake: string | null; bounce: string | null; loading: boolean;
   // actions
@@ -62,7 +66,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   selectedId: null, placing: null, dragging: null, hoverId: null,
   overlays: { walkable: false, keepClear: false, lowClearance: false }, overlaysOpen: false, ghostId: null, ghostOpen: false,
   validation: null, masks: null, saveState: 'saved', lastError: null,
-  drawer: null, contextTab: null, requestOpen: false, agentBusy: false, agentReply: null, analysisOpen: false,
+  drawer: null, contextTab: null, requestOpen: false, agentBusy: false, agentReply: null, analysisOpen: false, agentThread: [], threadRoomId: null,
   palettePage: 0, category: 'All', search: null, sidePage: 0, toasts: [], shake: null, bounce: null, loading: false,
 
   init({ units, embedded }) {
@@ -236,13 +240,16 @@ export const useEditor = create<EditorState>((set, get) => ({
   },
   async askAgent(text, furnitureId) {
     const s = get(); if (!s.room || !s.activeId) return;
-    set({ agentBusy: true, agentReply: null });
+    const thread = s.threadRoomId === s.room.id ? s.agentThread : [];
+    set({ agentBusy: true, agentReply: null, threadRoomId: s.room.id, agentThread: [...thread, { role: 'you', text }] });
+    const say = (turn: ChatTurn) => set({ agentThread: [...get().agentThread, turn] });
     try {
       const res = await api.agent({ text, roomId: s.room.id, baseLayoutId: s.activeId, furnitureId, channel: 'app' });
       set({ agentReply: res.reply, agentBusy: false });
+      say({ role: 'designer', text: res.reply, options: (res.options ?? []).map((o) => ({ name: o.variantName, layoutId: o.layoutId, tradeoff: o.tradeoff })) });
       postToHost('editor:agentReply', { reply: res.reply, layoutId: res.layout?.id ?? null, status: res.status });
       if (res.layout) { await get().loadRoomLayouts(s.room.id); await get().switchLayout(res.layout.id); }
-    } catch (e) { set({ agentBusy: false, agentReply: `Something went wrong: ${(e as Error).message}` }); }
+    } catch (e) { const msg = `Something went wrong: ${(e as Error).message}`; set({ agentBusy: false, agentReply: msg }); say({ role: 'designer', text: msg }); }
   },
   async furnish(theme, opts) {
     // Theme → a new furnished variant (server picks pieces and places them), then open it and show what was made.
@@ -255,7 +262,8 @@ export const useEditor = create<EditorState>((set, get) => ({
       const base = opts?.restyle ? s.layouts.find((l) => l.isCurrent)?.id ?? s.activeId : s.activeId;
       const body = { theme, baseLayoutId: base, purposeHint: opts?.restyle ? active?.requestText ?? null : null };
       const res = opts?.photos?.length ? await api.furnishPhotos(s.room.id, opts.photos, body) : await api.furnish(s.room.id, body);
-      set({ furnishing: false, agentReply: res.reply, requestOpen: true });
+      set({ furnishing: false, agentReply: res.reply, requestOpen: true, threadRoomId: s.room.id,
+        agentThread: [...(s.threadRoomId === s.room.id ? s.agentThread : []), { role: 'you', text: theme || 'Restyle from photos' }, { role: 'designer', text: res.reply, options: [{ name: res.layout.name, layoutId: res.layout.id }] }] });
       postToHost('editor:agentReply', { reply: res.reply, layoutId: res.layout.id, status: 'ok' });
       // new pieces drop in one after another (anything that was already in the base stays put); armed before the switch so they never flash
       const kept = new Set((s.layouts.find((l) => l.id === base)?.items ?? []).map((i) => i.id));

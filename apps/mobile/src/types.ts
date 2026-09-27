@@ -75,10 +75,11 @@ export interface Room {
   detectedObjects?: LayoutItem[];
 }
 
-export type Intent = 'fit_item' | 'make_space' | 'keep_clear' | 'compare' | 'clarify';
+export type Intent = 'fit_item' | 'make_space' | 'keep_clear' | 'compare' | 'redesign' | 'answer' | 'clarify';
 export interface PlanConstraint { type: 'lock' | 'adjacent' | 'keep_clear' | 'clear_zone'; item?: string; feature?: 'window' | 'door' | 'outlet' | 'wall'; w_m?: number; d_m?: number; label?: string; optional?: boolean }
 export interface PlanAction { type: 'add' | 'move' | 'remove' | 'rotate'; item: string; zone?: string; rotation?: number }
-export interface AgentPlan { intent: Intent; variantName?: string; constraints?: PlanConstraint[]; actions?: PlanAction[]; reply: string; clarifyingQuestion?: string; preferencesLearned?: string[] }
+export interface PlanOption { variantName: string; actions: PlanAction[]; constraints?: PlanConstraint[]; explanation?: string; tradeoff?: string }
+export interface AgentPlan { intent: Intent; variantName?: string; theme?: string; constraints?: PlanConstraint[]; actions?: PlanAction[]; roomSummary?: string; options?: PlanOption[]; recommended?: string; reply: string; clarifyingQuestion?: string; preferencesLearned?: string[] }
 
 export type Units = 'imperial' | 'metric';
 

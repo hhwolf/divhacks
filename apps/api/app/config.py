@@ -44,6 +44,7 @@ class Settings:
     public_api_url: str
     data_dir: Path
 
+    gemini_fallback_models: tuple[str, ...] = ()
     supabase_publishable_key: str = ""
     housing_data_mode: str = "demo"
     rentcast_api_key: str = ""
@@ -64,7 +65,8 @@ class Settings:
             supabase_table=_env("SUPABASE_TABLE", "arp_documents"),
             blob_token=_env("BLOB_READ_WRITE_TOKEN"),
             gemini_api_key=_env("GEMINI_API_KEY"),
-            gemini_model=_env("GEMINI_MODEL", "gemini-2.5-flash"),
+            gemini_model=_env("GEMINI_MODEL", "gemini-3.8-flash"),
+            gemini_fallback_models=tuple(m.strip() for m in _env("GEMINI_FALLBACK_MODELS", "gemini-3.7-flash,gemini-3.6-flash,gemini-flash-latest,gemini-3.5-flash-lite,gemini-3.1-flash-lite").split(",") if m.strip()),
             backboard_api_key=_env("BACKBOARD_API_KEY"),
             backboard_base_url=_env("BACKBOARD_BASE_URL", "https://app.backboard.io/api"),
             spectrum_project_id=_env("SPECTRUM_PROJECT_ID") or _env("PHOTON_PROJECT_ID"),

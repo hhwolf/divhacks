@@ -24,7 +24,9 @@ export async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
 export interface LayoutResponse { layout: Layout; furniture: Record<string, FurnitureItem>; validation?: ValidationResult; room?: Room }
 export interface RoomResponse { room: Room; layouts: Layout[]; currentLayout?: Layout }
-export interface AgentResponse { plan: unknown; layout: Layout | null; reply: string; status: string; links?: string[]; requestId?: string }
+/** One arrangement the interior designer saved as a variant (references/options-output.md in the skill). */
+export interface AgentOption { variantName: string; layoutId: string; recommended: boolean; moved: string[]; explanation?: string | null; tradeoff: string; validation: { ok: boolean; warnings: number; openFloorPct: number }; skillValidation: { ok: boolean; warnings: number; open_floor_pct: number } }
+export interface AgentResponse { plan: unknown; layout: Layout | null; reply: string; status: string; links?: string[]; requestId?: string; options?: AgentOption[]; recommended?: string | null; roomSummary?: string | null }
 export interface FurnishResponse { layout: Layout; style: FurnishStyle; placed: string[]; skipped: string[]; reply: string }
 export interface RentAssessBody extends HousingProfile { layoutId?: string | null }
 export interface CompareResponse {
