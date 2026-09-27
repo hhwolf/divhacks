@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useEditor } from '../store';
 import { I } from './icons';
+import { useCompactEditor } from '../lib/useCompactEditor';
 
 const IDEAS: { label: string; icon: ReactNode }[] = [
   { label: 'Cozy Japandi bedroom', icon: <I.bed /> },
@@ -16,12 +17,14 @@ const MAX_PHOTOS = 4;
  * Laid out like the app's native home screen (hero mark + title, row card with icon square + chevron, pill CTA) in the editor's palette.
  */
 export function FurnishCard() {
+  const compact = useCompactEditor(); const [dismissed, setDismissed] = useState(false);
   const room = useEditor((s) => s.room); const count = useEditor((s) => s.items.length); const activeId = useEditor((s) => s.activeId);
   const busy = useEditor((s) => s.furnishing); const loading = useEditor((s) => s.loading);
   const [text, setText] = useState(''); const [photos, setPhotos] = useState<File[]>([]); const file = useRef<HTMLInputElement>(null);
   const [previews, setPreviews] = useState<string[]>([]);
   useEffect(() => { const urls = photos.map((p) => URL.createObjectURL(p)); setPreviews(urls); return () => urls.forEach((u) => URL.revokeObjectURL(u)); }, [photos]);
-  if (!room || count > 0 || loading || !activeId || activeId === 'fixture') return null;
+  useEffect(() => { setDismissed(false); }, [room?.id]);
+  if (!room || (compact && dismissed) || count > 0 || loading || !activeId || activeId === 'fixture') return null;
   const go = (theme: string) => { if ((theme.trim() || photos.length) && !busy) void useEditor.getState().furnish(theme.trim(), { photos }); };
   const add = (list: FileList | null) => {
     // copy first: FileList is live and clearing the input (so the same photo can be re-picked) empties it before the updater runs
@@ -33,6 +36,7 @@ export function FurnishCard() {
   return (
     <div className="furnish-card" data-testid="furnish-card">
       <div className="furnish-hero">
+        {compact && <button className="sq small furnish-dismiss" aria-label="Close furnishing ideas" onClick={() => setDismissed(true)}><I.close /></button>}
         <div className="furnish-mark"><I.grid /></div>
         <div>
           <div className="furnish-eyebrow">Empty room</div>

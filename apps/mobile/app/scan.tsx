@@ -13,7 +13,7 @@ import {
   type RoomPlanCapability,
   RoomPlanView,
 } from '../modules/roomplan';
-import { api } from '../src/api';
+import { sampleRoomDraft } from '../src/newRoom';
 import { DimensionsSheet } from '../src/components/DimensionsSheet';
 import { useToast } from '../src/components/Toast';
 import { Button, Chip, Screen, Tile } from '../src/components/ui';
@@ -180,16 +180,11 @@ function Fallback({ capability }: { capability: RoomPlanCapability }) {
     ? 'RoomPlan is linked, but Apple reports this device cannot run room capture. Use an iPhone Pro or iPad Pro with LiDAR on iOS 16 or newer.'
     : 'This runtime does not include our RoomPlan native module. Expo Go, web, and generic simulator builds cannot scan rooms.';
 
-  const openEditor = useCallback(
-    (layoutId: string) => router.replace(`/editor/${encodeURIComponent(layoutId)}`),
-    [router],
-  );
-
   const loadSample = async () => {
     setBusy('sample');
     try {
-      const res = await api.createSampleRoom('nyc-bedroom');
-      openEditor(res.currentLayout.id);
+      setRoomDraft(sampleRoomDraft('nyc-bedroom'));
+      router.push('/setup');
     } catch (e) {
       toast(((e as Error | null)?.message ?? String(e)), { tone: 'danger', ms: 4500 });
     } finally {

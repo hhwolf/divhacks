@@ -5,6 +5,7 @@ import { ActivityIndicator, Modal, Pressable, RefreshControl, ScrollView, StyleS
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { api } from '../src/api';
+import { sampleRoomDraft } from '../src/newRoom';
 import { DimensionsSheet } from '../src/components/DimensionsSheet';
 import { RenameSheet } from '../src/components/RenameSheet';
 import { useToast } from '../src/components/Toast';
@@ -39,8 +40,8 @@ export default function Home() {
   const loadSample = async () => {
     setBusy('sample');
     try {
-      const res = await api.createSampleRoom('l-shaped');
-      router.push(`/editor/${encodeURIComponent(res.currentLayout.id)}`);
+      setRoomDraft(sampleRoomDraft());
+      router.push('/setup');
     } catch (e) {
       toast((e as Error | null)?.message ?? 'Something went wrong', { tone: 'danger', ms: 4500 });
     } finally {

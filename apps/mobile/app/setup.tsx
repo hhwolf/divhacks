@@ -12,7 +12,7 @@ import { ELEMENTS, localSuggestions, slugify, SPACE_TYPE_ICONS, SPACE_TYPES, SUG
 import { useStore } from '../src/store';
 import { colors, radius, spacing, type } from '../src/theme';
 import type { RoomElement, SetupSuggestionsResponse, SpaceTypeInfo } from '../src/types';
-import { formatArea, formatDims } from '../src/units';
+import { floorArea, formatArea, formatDims, formatSquareMeters } from '../src/units';
 
 type Step = 1 | 2;
 
@@ -44,6 +44,7 @@ export default function Setup() {
   const [roomState, setRoomState] = useState<'idle' | 'loading' | 'ready' | 'missing'>(editMode ? 'loading' : 'idle');
   const [roomName, setRoomName] = useState<string | null>(null);
   const [roomDims, setRoomDims] = useState<{ l: number; w: number; h: number } | undefined>(draft?.skeleton?.dimensions ?? draft?.dimensions);
+  const [roomPolygon, setRoomPolygon] = useState(draft?.skeleton?.floorPolygon);
   const [detectedCount, setDetectedCount] = useState(draft?.objects.length ?? 0);
 
   // Portrait form. The editor locks landscape while focused; a cold deep link into /setup would otherwise inherit it.
@@ -77,6 +78,7 @@ export default function Setup() {
         const elements = room.elements ?? [];
         setRoomName(room.name);
         setRoomDims(room.skeleton?.dimensions);
+        setRoomPolygon(room.skeleton?.floorPolygon);
         setDetectedCount(room.detectedObjects?.length ?? 0);
         setSelected(room.spaceTypes ?? []);
         setCustom(elements.filter((e) => e.custom));
@@ -204,7 +206,7 @@ export default function Setup() {
     return pool.all.filter((e) => !suggestedIds.has(e.id));
   }, [pool]);
 
-  const title = editMode ? 'Edit setup' : 'Set up room';
+  const title = editMode ? 'Edit room goals' : 'Room goals';
   const checkedCount = chosenElements().length;
 
   // ---- Guard states -------------------------------------------------------------------------
@@ -242,7 +244,9 @@ export default function Setup() {
       ? `RoomPlan found ${detectedCount} piece${detectedCount === 1 ? '' : 's'} — you can add them from the palette later`
       : editMode
         ? null
-        : 'The room starts clean: walls, doors and windows only. You place the furniture.';
+        : draft?.source === 'sample'
+          ? 'Explore the sample furniture, then adapt the room to your goals.'
+          : 'The room starts clean: walls, doors and windows only. You place the furniture.';
 
   return (
     <Screen>
@@ -250,7 +254,7 @@ export default function Setup() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <Text style={styles.stepLabel}>Step {step} of 2</Text>
-          <Text style={type.title}>{step === 1 ? 'What kind of space is this?' : 'What does this room need?'}</Text>
+          <Text style={styles.question}>{step === 1 ? 'What kind of space is this?' : 'What does this room need?'}</Text>
           <Text style={[type.subtitle, { marginTop: 2 }]}>
             {step === 1 ? 'Pick everything that applies — rooms often do more than one job.' : 'Untick what you do not need and add anything missing.'}
           </Text>
@@ -264,7 +268,7 @@ export default function Setup() {
                 {summaryName}
               </Text>
               <Text style={type.small} numberOfLines={1}>
-                {roomDims ? `${formatDims(roomDims, units)} · ${formatArea(roomDims.l, roomDims.w, units)}` : 'Dimensions pending'}
+                {roomDims ? `${formatDims(roomDims, units)} · ${roomPolygon?.length ? formatSquareMeters(floorArea(roomPolygon), units) : formatArea(roomDims.l, roomDims.w, units)}` : 'Dimensions pending'}
               </Text>
               {hint ? <Text style={[type.small, { marginTop: 2 }]}>{hint}</Text> : null}
             </View>
@@ -339,7 +343,7 @@ export default function Setup() {
                         onChangeText={setCustomText}
                         onSubmitEditing={addCustom}
                         placeholder="e.g. Piano, cat tree, easel"
-                        placeholderTextColor="#A08B7C"
+                        placeholderTextColor="#667360"
                         returnKeyType="done"
                         autoCapitalize="sentences"
                         style={styles.addInput}
@@ -368,7 +372,7 @@ export default function Setup() {
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <Button label="Back" icon="arrow-left" variant="ghost" onPress={() => setStep(1)} disabled={busy} style={{ flex: 1 }} />
               <Button
-                label={editMode ? 'Save setup' : 'Create clean room'}
+                label={editMode ? 'Save setup' : draft?.source === 'sample' ? 'Create sample room' : 'Create clean room'}
                 icon={editMode ? 'content-save-outline' : 'home-plus-outline'}
                 onPress={submit}
                 busy={busy}
@@ -428,7 +432,7 @@ function ElementRow({
         {sub ? <Text style={type.small}>{sub}</Text> : null}
       </View>
       {onRemove ? (
-        <Pressable onPress={onRemove} hitSlop={8} accessibilityRole="button" accessibilityLabel={`Remove ${element.label}`}>
+        <Pressable onPress={onRemove} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }} accessibilityRole="button" accessibilityLabel={`Remove ${element.label}`}>
           <MaterialCommunityIcons name="close-circle-outline" size={22} color={colors.inkSoft} />
         </Pressable>
       ) : null}
@@ -437,6 +441,7 @@ function ElementRow({
 }
 
 const styles = StyleSheet.create({
+  question: { ...type.title, fontSize: 25, lineHeight: 30 },
   content: { padding: spacing.lg, paddingBottom: spacing.xl },
   stepLabel: { ...type.small, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: spacing.xs },
   summary: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, marginTop: spacing.lg, marginBottom: spacing.lg },
@@ -446,7 +451,8 @@ const styles = StyleSheet.create({
   card: {
     flexGrow: 1,
     flexBasis: '45%',
-    minHeight: 120,
+    minWidth: 0,
+    minHeight: 108,
     backgroundColor: colors.tile,
     borderRadius: radius.lg,
     padding: spacing.md,
