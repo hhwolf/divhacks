@@ -9,8 +9,8 @@ import type { FloorStyle, Theme, ViewMode } from '../store';
 
 const SLAB = 0.5, WALL_T = 0.14, TRIM = 0.12;
 export const COLORS = {
-  slab: '#857A70', slabTeal: '#55504B', trim: '#EFECE6', frame: '#F1EEE8', pane: '#DDEAF1', paneGlow: '#EEF5FA', paneNight: '#27324A', paneNightGlow: '#3E4D6E',
-  door: '#D9D4CA', brass: '#A8844F',
+  slab: '#AEB7B2', slabTeal: '#7F918B', trim: '#EEF1EC', frame: '#F3F5F1', pane: '#DDEAF1', paneGlow: '#EEF5FA', paneNight: '#27324A', paneNightGlow: '#3E4D6E',
+  door: '#E5E8E2', brass: '#8B9B8F',
 };
 
 /** Ref callback that adds procedural surface variation to a JSX material exactly once (before its first compile). */
@@ -50,14 +50,14 @@ export function RoomMesh({ sk, hidden, viewMode, wallColor, floorStyle, floorCol
   const wallH = viewMode === 'half' ? 1.1 : sk.dimensions.h;
   return (
     <group>
-      {/* slab (dark brown edge) */}
+      {/* soft plinth edge */}
       <mesh geometry={slabGeo} position={[0, 0.001, 0]} receiveShadow><meshStandardMaterial color={theme === 'teal' ? COLORS.slabTeal : COLORS.slab} roughness={0.9} /></mesh>
       {/* floor: color map + matching roughness map (joints matte, boards slightly varied) */}
       <mesh geometry={floorGeo} position={[0, 0.012, 0]} receiveShadow>
         <meshStandardMaterial map={floorTex} roughnessMap={floorRough} roughness={1} metalness={0} side={THREE.DoubleSide} />
       </mesh>
       {/* faint grid in plan view */}
-      {viewMode === 'plan' && <gridHelper args={[Math.max(b.x1 - b.x0, b.z1 - b.z0) * 2, Math.round(Math.max(b.x1 - b.x0, b.z1 - b.z0) * 2 / 0.5), '#7a4a33', '#7a4a33']} position={[(b.x0 + b.x1) / 2, 0.02, (b.z0 + b.z1) / 2]} />}
+      {viewMode === 'plan' && <gridHelper args={[Math.max(b.x1 - b.x0, b.z1 - b.z0) * 2, Math.round(Math.max(b.x1 - b.x0, b.z1 - b.z0) * 2 / 0.5), '#6E8179', '#6E8179']} position={[(b.x0 + b.x1) / 2, 0.02, (b.z0 + b.z1) / 2]} />}
       {viewMode !== 'plan' && sk.walls.map((_, i) => (
         <Wall key={i} sk={sk} i={i} hidden={hidden.has(i)} height={wallH} color={wallColor} night={night} theme={theme} />
       ))}

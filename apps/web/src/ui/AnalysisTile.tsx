@@ -1,6 +1,5 @@
 import { formatArea } from '@arp/geometry';
 import { useState } from 'react';
-import { RentPanel } from './RentPanel';
 import { useEditor } from '../store';
 import { useCompactEditor } from '../lib/useCompactEditor';
 
@@ -9,10 +8,9 @@ export function AnalysisTile() {
   const compact = useCompactEditor();
   const v = useEditor((s) => s.validation); const open = useEditor((s) => s.analysisOpen); const units = useEditor((s) => s.units); const set = useEditor;
   const [tab, setTab] = useState<'fit' | 'space'>('fit');
-  const [rentOpen, setRentOpen] = useState(() => new URLSearchParams(location.search).get('onboarding') === 'rent');
   if (!v) return null; const m = v.metrics;
   return (
-    <><div className={`analysis ${open ? 'open' : ''} ${m.conflicts ? 'has-conflicts' : ''}`} data-testid="analysis">
+    <div className={`analysis ${open ? 'open' : ''} ${m.conflicts ? 'has-conflicts' : ''}`} data-testid="analysis">
       <div className="an-tabs">
         {(['fit', 'space'] as const).map((x) => <button key={x} className={tab === x ? 'on' : ''} onClick={() => { setTab(x); if (compact) set.getState().setAnalysisOpen(!open || tab !== x); }}>{x}</button>)}
         <button className="an-more" aria-label={open ? "Collapse room analysis" : "Expand room analysis"} onClick={() => set.getState().setAnalysisOpen(!open)}>{open ? '-' : '+'}</button>
@@ -36,7 +34,6 @@ export function AnalysisTile() {
         <div className="an-row"><span>Storage reach</span><b>{m.reachableStorage}%</b></div>
         <div className="an-fits">Room area is measured from the scan for rent checks.</div>
       </>}
-      <div className="rent-mini"><button className="btn small" onClick={() => setRentOpen(true)}>Rent & costs</button></div>
-    </div>{rentOpen && <RentPanel onClose={() => setRentOpen(false)} />}</>
+    </div>
   );
 }

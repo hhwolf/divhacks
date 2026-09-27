@@ -5,9 +5,9 @@ import { api } from '../lib/api';
 import { snapshotCanvas } from './TopLeft';
 import { postToHost } from '../lib/bridge';
 
-const WALLS = ['#F3EDE4', '#F3DEC2', '#DCE3DA', '#5A845E', '#8FBDB0', '#C9B7E8', '#F2C7C0', '#B8CDE0', '#6B6E80', '#3E4A48'];
-const FLOORS: { style: 'brick' | 'herringbone' | 'plank'; color: string; label: string }[] = [
-  { style: 'plank', color: '#C9A57C', label: 'Light oak plank' }, { style: 'herringbone', color: '#BA7A57', label: 'Herringbone oak' }, { style: 'plank', color: '#8E5A3C', label: 'Walnut plank' }, { style: 'brick', color: '#B0684C', label: 'Terracotta brick' }, { style: 'brick', color: '#8A8A90', label: 'Concrete' },
+const WALLS = ['#EEF3EC', '#F4F6F2', '#E4ECE7', '#DCE3DA', '#CFE0DA', '#DDE7EE', '#E6E4F0', '#F1E7E4', '#6B6E80', '#3E4A48'];
+const FLOORS: { style: 'brick' | 'herringbone' | 'plank' | 'tile'; color: string; label: string }[] = [
+  { style: 'plank', color: '#B9C8BE', label: 'Sage plank' }, { style: 'herringbone', color: '#C7D2CD', label: 'Pale herringbone' }, { style: 'plank', color: '#D7DED8', label: 'Ash plank' }, { style: 'tile', color: '#C5CDD2', label: 'Cool tile' }, { style: 'brick', color: '#AEB9B4', label: 'Concrete paver' },
 ];
 export function Drawers() {
   const drawer = useEditor((s) => s.drawer); const set = useEditor;

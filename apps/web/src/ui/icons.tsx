@@ -37,5 +37,6 @@ export const I = {
   table: () => <svg {...base}><path d="M3 9h18M6 9v10M18 9v10" /></svg>,
   plant: () => <svg {...base}><path d="M12 21v-8" /><path d="M12 13c-4 0-6-3-6-6 3 0 6 2 6 6zM12 13c4 0 6-3 6-6-3 0-6 2-6 6z" /><path d="M8 21h8" /></svg>,
   imported: () => <svg {...base}><path d="M12 3v12M8 11l4 4 4-4" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /></svg>,
+  dollar: () => <svg {...base}><circle cx="12" cy="12" r="8.5" /><path d="M12 7v10M15 9.2c-.7-.8-1.8-1.2-3-1.2-1.8 0-3 .9-3 2.2 0 1.5 1.4 2 3 2.3 1.9.4 3 .9 3 2.4 0 1.3-1.2 2.1-3 2.1-1.4 0-2.5-.4-3.3-1.3" /></svg>,
   drag: () => <svg {...base}><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3" /></svg>,
 };

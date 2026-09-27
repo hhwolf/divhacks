@@ -52,12 +52,24 @@ const clone = (s: Snapshot): Snapshot => ({ items: s.items.map((i) => ({ ...i })
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let dragSnapshot: Snapshot | null = null; // items as they were when the current drag started (for a single undo step)
 let toastId = 0;
-const ls = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d; } catch { return d; } };
+const ls = <T,>(k: string, d: T, legacy?: T | T[]): T => {
+  try {
+    const v = localStorage.getItem(k);
+    if (!v) return d;
+    const parsed = JSON.parse(v) as T;
+    const matchesLegacy = Array.isArray(legacy) ? legacy.some((x) => Object.is(parsed, x)) : legacy !== undefined && Object.is(parsed, legacy);
+    if (matchesLegacy) {
+      localStorage.setItem(k, JSON.stringify(d));
+      return d;
+    }
+    return parsed;
+  } catch { return d; }
+};
 const lsSet = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } };
 
 export const useEditor = create<EditorState>((set, get) => ({
   embedded: false, units: ls('arp.units', 'imperial'), theme: ls('arp.theme', 'teal'), night: false, sound: false, viewMode: 'cutaway', orbit: 0,
-  wallColor: ls('arp.wallColor', '#F3EDE4'), floorStyle: ls('arp.floorStyle', 'plank'), floorColor: ls('arp.floorColor', '#C9A57C'),
+  wallColor: ls('arp.wallColor', '#EEF3EC', ['#F3EDE4', '#F3DEC2']), floorStyle: ls('arp.floorStyle', 'plank'), floorColor: ls('arp.floorColor', '#B9C8BE', ['#C9A57C', '#BA7A57', '#8E5A3C', '#B0684C']),
   room: null, layouts: [], activeId: null, furniture: {}, style: null, furnishing: false, entrance: null, items: [], zones: [], history: [], future: [],
   selectedId: null, placing: null, dragging: null, hoverId: null,
   overlays: { walkable: false, keepClear: false, lowClearance: false }, overlaysOpen: false, ghostId: null, ghostOpen: false,

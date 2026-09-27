@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { useEditor } from '../store';
 import { I } from './icons';
+import { RentPanel } from './RentPanel';
 export function BottomCenter() {
   const overlays = useEditor((s) => s.overlays); const overlaysOpen = useEditor((s) => s.overlaysOpen); const ghostOpen = useEditor((s) => s.ghostOpen); const ghostId = useEditor((s) => s.ghostId);
   const night = useEditor((s) => s.night); const sound = useEditor((s) => s.sound); const layouts = useEditor((s) => s.layouts); const activeId = useEditor((s) => s.activeId); const set = useEditor;
+  const [rentOpen, setRentOpen] = useState(() => new URLSearchParams(location.search).get('onboarding') === 'rent');
   const anyOverlay = overlays.walkable || overlays.keepClear || overlays.lowClearance;
   return (
     <div className="bottom-center" data-testid="bottom-center">
@@ -26,7 +29,9 @@ export function BottomCenter() {
         <button className={`sq ${ghostId || ghostOpen ? 'active' : ''}`} title="Ghost compare" aria-label="Ghost compare" onClick={() => set.getState().setGhostOpen(!ghostOpen)}><I.tree /></button>
         <button className={`sq ${night ? 'active' : ''}`} title="Day / night" aria-label="Day night" onClick={() => set.getState().toggleNight()}><I.moon /></button>
         <button className={`sq ${sound ? '' : 'muted'}`} title="Sound" aria-label="Sound" onClick={() => set.getState().toggleSound()}>{sound ? <I.sound /> : <I.soundOff />}</button>
+        <button className={`sq ${rentOpen ? 'active' : ''}`} title="Rent & costs" aria-label="Rent and costs" onClick={() => setRentOpen(true)}><I.dollar /></button>
       </div>
+      {rentOpen && <RentPanel onClose={() => setRentOpen(false)} />}
     </div>
   );
 }
