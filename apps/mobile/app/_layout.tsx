@@ -26,7 +26,7 @@ export default function RootLayout() {
   if (!hydrated) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={colors.ink} />
+        <ActivityIndicator color={colors.forest} />
       </View>
     );
   }

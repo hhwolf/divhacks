@@ -64,8 +64,8 @@ def capture(web: str, ctx_size: tuple[int, int], tag: str, ids: dict, out: pathl
     shoot(pg, out, f"{tag}-08-request-reply")
     # night + teal theme
     pg.evaluate("() => { const s = window.__arpStore.getState(); s.setRequestOpen(false); s.toggleNight(); }"); settle(pg, 500); shoot(pg, out, f"{tag}-09-night")
-    pg.evaluate("() => { const s = window.__arpStore.getState(); s.toggleNight(); s.setTheme('teal'); }"); settle(pg, 500); shoot(pg, out, f"{tag}-10-teal-theme")
-    pg.evaluate("() => { const s = window.__arpStore.getState(); s.setTheme('peach'); s.cycleView(); }"); settle(pg, 500); shoot(pg, out, f"{tag}-11-half-walls")
+    pg.evaluate("() => { const s = window.__arpStore.getState(); s.toggleNight(); s.setTheme('stone'); }"); settle(pg, 500); shoot(pg, out, f"{tag}-10-stone-theme")
+    pg.evaluate("() => { const s = window.__arpStore.getState(); s.setTheme('forest'); s.cycleView(); }"); settle(pg, 500); shoot(pg, out, f"{tag}-11-half-walls")
     pg.evaluate("() => { const s = window.__arpStore.getState(); s.cycleView(); }"); settle(pg, 500); shoot(pg, out, f"{tag}-12-plan-view")
     pg.evaluate("() => { const s = window.__arpStore.getState(); s.cycleView(); }")
     if ids.get("desk"):

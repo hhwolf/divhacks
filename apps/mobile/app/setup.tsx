@@ -182,8 +182,6 @@ export default function Setup() {
     }
   };
 
-  const labelFor = (id: string) => spaceTypes.find((t) => t.id === id)?.label ?? id;
-
   // Suggested elements grouped by the space type that suggested them (first type wins), then the rest.
   const groups = useMemo(() => {
     if (!pool) return [];
@@ -207,7 +205,6 @@ export default function Setup() {
   }, [pool]);
 
   const title = editMode ? 'Edit room goals' : 'Room goals';
-  const checkedCount = chosenElements().length;
 
   // ---- Guard states -------------------------------------------------------------------------
   if (!editMode && !draft) {
@@ -218,7 +215,6 @@ export default function Setup() {
           <Tile style={{ alignItems: 'center', gap: spacing.sm }}>
             <MaterialCommunityIcons name="cube-outline" size={40} color={colors.inkSoft} />
             <Text style={[type.h2, { textAlign: 'center' }]}>Nothing to set up yet</Text>
-            <Text style={[type.small, { textAlign: 'center' }]}>Scan a room or enter its dimensions first, then come back here to say what the space is for.</Text>
             <Button label="Go home" icon="home-outline" onPress={() => router.replace('/')} style={{ marginTop: spacing.sm, alignSelf: 'stretch' }} />
           </Tile>
         </View>
@@ -239,14 +235,7 @@ export default function Setup() {
   }
 
   const summaryName = editMode ? roomName : name.trim() || draft?.name;
-  const hint =
-    detectedCount > 0
-      ? `RoomPlan found ${detectedCount} piece${detectedCount === 1 ? '' : 's'} — you can add them from the palette later`
-      : editMode
-        ? null
-        : draft?.source === 'sample'
-          ? 'Explore the sample furniture, then adapt the room to your goals.'
-          : 'The room starts clean: walls, doors and windows only. You place the furniture.';
+  const hint = detectedCount > 0 ? `${detectedCount} item${detectedCount === 1 ? '' : 's'} detected` : null;
 
   return (
     <Screen>
@@ -255,9 +244,6 @@ export default function Setup() {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <Text style={styles.stepLabel}>Step {step} of 2</Text>
           <Text style={styles.question}>{step === 1 ? 'What kind of space is this?' : 'What does this room need?'}</Text>
-          <Text style={[type.subtitle, { marginTop: 2 }]}>
-            {step === 1 ? 'Pick everything that applies — rooms often do more than one job.' : 'Untick what you do not need and add anything missing.'}
-          </Text>
 
           <Tile style={styles.summary}>
             <View style={styles.summaryIcon}>
@@ -292,7 +278,7 @@ export default function Setup() {
                       style={({ pressed }) => [styles.card, on && styles.cardOn, pressed && styles.pressed]}
                     >
                       <View style={[styles.cardIcon, on && styles.cardIconOn]}>
-                        <MaterialCommunityIcons name={SPACE_TYPE_ICONS[t.id] ?? ('shape-outline' as IconName)} size={26} color={on ? colors.ink : colors.tile} />
+                        <MaterialCommunityIcons name={SPACE_TYPE_ICONS[t.id] ?? ('shape-outline' as IconName)} size={26} color={on ? colors.forest : colors.white} />
                       </View>
                       <Text style={[styles.cardLabel, on && { color: colors.tile }]}>{t.label}</Text>
                       <MaterialCommunityIcons
@@ -310,17 +296,17 @@ export default function Setup() {
             <View style={{ gap: spacing.lg }}>
               {pool === null || poolLoading ? (
                 <Tile>
-                  <EmptyNote>Finding what a {selected.map(labelFor).join(' + ').toLowerCase() || 'room'} usually needs…</EmptyNote>
+                  <EmptyNote>Loading…</EmptyNote>
                 </Tile>
               ) : (
                 <>
                   {groups.length === 0 ? (
                     <Tile>
-                      <EmptyNote>No suggestions for this mix — pick from “More” below or add your own.</EmptyNote>
+                      <EmptyNote>No suggestions</EmptyNote>
                     </Tile>
                   ) : null}
                   {groups.map((g) => (
-                    <Section key={g.key} title={g.title} tag={g.key === 'rest' ? undefined : 'suggested'}>
+                    <Section key={g.key} title={g.title}>
                       {g.items.map((e, i) => (
                         <ElementRow key={e.id} element={e} checked={checked.has(e.id)} first={i === 0} onToggle={() => toggleElement(e.id)} />
                       ))}
@@ -342,8 +328,8 @@ export default function Setup() {
                         value={customText}
                         onChangeText={setCustomText}
                         onSubmitEditing={addCustom}
-                        placeholder="e.g. Piano, cat tree, easel"
-                        placeholderTextColor="#667360"
+                        placeholder="Add an item"
+                        placeholderTextColor={colors.inkSoft}
                         returnKeyType="done"
                         autoCapitalize="sentences"
                         style={styles.addInput}
@@ -363,7 +349,7 @@ export default function Setup() {
         <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.md }]}>
           {step === 1 ? (
             <Button
-              label={selected.length ? `Continue with ${selected.length} selected` : 'Pick at least one'}
+              label="Continue"
               icon="arrow-right"
               onPress={goToStep2}
               disabled={selected.length === 0}
@@ -372,7 +358,7 @@ export default function Setup() {
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
               <Button label="Back" icon="arrow-left" variant="ghost" onPress={() => setStep(1)} disabled={busy} style={{ flex: 1 }} />
               <Button
-                label={editMode ? 'Save setup' : draft?.source === 'sample' ? 'Create sample room' : 'Create clean room'}
+                label={editMode ? 'Save' : 'Create room'}
                 icon={editMode ? 'content-save-outline' : 'home-plus-outline'}
                 onPress={submit}
                 busy={busy}
@@ -381,11 +367,6 @@ export default function Setup() {
               />
             </View>
           )}
-          {step === 2 ? (
-            <Text style={[type.small, { textAlign: 'center', marginTop: spacing.sm }]}>
-              {checkedCount} element{checkedCount === 1 ? '' : 's'} · {selected.map(labelFor).join(', ')}
-            </Text>
-          ) : null}
         </View>
       </KeyboardAvoidingView>
     </Screen>
@@ -417,7 +398,6 @@ function ElementRow({
   onToggle: () => void;
   onRemove?: () => void;
 }) {
-  const sub = element.custom ? 'Your own' : element.zone ? `Clear floor zone · ${element.zone.w} × ${element.zone.d} m` : null;
   return (
     <Pressable
       onPress={onToggle}
@@ -426,11 +406,8 @@ function ElementRow({
       accessibilityLabel={element.label}
       style={({ pressed }) => [styles.row, !first && styles.rowBorder, pressed && styles.pressed]}
     >
-      <MaterialCommunityIcons name={checked ? 'checkbox-marked' : 'checkbox-blank-outline'} size={24} color={checked ? colors.ink : colors.inkSoft} />
-      <View style={{ flex: 1 }}>
-        <Text style={[styles.rowLabel, !checked && { color: colors.inkSoft }]}>{element.label}</Text>
-        {sub ? <Text style={type.small}>{sub}</Text> : null}
-      </View>
+      <MaterialCommunityIcons name={checked ? 'checkbox-marked' : 'checkbox-blank-outline'} size={24} color={checked ? colors.forest : colors.inkSoft} />
+      <Text style={[styles.rowLabel, { flex: 1 }, !checked && { color: colors.inkSoft }]}>{element.label}</Text>
       {onRemove ? (
         <Pressable onPress={onRemove} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }} accessibilityRole="button" accessibilityLabel={`Remove ${element.label}`}>
           <MaterialCommunityIcons name="close-circle-outline" size={22} color={colors.inkSoft} />
@@ -460,8 +437,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'transparent',
   },
-  cardOn: { backgroundColor: colors.ink, borderColor: colors.ink },
-  cardIcon: { width: 48, height: 48, borderRadius: radius.md, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  cardOn: { backgroundColor: colors.forest, borderColor: colors.forest },
+  cardIcon: { width: 48, height: 48, borderRadius: radius.md, backgroundColor: colors.forest, alignItems: 'center', justifyContent: 'center' },
   cardIconOn: { backgroundColor: colors.tile },
   cardLabel: { fontSize: 16, fontWeight: '700', color: colors.ink, marginTop: spacing.sm },
   cardCheck: { position: 'absolute', top: spacing.md, right: spacing.md },
@@ -482,6 +459,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.tileMuted,
   },
-  addButton: { width: 44, height: 44, borderRadius: radius.sm, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  addButton: { width: 44, height: 44, borderRadius: radius.sm, backgroundColor: colors.forest, alignItems: 'center', justifyContent: 'center' },
   footer: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, backgroundColor: colors.bg, borderTopWidth: 1, borderTopColor: colors.bgDeep },
 });

@@ -1,5 +1,5 @@
-/** Glyphs traced from ref2/ref3 (white on dark-brown squares). 24×24 viewBox, stroke-based, rounded. */
-const base = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.7, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+/** Line glyphs on a 24×24 grid: thin, rounded strokes so the chrome reads as a design tool, not a game HUD. */
+const base = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
 export const I = {
   menu: () => <svg {...base}><path d="M4 7h16M4 12h16M4 17h16" /></svg>,
   home: () => <svg {...base}><path d="m4 11 8-7 8 7" /><path d="M6.5 10.5V20h11v-9.5" /><path d="M10 20v-6h4v6" /></svg>,
@@ -9,12 +9,10 @@ export const I = {
   eye: () => <svg {...base}><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /></svg>,
   bucket: () => <svg {...base}><path d="M5 10.5 12.5 3l6.5 6.5L11.5 17z" /><path d="M5 10.5 11.5 17" /><path d="M19 15.5c0 1.6-1 3-2 3s-2-1.4-2-3c0-1.5 2-3.5 2-3.5s2 2 2 3.5z" fill="currentColor" stroke="none" /></svg>,
   help: () => <svg {...base}><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.1.9-1.1 1.8" /><path d="M12 17h.01" /></svg>,
-  palette: () => <svg {...base}><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-.9 2-1.8 0-1-.9-1.4-.9-2.4 0-1 .9-1.6 2.1-1.6H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z" fill="currentColor" /><circle cx="8" cy="10.5" r="1.4" fill="#4A3327" stroke="none" /><circle cx="11.5" cy="7.5" r="1.4" fill="#4A3327" stroke="none" /><circle cx="15.5" cy="8.5" r="1.4" fill="#4A3327" stroke="none" /><circle cx="8.5" cy="14.5" r="1.4" fill="#4A3327" stroke="none" /></svg>,
-  tree: () => <svg {...base}><path d="M12 3 8.5 8.5h7z" fill="currentColor" /><path d="M12 6.5 7.5 13h9z" fill="currentColor" /><path d="M12 10.5 6.5 18h11z" fill="currentColor" /><path d="M12 18v3.5" /></svg>,
-  moon: () => <svg {...base}><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" fill="currentColor" /></svg>,
-  sound: () => <svg {...base}><path d="M4 9.5v5h3l4.5 3.5v-12L7 9.5z" fill="currentColor" /><path d="M15 9a4 4 0 0 1 0 6" /><path d="M17.8 6.5a7.5 7.5 0 0 1 0 11" /></svg>,
-  soundOff: () => <svg {...base}><path d="M4 10v4h3l4 3.5v-11L7 10z" /><path d="m16 9 5 5M21 9l-5 5" /></svg>,
-  cursor: () => <svg {...base}><path d="M6 4.5 18 11l-5 1.2L10.5 17z" fill="currentColor" /></svg>,
+  palette: () => <svg {...base}><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-.9 2-1.8 0-1-.9-1.4-.9-2.4 0-1 .9-1.6 2.1-1.6H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z" /><circle cx="8" cy="11" r="1" fill="currentColor" /><circle cx="11.5" cy="7.5" r="1" fill="currentColor" /><circle cx="15.5" cy="8.5" r="1" fill="currentColor" /></svg>,
+  tree: () => <svg {...base}><path d="M12 3 7 10h10z" /><path d="M12 8 6 16h12z" /><path d="M12 16v5" /></svg>,
+  moon: () => <svg {...base}><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></svg>,
+  cursor: () => <svg {...base}><path d="M6 4.5 18 11l-5 1.2L10.5 17z" /></svg>,
   search: () => <svg {...base}><circle cx="11" cy="11" r="6" /><path d="m20 20-4.5-4.5" /></svg>,
   chevL: () => <svg {...base}><path d="m14.5 6-6 6 6 6" /></svg>,
   chevR: () => <svg {...base}><path d="m9.5 6 6 6-6 6" /></svg>,
@@ -38,5 +36,11 @@ export const I = {
   table: () => <svg {...base}><path d="M3 9h18M6 9v10M18 9v10" /></svg>,
   plant: () => <svg {...base}><path d="M12 21v-8" /><path d="M12 13c-4 0-6-3-6-6 3 0 6 2 6 6zM12 13c4 0 6-3 6-6-3 0-6 2-6 6z" /><path d="M8 21h8" /></svg>,
   imported: () => <svg {...base}><path d="M12 3v12M8 11l4 4 4-4" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /></svg>,
+  layers: () => <svg {...base}><path d="m12 4 9 5-9 5-9-5z" /><path d="m3 14 9 5 9-5" /></svg>,
+  sliders: () => <svg {...base}><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg>,
+  back: () => <svg {...base}><path d="M19 12H5" /><path d="m11 6-6 6 6 6" /></svg>,
+  check: () => <svg {...base}><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>,
+  unlockAll: () => <svg {...base}><rect x="4" y="11" width="12" height="9" rx="2" /><path d="M7 11V8a3.5 3.5 0 0 1 6.6-1.6" /><path d="M18 8.5h3M19.5 7v3" /></svg>,
+  broom: () => <svg {...base}><path d="M14.5 3.5 10 10" /><path d="M6.5 11.5 10 10l3 3-1.5 3.5z" /><path d="M6.5 11.5c-1.5 2-2.5 5-2.5 8.5 3.5 0 6.5-1 7.5-3.5" /></svg>,
   drag: () => <svg {...base}><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3" /></svg>,
 };

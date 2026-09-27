@@ -3,17 +3,16 @@ import type { FurnishStyle, FurnitureItem, Layout, LayoutItem, Room, Rotation, U
 import { GRID, footprint, memoizedValidate, overlayMasks, roomBounds, type OverlayMasks } from '@arp/geometry';
 import { api, unwrapLayout } from './lib/api';
 import { isEmbedded, postToHost } from './lib/bridge';
-import { thunk } from './lib/sound';
 
 export type ViewMode = 'cutaway' | 'half' | 'plan';
-export type Theme = 'stone' | 'peach' | 'teal';
+export type Theme = 'forest' | 'stone';
 export type FloorStyle = 'brick' | 'herringbone' | 'plank' | 'tile';
-export type Drawer = null | 'menu' | 'paint' | 'help' | 'context';
+export type Drawer = null | 'menu' | 'paint' | 'context';
 export type SaveState = 'saved' | 'saving' | 'dirty' | 'blocked' | 'error' | 'readonly';
 interface Snapshot { items: LayoutItem[]; zones: Zone[] }
 
 export interface EditorState {
-  embedded: boolean; units: Units; theme: Theme; night: boolean; sound: boolean; viewMode: ViewMode; orbit: 0 | 1 | 2 | 3;
+  embedded: boolean; units: Units; theme: Theme; night: boolean; viewMode: ViewMode; orbit: 0 | 1 | 2 | 3;
   wallColor: string; floorStyle: FloorStyle; floorColor: string;
   room: Room | null; layouts: Layout[]; activeId: string | null; furniture: Record<string, FurnitureItem>; style: FurnishStyle | null; furnishing: boolean;
   /** drop-in animation after a furnish: start time + stagger index per new item id */
@@ -22,8 +21,8 @@ export interface EditorState {
   selectedId: string | null; placing: { furnitureId: string } | null; dragging: string | null; hoverId: string | null;
   overlays: { walkable: boolean; keepClear: boolean; lowClearance: boolean }; overlaysOpen: boolean; ghostId: string | null; ghostOpen: boolean;
   validation: ValidationResult | null; masks: OverlayMasks | null; saveState: SaveState; lastError: string | null;
-  drawer: Drawer; contextTab: string | null; requestOpen: boolean; agentBusy: boolean; agentReply: string | null; analysisOpen: boolean;
-  palettePage: number; category: string; search: string | null; sidePage: number; toasts: { id: number; text: string; kind: 'info' | 'error' }[];
+  drawer: Drawer; contextTab: string | null; requestOpen: boolean; agentBusy: boolean; agentReply: string | null; agentStatus: string | null; analysisOpen: boolean;
+  palettePage: number; category: string; search: string | null; sidePage: number; toasts: { id: number; text: string; kind: 'info' | 'error'; action?: { label: string; run: () => void } }[];
   shake: string | null; bounce: string | null; loading: boolean;
   // actions
   init(opts: { units?: Units; embedded?: boolean }): void;
@@ -34,16 +33,16 @@ export interface EditorState {
   setItems(items: LayoutItem[], zones?: Zone[], pushHistory?: boolean): void;
   addItem(furnitureId: string, x?: number, z?: number): string;
   moveItem(id: string, x: number, z: number, opts?: { free?: boolean; commit?: boolean }): void;
-  rotateItem(id: string): void; toggleLock(id: string): void; removeItem(id: string): void; duplicateItem(id: string): void; recolor(id: string, color: string | null): void;
+  rotateItem(id: string): void; toggleLock(id: string): void; removeItem(id: string): void; unlockAll(): void; lockAll(): void; clearRoom(): void; duplicateItem(id: string): void; recolor(id: string, color: string | null): void;
   undo(): void; redo(): void; select(id: string | null): void; startPlacing(furnitureId: string): void; cancelPlacing(): void; setDragging(id: string | null): void; setHover(id: string | null): void;
   revalidate(): void; scheduleSave(): void; saveNow(): Promise<void>;
-  setUnits(u: Units): void; setTheme(t: Theme): void; toggleNight(): void; toggleSound(): void; cycleView(): void; orbitBy(d: 1 | -1): void; setWallColor(c: string): void; setFloorStyle(s: FloorStyle, color?: string): void;
+  setUnits(u: Units): void; setTheme(t: Theme): void; toggleNight(): void; cycleView(): void; orbitBy(d: 1 | -1): void; setWallColor(c: string): void; setFloorStyle(s: FloorStyle, color?: string): void;
   toggleOverlay(k: keyof EditorState['overlays']): void; setOverlaysOpen(v: boolean): void; setGhost(id: string | null): void; setGhostOpen(v: boolean): void;
   setDrawer(d: Drawer, contextTab?: string | null): void; setRequestOpen(v: boolean): void; setAnalysisOpen(v: boolean): void;
   setPalettePage(p: number): void; setCategory(c: string): void; setSearch(s: string | null): void; setSidePage(p: number): void;
   createVariant(name?: string, fromId?: string): Promise<Layout | null>; renameVariant(id: string, name: string): Promise<void>; deleteVariant(id: string): Promise<void>;
   askAgent(text: string, furnitureId?: string): Promise<void>; furnish(theme: string, opts?: { restyle?: boolean; photos?: File[] }): Promise<void>; addFurniture(f: FurnitureItem): void;
-  toast(text: string, kind?: 'info' | 'error'): void; dismissToast(id: number): void;
+  toast(text: string, kind?: 'info' | 'error', action?: { label: string; run: () => void }): void; dismissToast(id: number): void;
 }
 
 const snap = (v: number) => Math.round(v / GRID) * GRID;
@@ -53,20 +52,24 @@ let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let dragSnapshot: Snapshot | null = null; // items as they were when the current drag started (for a single undo step)
 let toastId = 0;
 const ls = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d; } catch { return d; } };
+const storedTheme = (): Theme => (ls<string>('arp.theme', 'forest') === 'stone' ? 'stone' : 'forest');
 const lsSet = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } };
 
 export const useEditor = create<EditorState>((set, get) => ({
-  embedded: false, units: ls('arp.units', 'imperial'), theme: ls('arp.theme', 'teal'), night: false, sound: false, viewMode: 'cutaway', orbit: 0,
+  // Inside the phone app the editor always uses the app's forest palette.
+  embedded: false, units: ls('arp.units', 'imperial'), theme: isEmbedded() ? 'forest' : storedTheme(), night: false, viewMode: 'cutaway', orbit: 0,
   wallColor: ls('arp.wallColor', '#F3EDE4'), floorStyle: ls('arp.floorStyle', 'plank'), floorColor: ls('arp.floorColor', '#C9A57C'),
   room: null, layouts: [], activeId: null, furniture: {}, style: null, furnishing: false, entrance: null, items: [], zones: [], history: [], future: [],
   selectedId: null, placing: null, dragging: null, hoverId: null,
   overlays: { walkable: false, keepClear: false, lowClearance: false }, overlaysOpen: false, ghostId: null, ghostOpen: false,
   validation: null, masks: null, saveState: 'saved', lastError: null,
-  drawer: null, contextTab: null, requestOpen: false, agentBusy: false, agentReply: null, analysisOpen: false,
+  drawer: null, contextTab: null, requestOpen: false, agentBusy: false, agentReply: null, agentStatus: null, analysisOpen: false,
   palettePage: 0, category: 'All', search: null, sidePage: 0, toasts: [], shake: null, bounce: null, loading: false,
 
   init({ units, embedded }) {
-    set({ embedded: embedded ?? isEmbedded(), units: units ?? get().units, sound: !(embedded ?? isEmbedded()) && ls('arp.sound', true) });
+    // Inside the phone app the editor always wears the app's forest palette (the WebView flag can arrive after module load).
+    const emb = embedded ?? isEmbedded();
+    set({ embedded: emb, units: units ?? get().units, ...(emb ? { theme: 'forest' as const } : {}) });
   },
   async loadLayout(id) {
     set({ loading: true, lastError: null });
@@ -117,7 +120,6 @@ export const useEditor = create<EditorState>((set, get) => ({
     const item: LayoutItem = { id, furnitureId, x: snap(x ?? (b.x0 + b.x1) / 2), z: snap(z ?? (b.z0 + b.z1) / 2), rotation: 0, locked: false };
     s.setItems([...s.items, item]);
     set({ selectedId: id, bounce: id }); setTimeout(() => set({ bounce: null }), 400);
-    if (get().sound) thunk();
     return id;
   },
   moveItem(id, x, z, opts) {
@@ -138,7 +140,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     if (opts?.commit) {
       const base = dragSnapshot ?? clone({ items: s.items, zones: s.zones }); dragSnapshot = null;
       const moved = base.items.some((b) => { const cur = items.find((i) => i.id === b.id); return !cur || Math.abs(cur.x - b.x) > 1e-9 || Math.abs(cur.z - b.z) > 1e-9; });
-      if (moved) { set({ items, history: [...s.history.slice(-60), base], future: [] }); get().revalidate(); get().scheduleSave(); if (get().sound) thunk(); set({ bounce: id }); setTimeout(() => set({ bounce: null }), 350); }
+      if (moved) { set({ items, history: [...s.history.slice(-60), base], future: [] }); get().revalidate(); get().scheduleSave(); set({ bounce: id }); setTimeout(() => set({ bounce: null }), 350); }
       else set({ items });
     } else { set({ items }); get().revalidate(); }
   },
@@ -151,6 +153,21 @@ export const useEditor = create<EditorState>((set, get) => ({
   },
   toggleLock(id) { const s = get(); s.setItems(s.items.map((i) => (i.id === id ? { ...i, locked: !i.locked } : i))); },
   removeItem(id) { const s = get(); const item = s.items.find((i) => i.id === id); if (!item || item.locked) { get().toast('Unlock it first'); return; } s.setItems(s.items.filter((i) => i.id !== id)); set({ selectedId: null }); },
+  unlockAll() {
+    const s = get(); const n = s.items.filter((i) => i.locked).length; if (!n) { get().toast('Nothing is locked'); return; }
+    s.setItems(s.items.map((i) => (i.locked ? { ...i, locked: false } : i))); get().toast(`Unlocked ${n} item${n === 1 ? '' : 's'}`);
+  },
+  lockAll() {
+    const s = get(); const n = s.items.filter((i) => !i.locked).length; if (!n) return;
+    s.setItems(s.items.map((i) => (i.locked ? i : { ...i, locked: true }))); get().toast(`Locked ${n} item${n === 1 ? '' : 's'}`);
+  },
+  clearRoom() {
+    // Locked pieces stay (same rule as removing one item); one undo step brings everything back.
+    const s = get(); const keep = s.items.filter((i) => i.locked); const n = s.items.length - keep.length;
+    if (!n) { get().toast(keep.length ? 'Everything left is locked. Unlock all first.' : 'The room is already empty'); return; }
+    s.setItems(keep); set({ selectedId: null, placing: null });
+    get().toast(`Removed ${n} item${n === 1 ? '' : 's'}${keep.length ? ` · kept ${keep.length} locked` : ''}`, 'info', { label: 'Undo', run: () => get().undo() });
+  },
   duplicateItem(id) { const s = get(); const item = s.items.find((i) => i.id === id); if (!item) return; const nid = s.addItem(item.furnitureId, item.x + 0.3, item.z + 0.3); if (nid) s.setItems(get().items.map((i) => (i.id === nid ? { ...i, rotation: item.rotation, color: item.color } : i)), undefined, false); },
   recolor(id, color) { const s = get(); s.setItems(s.items.map((i) => (i.id === id ? { ...i, color } : i))); },
   undo() { const s = get(); const prev = s.history[s.history.length - 1]; if (!prev) return; set({ history: s.history.slice(0, -1), future: [clone({ items: s.items, zones: s.zones }), ...s.future], items: prev.items, zones: prev.zones }); get().revalidate(); get().scheduleSave(); },
@@ -194,7 +211,6 @@ export const useEditor = create<EditorState>((set, get) => ({
   setUnits(units) { set({ units }); lsSet('arp.units', units); },
   setTheme(theme) { set({ theme }); lsSet('arp.theme', theme); },
   toggleNight() { set({ night: !get().night }); },
-  toggleSound() { const v = !get().sound; set({ sound: v }); lsSet('arp.sound', v); if (v) thunk(); },
   cycleView() { const order: ViewMode[] = ['cutaway', 'half', 'plan']; set({ viewMode: order[(order.indexOf(get().viewMode) + 1) % 3] }); },
   orbitBy(d) { set({ orbit: (((get().orbit + d) % 4 + 4) % 4) as 0 | 1 | 2 | 3 }); },
   setWallColor(c) { set({ wallColor: c }); lsSet('arp.wallColor', c); },
@@ -236,13 +252,13 @@ export const useEditor = create<EditorState>((set, get) => ({
   },
   async askAgent(text, furnitureId) {
     const s = get(); if (!s.room || !s.activeId) return;
-    set({ agentBusy: true, agentReply: null });
+    set({ agentBusy: true, agentReply: null, agentStatus: null });
     try {
       const res = await api.agent({ text, roomId: s.room.id, baseLayoutId: s.activeId, furnitureId, channel: 'app' });
-      set({ agentReply: res.reply, agentBusy: false });
+      set({ agentReply: res.reply, agentStatus: res.status, agentBusy: false });
       postToHost('editor:agentReply', { reply: res.reply, layoutId: res.layout?.id ?? null, status: res.status });
       if (res.layout) { await get().loadRoomLayouts(s.room.id); await get().switchLayout(res.layout.id); }
-    } catch (e) { set({ agentBusy: false, agentReply: `Something went wrong: ${(e as Error).message}` }); }
+    } catch (e) { set({ agentBusy: false, agentStatus: 'error', agentReply: `Something went wrong: ${(e as Error).message}` }); }
   },
   async furnish(theme, opts) {
     // Theme → a new furnished variant (server picks pieces and places them), then open it and show what was made.
@@ -255,7 +271,7 @@ export const useEditor = create<EditorState>((set, get) => ({
       const base = opts?.restyle ? s.layouts.find((l) => l.isCurrent)?.id ?? s.activeId : s.activeId;
       const body = { theme, baseLayoutId: base, purposeHint: opts?.restyle ? active?.requestText ?? null : null };
       const res = opts?.photos?.length ? await api.furnishPhotos(s.room.id, opts.photos, body) : await api.furnish(s.room.id, body);
-      set({ furnishing: false, agentReply: res.reply, requestOpen: true });
+      set({ furnishing: false, agentReply: res.reply, agentStatus: 'info', requestOpen: true });
       postToHost('editor:agentReply', { reply: res.reply, layoutId: res.layout.id, status: 'ok' });
       // new pieces drop in one after another (anything that was already in the base stays put); armed before the switch so they never flash
       const kept = new Set((s.layouts.find((l) => l.id === base)?.items ?? []).map((i) => i.id));
@@ -263,11 +279,10 @@ export const useEditor = create<EditorState>((set, get) => ({
       set({ entrance: { at: Number.POSITIVE_INFINITY, order } });
       await get().loadRoomLayouts(s.room.id); await get().switchLayout(res.layout.id);
       set({ entrance: { at: performance.now(), order } }); setTimeout(() => set({ entrance: null }), 700 + Object.keys(order).length * ENTRANCE_STAGGER);
-      if (get().sound) thunk();
     } catch (e) { set({ furnishing: false, entrance: null }); get().toast(`Couldn't furnish: ${(e as Error).message}`, 'error'); }
   },
   addFurniture(f) { set({ furniture: { ...get().furniture, [f.id]: f } }); },
-  toast(text, kind = 'info') { const id = ++toastId; set({ toasts: [...get().toasts, { id, text, kind }] }); setTimeout(() => get().dismissToast(id), 3200); },
+  toast(text, kind = 'info', action) { const id = ++toastId; set({ toasts: [...get().toasts, { id, text, kind, action }] }); setTimeout(() => get().dismissToast(id), action ? 6000 : 3200); },
   dismissToast(id) { set({ toasts: get().toasts.filter((t) => t.id !== id) }); },
 }));
 

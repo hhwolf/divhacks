@@ -75,7 +75,7 @@ def compose_reply(plan: AgentPlan, result: SolveResult) -> str:
 def rejection_reply(sk_room: Room, result: SolveResult, alternative: str) -> str:
     if result.shortfall_m and result.failed_wall is not None:
         label = wall_label(sk_room.skeleton, result.failed_wall)
-        return f"It's {round(result.shortfall_m * 100)} cm too wide for the {label}; want me to try {alternative}?"
+        return f"It's {format_length_imperial(result.shortfall_m)} too wide for the {label}; want me to try {alternative}?"
     reason = result.violations[0].message if result.violations else "it doesn't pass the fit check"
     return f"I couldn't make that work: {reason.lower()}. Want me to try {alternative}?"
 

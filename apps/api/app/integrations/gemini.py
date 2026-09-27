@@ -134,7 +134,11 @@ class GeminiAdapter:
 
     async def extract_listing(self, text: str, html_meta: dict[str, Any]) -> dict[str, Any]:
         if not self.live:
-            return dict(MOCK_DESK)
+            # No key: callers use what the page states. If it states no size, don't invent one; flag it so the agent asks.
+            title = str(html_meta.get("og:title") or html_meta.get("title") or "Imported item")
+            return {"name": re.split(r"\s[–|-]\s", title)[0].strip()[:60] or "Imported item", "category": "imported",
+                    "dims": html_meta.get("dims") or {"w": 0.5, "d": 0.5, "h": 0.5}, "price": html_meta.get("price"), "color": None,
+                    "estimated": not html_meta.get("dims")}
         prompt = (
             "Extract the furniture item from this marketplace listing. Dimensions in meters (w = width along the front, d = depth, h = height). "
             "Set estimated=true when dimensions are inferred rather than stated.\n\nMETA:\n" + json.dumps(html_meta) + "\n\nTEXT:\n" + text[:6000]

@@ -13,7 +13,10 @@ export function isEmbedded(): boolean {
 export function postToHost<T>(type: BridgeType, payload?: T, id?: string): void {
   const msg: BridgeMessage<T> = { type, payload, id };
   window.ReactNativeWebView?.postMessage(JSON.stringify(msg));
-  if (!window.ReactNativeWebView && isEmbedded()) console.debug('[bridge→host]', msg);
+  // Expo web build: the host is the parent page of an iframe. Only post to the page that embedded us.
+  const parentOrigin = !window.ReactNativeWebView && window.parent !== window && document.referrer ? new URL(document.referrer).origin : null;
+  if (parentOrigin) window.parent.postMessage(JSON.stringify(msg), parentOrigin);
+  else if (!window.ReactNativeWebView && isEmbedded()) console.debug('[bridge→host]', msg);
 }
 export function onHostMessage(h: Handler): () => void { handlers.add(h); return () => handlers.delete(h); }
 window.__ARP_HOST__ = { receive(msg) { for (const h of handlers) h(msg); } };

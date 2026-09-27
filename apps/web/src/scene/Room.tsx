@@ -7,9 +7,9 @@ import { patchSurface, tone, type Surface } from './materials';
 import { DECAL_LAYER } from './Furniture';
 import type { FloorStyle, Theme, ViewMode } from '../store';
 
-const SLAB = 0.5, WALL_T = 0.14, TRIM = 0.12;
+const SLAB = 0.1, WALL_T = 0.14, TRIM = 0.12; // thin architectural-model plinth, not a game island
 export const COLORS = {
-  slab: '#857A70', slabTeal: '#55504B', trim: '#EFECE6', frame: '#F1EEE8', pane: '#DDEAF1', paneGlow: '#EEF5FA', paneNight: '#27324A', paneNightGlow: '#3E4D6E',
+  slab: '#B9B2A6', slabForest: '#B4BAA8', trim: '#EFECE6', frame: '#F1EEE8', pane: '#DDEAF1', paneGlow: '#EEF5FA', paneNight: '#27324A', paneNightGlow: '#3E4D6E',
   door: '#D9D4CA', brass: '#A8844F',
 };
 
@@ -40,7 +40,7 @@ export function RoomMesh({ sk, hidden, viewMode, wallColor, floorStyle, floorCol
 }) {
   const b = roomBounds(sk);
   const slabGeo = useMemo(() => {
-    const shape = roundedPolygonShape(sk.floorPolygon, WALL_T + 0.08, 0.34);
+    const shape = roundedPolygonShape(sk.floorPolygon, WALL_T + 0.04, 0.05);
     const g = new THREE.ExtrudeGeometry(shape, { depth: SLAB, bevelEnabled: false });
     g.rotateX(Math.PI / 2); g.translate(0, 0.0, 0); return g;
   }, [sk]);
@@ -50,8 +50,8 @@ export function RoomMesh({ sk, hidden, viewMode, wallColor, floorStyle, floorCol
   const wallH = viewMode === 'half' ? 1.1 : sk.dimensions.h;
   return (
     <group>
-      {/* slab (dark brown edge) */}
-      <mesh geometry={slabGeo} position={[0, 0.001, 0]} receiveShadow><meshStandardMaterial color={theme === 'teal' ? COLORS.slabTeal : COLORS.slab} roughness={0.9} /></mesh>
+      {/* plinth */}
+      <mesh geometry={slabGeo} position={[0, 0.001, 0]} receiveShadow><meshStandardMaterial color={theme === 'forest' ? COLORS.slabForest : COLORS.slab} roughness={0.9} /></mesh>
       {/* floor: color map + matching roughness map (joints matte, boards slightly varied) */}
       <mesh geometry={floorGeo} position={[0, 0.012, 0]} receiveShadow>
         <meshStandardMaterial map={floorTex} roughnessMap={floorRough} roughness={1} metalness={0} side={THREE.DoubleSide} />
@@ -165,7 +165,7 @@ function DoorFloorMarker({ sk, door }: { sk: RoomSkeleton; door: RoomSkeleton['d
     return arr;
   }, [a, b, hinge, radius, n]);
   const arc = useMemo(() => {
-    const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: '#F7F2EA', transparent: true, opacity: 0.8 })); l.layers.set(DECAL_LAYER); return l;
+    const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: '#2F3A28', transparent: true, opacity: 0.55 })); l.layers.set(DECAL_LAYER); return l;
   }, [pts]);
   return (
     <group>

@@ -102,9 +102,9 @@ function LiveScan() {
 
   const chipLabel =
     status === 'idle'
-      ? 'Ready — point at a wall and press Start'
+      ? 'Ready'
       : status === 'scanning'
-        ? progress.message ?? 'Scanning… walk the room slowly'
+        ? progress.message ?? 'Scanning…'
         : status === 'processing'
           ? progress.message ?? 'Processing…'
           : status === 'done'
@@ -134,7 +134,7 @@ function LiveScan() {
         ) : null}
 
         {cameraDenied ? (
-          <Button label="Open Settings to allow the camera" icon="cog" onPress={() => Linking.openSettings()} variant="secondary" style={{ marginTop: spacing.sm }} />
+          <Button label="Allow camera" icon="cog" onPress={() => Linking.openSettings()} variant="secondary" style={{ marginTop: spacing.sm }} />
         ) : null}
         <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
           {status === 'done' && scan ? (
@@ -175,10 +175,7 @@ function Fallback({ capability }: { capability: RoomPlanCapability }) {
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasted, setPasted] = useState('');
 
-  const title = capability.moduleLinked ? 'RoomPlan needs a LiDAR iPhone or iPad Pro' : 'Install the TestFlight build on a LiDAR iPhone';
-  const reason = capability.moduleLinked
-    ? 'RoomPlan is linked, but Apple reports this device cannot run room capture. Use an iPhone Pro or iPad Pro with LiDAR on iOS 16 or newer.'
-    : 'This runtime does not include our RoomPlan native module. Expo Go, web, and generic simulator builds cannot scan rooms.';
+  const title = 'Scanning needs a LiDAR iPhone';
 
   const loadSample = async () => {
     setBusy('sample');
@@ -225,17 +222,13 @@ function Fallback({ capability }: { capability: RoomPlanCapability }) {
               <MaterialCommunityIcons name="cube-scan" size={40} color={colors.tile} />
             </View>
             <Text style={[type.h2, { textAlign: 'center' }]}>{title}</Text>
-            <Text style={[type.body, { textAlign: 'center', color: colors.inkSoft }]}>{reason}</Text>
-            <Text style={[type.small, { textAlign: 'center' }]}>
-              Install the latest TestFlight build, or run <Text style={styles.mono}>npx expo run:ios --device</Text> on a LiDAR iPhone Pro to scan for real. Meanwhile, pick another way in:
-            </Text>
           </Tile>
 
           <View style={{ gap: spacing.sm, marginTop: spacing.lg }}>
             <Button label="Load sample room" icon="bed-king-outline" onPress={loadSample} busy={busy === 'sample'} />
             <Button label="Enter dimensions" icon="ruler-square" variant="secondary" onPress={() => setSheetOpen(true)} />
             <Button
-              label={pasteOpen ? 'Hide JSON box' : 'Paste RoomPlan JSON'}
+              label="Paste JSON"
               icon="code-json"
               variant="secondary"
               onPress={() => setPasteOpen((v) => !v)}
@@ -244,20 +237,17 @@ function Fallback({ capability }: { capability: RoomPlanCapability }) {
 
           {pasteOpen ? (
             <Tile style={{ marginTop: spacing.lg }}>
-              <Text style={[type.small, { marginBottom: spacing.sm }]}>
-                Paste our {'{'}skeleton, objects{'}'} export (or {'{'}dimensions{'}'}). You will pick the space type next; the geometry is sent to POST /rooms unchanged.
-              </Text>
               <TextInput
                 multiline
                 value={pasted}
                 onChangeText={setPasted}
-                placeholder='{"skeleton":{"walls":[...],"doors":[],"windows":[],"floorPolygon":[...],"dimensions":{"l":3.4,"w":3,"h":2.7}},"objects":[]}'
-                placeholderTextColor="#A08B7C"
+                placeholder="Paste JSON"
+                placeholderTextColor={colors.inkSoft}
                 autoCapitalize="none"
                 autoCorrect={false}
                 style={styles.textarea}
               />
-              <Button label="Set up room from JSON" icon="upload" onPress={submitPasted} disabled={!pasted.trim()} style={{ marginTop: spacing.sm }} />
+              <Button label="Continue" icon="arrow-right" onPress={submitPasted} disabled={!pasted.trim()} style={{ marginTop: spacing.sm }} />
             </Tile>
           ) : null}
         </ScrollView>
@@ -287,8 +277,7 @@ function draftFromJson(parsed: Record<string, unknown>): RoomDraft | null {
 
 const styles = StyleSheet.create({
   content: { padding: spacing.lg },
-  heroIcon: { width: 72, height: 72, borderRadius: radius.lg, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xs },
-  mono: { fontFamily: Platform.select({ ios: 'Menlo', default: 'monospace' }), color: colors.ink },
+  heroIcon: { width: 72, height: 72, borderRadius: radius.lg, backgroundColor: colors.forest, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xs },
   textarea: {
     minHeight: 160,
     backgroundColor: colors.white,
@@ -305,7 +294,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     padding: spacing.lg,
-    backgroundColor: 'rgba(74,51,39,0.85)',
+    backgroundColor: 'rgba(37,52,32,0.88)',
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
   },

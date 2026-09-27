@@ -50,7 +50,7 @@ def test_marketplace_desk_request(client: TestClient, bedroom: dict) -> None:
     assert layout["createdBy"] == "agent" and layout["requestText"].startswith("Will this fit")
     assert _bed(layout) == _bed(bedroom["current"])
     desk = next(i for i in layout["items"] if i["id"].startswith("imp_"))
-    assert desk["rotation"] == 0 and desk["z"] == pytest.approx(0.3)
+    assert desk["rotation"] == 0 and desk["z"] == pytest.approx(0.305)
     assert layout["metrics"]["conflicts"] == 0
     assert "window" in out["reply"] and "to spare" in out["reply"]
     assert out["links"] == [f"roomplanner://layout/{layout['id']}", f"http://localhost:5173/layout/{layout['id']}"]
@@ -60,11 +60,24 @@ def test_marketplace_desk_request(client: TestClient, bedroom: dict) -> None:
     assert current["items"] == bedroom["current"]["items"]
 
 
-def test_app_assistant_rejects_new_furniture_links(client: TestClient, bedroom: dict) -> None:
+def test_app_link_reads_listing_size_and_answers_fit(client: TestClient, bedroom: dict) -> None:
     out = _ask(client, bedroom, DESK_Q)
-    assert out["status"] == "clarify" and out["layout"] is None
-    assert "iMessage/Photon" in out["reply"]
-    assert [l["name"] for l in client.get(f"/rooms/{bedroom['roomId']}").json()["layouts"]] == ["Current Room"]
+    assert out["status"] == "ok" and out["reply"].startswith("Yes, it fits.")
+    assert 'Solid wood desk is 3\' 11" W × 24 in D × 30 in H (listed).' in out["reply"]
+    desk = next(i for i in out["layout"]["items"] if i["id"].startswith("imp_"))
+    item = next(f for f in client.get("/furniture").json()["items"] if f["id"] == desk["furnitureId"])
+    assert item["dimensionsConfirmed"] and not item["estimated"] and item["sourceUrl"].endswith("/fixtures/listings/desk")
+    assert _bed(out["layout"]) == _bed(bedroom["current"])
+
+
+def test_app_link_typed_size_overrides_listing(client: TestClient, bedroom: dict) -> None:
+    out = _ask(client, bedroom, "will this fit? it's 30 x 20 x 29 in http://testserver/fixtures/listings/desk")
+    assert "30 in W × 20 in D × 29 in H (you gave)" in out["reply"]
+
+
+def test_app_link_unreachable_asks_for_size(client: TestClient, bedroom: dict) -> None:
+    out = _ask(client, bedroom, "will this fit http://127.0.0.1:9/nothing-here")
+    assert out["status"] == "clarify" and out["layout"] is None and "couldn't open that link" in out["reply"]
 
 
 def test_basic_addition_recommends_preset_item(client: TestClient, bedroom: dict) -> None:

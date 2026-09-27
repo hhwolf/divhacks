@@ -7,6 +7,11 @@ export const auth = url && key ? createClient(url, key) : null;
 export function randomId() { return Array.from(crypto.getRandomValues(new Uint8Array(24)), (b) => b.toString(16).padStart(2, '0')).join(''); }
 
 export function demoSession() {
+  // The Expo web build embeds this page in a cross-origin iframe, where the native injection can't reach; it passes its
+  // demo session in the URL instead (embedded mode only).
+  const params = new URLSearchParams(location.search);
+  const handed = params.get('embedded') === '1' ? params.get('demoSession') : null;
+  if (handed) localStorage.setItem('arp-demo-session', handed);
   let value = localStorage.getItem('arp-demo-session');
   if (!value) { value = randomId(); localStorage.setItem('arp-demo-session', value); }
   return value;
