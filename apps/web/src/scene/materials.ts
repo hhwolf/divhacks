@@ -131,7 +131,8 @@ export function tone(hex: string): string {
 
 export function makeMaterial(spec: MatSpec, name = ''): THREE.MeshStandardMaterial {
   const m = new THREE.MeshStandardMaterial({
-    name, color: tone(spec.color), roughness: spec.roughness, metalness: spec.metalness ?? 0, flatShading: true,
+    // smooth: the GLB's own normals decide (Kenney pieces ship split/flat normals, the Blender-built ones soft bevels)
+    name, color: tone(spec.color), roughness: spec.roughness, metalness: spec.metalness ?? 0, flatShading: false,
     emissive: spec.emissive ?? '#000000', emissiveIntensity: spec.emissiveIntensity ?? 0,
   });
   m.userData.surface = spec.surface; m.userData.baseEmissive = m.emissive.clone(); m.userData.baseEmissiveIntensity = m.emissiveIntensity;
