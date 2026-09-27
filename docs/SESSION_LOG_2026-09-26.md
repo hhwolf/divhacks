@@ -6,7 +6,7 @@ Everything done with Claude across five sessions in `e:\divhacks` on Sep 26, 202
 
 ## On this branch: `feature/siddhi.m/checking-for-workflow`
 
-- **Starts from:** `main` at `746daf5` ("Adaptive Room Planner — DivHacks 2026 (Live Better) (#1)").
+- **Starts from:** `main` at `746daf5` ("FitCheck — DivHacks 2026 (Live Better) (#1)").
 - **Compared with `main`:** 2 commits ahead and 0 behind, with 115 files changed (+5,221 / −3,404). It is in sync with `origin`.
 - **Not merged into `main` yet.**
 
@@ -52,7 +52,7 @@ Everything done with Claude across five sessions in `e:\divhacks` on Sep 26, 202
 - This file (`docs/SESSION_LOG_2026-09-26.md`).
 
 ## 1. Understanding the project
-- Got a detailed run-through of the whole project: the Adaptive Room Planner monorepo for DivHacks 2026 (submissions due Sep 27 at 10:30 AM ET).
+- Got a detailed run-through of the whole project: the FitCheck monorepo for DivHacks 2026 (submissions due Sep 27 at 10:30 AM ET).
 - Got a list of every feature and its stage:
   - everything works end to end in mock mode
   - none of the real outside services has been connected

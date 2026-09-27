@@ -21,7 +21,7 @@ export function Home() {
   return (
     <div className={`home theme-${theme}`}>
       <Backdrop />
-      <header><h1>Adaptive Room Planner</h1><p>Scan a room, save the Current Room, and test layout ideas as separate variants. <span className={`chip ${health}`}>API: {health}</span></p></header>
+      <header><h1>FitCheck</h1><p>Scan a room, save the Current Room, and test layout ideas as separate variants. <span className={`chip ${health}`}>API: {health}</span></p></header>
       <Account />
       <div className="cards">
         <button className="card" onClick={() => alert('Scanning needs the iPhone app with LiDAR. Use a sample room here or open the mobile preview.')}><span className="card-icon"><I.camera /></span><b>Scan room</b><small>RoomPlan on iPhone Pro</small></button>

@@ -1,4 +1,4 @@
-# Adaptive Room Planner — "Where did my space go?"
+# FitCheck — "Where did my space go?"
 
 DivHacks 2026 · **Live Better** track. Scan your NYC room once, text furniture ideas over iMessage, and rearrange your real room like a cozy top-down game before you buy or haul anything up three flights.
 
@@ -145,7 +145,7 @@ Rent demo: open Rent, confirm the room measurement, report rats or a leak, and c
 
 ## Devpost blurb
 
-**Adaptive Room Planner — Where did my space go?** (Live Better)
+**FitCheck — Where did my space go?** (Live Better)
 
 Renters in 100–150 sq ft NYC rooms buy secondhand and guess. We scan the room once with RoomPlan, rebuild the furniture you already own in a cozy isometric editor, and split the AI workflow into two natural channels: text a Facebook Marketplace/IKEA/Amazon listing or photo over iMessage to bring new furniture into the room, then use the in-app assistant for layout changes like "make space for yoga" or "place the desk near the window." Gemini turns listings and spatial requests into structured constraints, Backboard remembers your non-negotiables ("never move the bed"), a Python placement solver finds a spot on a 10 cm grid, and a shared TypeScript/Python fit validator checks bounds, overlaps, door swing clearance, access edges and walkable paths before anything is saved. Every answer becomes a named layout variant next to your untouched Current Room, with open-floor %, conflicts and walkability side by side in a compare view. Supabase stores rooms, furniture, rent assessments and variants when configured; everything degrades to an offline mock mode so the synthetic demo works without credentials. Real housing sources report unavailable states rather than silently substituting fixtures.
 

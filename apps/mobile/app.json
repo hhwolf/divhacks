@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Room Planner",
+    "name": "FitCheck",
     "slug": "adaptive-room-planner",
     "version": "1.0.0",
     "scheme": "roomplanner",
@@ -11,7 +11,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "dev.roomplanner.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "Room Planner uses the camera and LiDAR to scan your room with RoomPlan.",
+        "NSCameraUsageDescription": "FitCheck uses the camera and LiDAR to scan your room with RoomPlan.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "appleTeamId": "59MGA3685P"

@@ -35,7 +35,7 @@ class BackboardAdapter:
         user = await self._repo.get("users", user_id) or {}
         if user.get("backboardAssistantId"):
             return str(user["backboardAssistantId"])
-        assistant = await self._client.create_assistant(name=f"roomplanner-{user_id}", description="Adaptive Room Planner user memory")
+        assistant = await self._client.create_assistant(name=f"roomplanner-{user_id}", description="FitCheck user memory")
         await self._repo.update("users", user_id, {"backboardAssistantId": str(assistant.assistant_id)})
         return str(assistant.assistant_id)
 

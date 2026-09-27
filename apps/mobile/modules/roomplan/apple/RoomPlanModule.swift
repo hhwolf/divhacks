@@ -40,7 +40,7 @@ public class RoomPlanModule: Module {
         // useful message — so resolve the permission explicitly first and give JS a clear error to act on.
         RoomPlanCoordinator.requestCamera {
           guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else {
-            promise.reject(Exception(name: "CameraPermissionDenied", description: "Camera access is off for Room Planner. Enable it in Settings › Privacy › Camera to scan."))
+            promise.reject(Exception(name: "CameraPermissionDenied", description: "Camera access is off for FitCheck. Enable it in Settings › Privacy › Camera to scan."))
             return
           }
           do {

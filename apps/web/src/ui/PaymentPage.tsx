@@ -14,7 +14,7 @@ export function PaymentPage() {
   }, [id]);
   const simulate = async (outcome: string) => { if (!id) return; setBusy(true); setError(''); try { setPayment((await api.simulatePayment(id, outcome)).payment); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };
   return <main className="payment-page"><section className="housing-section">
-    <span className="eyebrow">Adaptive Room Planner</span><h1>Payment status</h1>
+    <span className="eyebrow">FitCheck</span><h1>Payment status</h1>
     {error && <p className="err" role="alert">{error}</p>}
     {payment && <><p className="notice">{payment.mode === 'demo' ? 'Offline simulation. No Stripe transaction or money transfer occurred.' : 'Stripe test payment. No live charge.'}</p>
       <h2>{dollars(payment.amountCents)} · {payment.status}</h2><p>{payment.purpose.replaceAll('_', ' ')} · {payment.rentalPeriod}</p>
