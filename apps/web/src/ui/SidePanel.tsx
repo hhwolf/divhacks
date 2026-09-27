@@ -33,6 +33,7 @@ export function SidePanel() {
       <div className={`details ${level ?? ''}`}>
         <div className="details-name">{f.name} {f.estimated && <span className="badge">estimated</span>}{item.locked && <span className="badge lock">locked</span>}</div>
         <div className="details-row">{formatDims(f.dims, units)}</div>
+        <div className="details-row">Rotation: <b>{item.rotation}°</b></div>
         <div className="details-row">Gap to wall: <b>{formatLength(gap, units)}</b></div>
         {(f.price != null || f.sourceUrl) && <div className="details-row">{f.price != null && <b>${f.price}</b>} {f.sourceUrl && <a href={f.sourceUrl} target="_blank" rel="noreferrer">source</a>}</div>}
         {problems.map((v, k) => <div key={k} className={`details-row problem ${v.severity}`}>{v.message}</div>)}

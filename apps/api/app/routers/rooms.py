@@ -29,16 +29,21 @@ class CreateRoomBody(BaseModel):
 @router.post("", status_code=201)
 async def post_room(body: CreateRoomBody, ctx: AppContext = Depends(get_ctx)) -> dict:
     user = await ctx.demo_user()
+    space_types, elements = body.spaceTypes, body.elements
     if body.sample:
         data = load_sample(body.sample)
         skeleton, objects, name, source = RoomSkeleton.model_validate(data["skeleton"]), data["objects"], body.name or data["name"], "sample"
+        if not space_types:
+            space_types = data.get("spaceTypes", [])
+        if not elements:
+            elements = [RoomElement.model_validate(e) for e in data.get("elements", [])]
     elif body.skeleton is not None:
         skeleton, objects, name, source = body.skeleton, body.objects, body.name or "Scanned room", "scan"
     elif body.dimensions is not None:
         skeleton, objects, name, source = skeleton_from_dimensions(body.dimensions, body.doors, body.windows), body.objects, body.name or "My room", "manual"
     else:
         raise HTTPException(422, f"Provide 'sample' ({', '.join(SAMPLES)}), 'skeleton' or 'dimensions'")
-    room, layout = await create_room(ctx, name=name, skeleton=skeleton, source=source, objects=objects, user_id=user.id, seed=body.seed, space_types=body.spaceTypes, elements=body.elements)
+    room, layout = await create_room(ctx, name=name, skeleton=skeleton, source=source, objects=objects, user_id=user.id, seed=body.seed, space_types=space_types, elements=elements)
     return {"room": room.model_dump(), "currentLayout": layout.model_dump(), "layouts": [layout.model_dump()]}
 
 

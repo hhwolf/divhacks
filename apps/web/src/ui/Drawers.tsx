@@ -40,10 +40,12 @@ function Paint() {
   const wallColor = useEditor((s) => s.wallColor); const floorStyle = useEditor((s) => s.floorStyle); const floorColor = useEditor((s) => s.floorColor); const set = useEditor;
   return (
     <div className="drawer paint" data-testid="drawer-paint">
-      <h3>Walls</h3>
+      <h3>Wall materials</h3>
       <div className="swatch-row">{WALLS.map((c) => <button key={c} className={`tile swatch ${wallColor === c ? 'on' : ''}`} style={{ background: c }} aria-label={`Wall ${c}`} onClick={() => set.getState().setWallColor(c)} />)}</div>
-      <h3>Floor</h3>
+      <h3>Floor materials</h3>
       {FLOORS.map((f) => <button key={f.label} className={`drawer-item ${floorStyle === f.style && floorColor === f.color ? 'active' : ''}`} onClick={() => set.getState().setFloorStyle(f.style, f.color)}><span className="swatch-dot" style={{ background: f.color }} />{f.label}</button>)}
+      <h3>Furniture materials</h3>
+      <div className="paint-note">Select an item, then use its swatches to change fabric, wood, paint, or metal color.</div>
     </div>
   );
 }

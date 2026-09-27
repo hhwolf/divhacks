@@ -11,8 +11,30 @@ import { type AgentLogEntry, useStore } from '../src/store';
 import { colors, radius, spacing, type } from '../src/theme';
 import type { AgentStatus, Layout } from '../src/types';
 
-const PLACEHOLDER = 'make space for yoga, keep my dresser';
-const SUGGESTIONS = ['make space for yoga', 'create a reading corner', 'place the desk near the window', "don't move my bed"];
+type AssistMode = 'plan' | 'clear' | 'protect' | 'compare';
+
+const PROMPTS: Record<AssistMode, { label: string; placeholder: string; questions: string[] }> = {
+  plan: {
+    label: 'Plan',
+    placeholder: 'Where should my desk go if the bed stays put?',
+    questions: ['Where should my desk go if the bed stays put?', 'Can you create a reading corner near the window?', 'Can you make this room feel more open?'],
+  },
+  clear: {
+    label: 'Clear',
+    placeholder: 'Can you make space for yoga without moving my dresser?',
+    questions: ['Can you make space for yoga without moving my dresser?', 'Can you clear a path from the door to the desk?', 'Can you open up the center of the room?'],
+  },
+  protect: {
+    label: 'Protect',
+    placeholder: "Can you rearrange this without moving my bed?",
+    questions: ["Can you rearrange this without moving my bed?", 'Can you keep the dresser where it is?', 'Can you keep the window area clear?'],
+  },
+  compare: {
+    label: 'Compare',
+    placeholder: 'Can you make a second option with more open floor?',
+    questions: ['Can you make a second option with more open floor?', 'Can you try a layout for guests?', 'Can you compare a study setup with a lounge setup?'],
+  },
+};
 
 export default function Ask() {
   const router = useRouter();
@@ -25,7 +47,9 @@ export default function Ask() {
   const [baseLayoutId, setBaseLayoutId] = useState(params.layoutId ?? '');
   const [baseLayout, setBaseLayout] = useState<Layout | null>(null);
   const [text, setText] = useState('');
+  const [mode, setMode] = useState<AssistMode>('plan');
   const [sending, setSending] = useState(false);
+  const cfg = PROMPTS[mode];
 
   // Resolve missing ids: layout -> room, or room -> its Current layout.
   useEffect(() => {
@@ -108,13 +132,18 @@ export default function Ask() {
               multiline
               value={text}
               onChangeText={setText}
-              placeholder={PLACEHOLDER}
+              placeholder={cfg.placeholder}
               placeholderTextColor="#A08B7C"
               style={styles.input}
               editable={!sending}
             />
+            <View style={styles.modeRow}>
+              {(Object.keys(PROMPTS) as AssistMode[]).map((m) => (
+                <Chip key={m} label={PROMPTS[m].label} onPress={() => setMode(m)} tone={mode === m ? 'ink' : 'tile'} style={mode === m ? undefined : styles.chipOutline} />
+              ))}
+            </View>
             <View style={styles.chipRow}>
-              {SUGGESTIONS.map((s) => <Chip key={s} icon="auto-fix" label={s} onPress={() => setText(s)} tone="tile" style={styles.chipOutline} />)}
+              {cfg.questions.map((s) => <Chip key={s} icon="auto-fix" label={s} onPress={() => setText(s)} tone="tile" style={styles.chipOutline} />)}
             </View>
             <Button label="Send" icon="send" onPress={send} busy={sending} disabled={!text.trim() || !baseLayoutId} style={{ marginTop: spacing.md }} />
             <Pressable onPress={simulateIMessage} style={{ alignSelf: 'center', marginTop: spacing.md }}>
@@ -126,7 +155,7 @@ export default function Ask() {
             <SectionTitle>Agent log</SectionTitle>
             {visibleLog.length === 0 ? (
               <Tile>
-                <EmptyNote>No requests yet. Try “{PLACEHOLDER}” or “create a reading corner near the window”.</EmptyNote>
+                <EmptyNote>No requests yet. Try “{cfg.placeholder}”.</EmptyNote>
               </Tile>
             ) : (
               <View style={{ gap: spacing.sm }}>
@@ -193,6 +222,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
     textAlignVertical: 'top',
   },
+  modeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
   chipOutline: { borderWidth: 1, borderColor: colors.tileMuted },
   link: { color: colors.inkSoft, textDecorationLine: 'underline', fontSize: 13 },

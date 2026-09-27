@@ -83,7 +83,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     set({ loading: true });
     const [fx, manifest] = await Promise.all([fetch(`/fixtures/rooms/sample-${sample}.json`).then((r) => r.json()), fetch('/assets/furniture/manifest.json').then((r) => r.json())]);
     const furniture = Object.fromEntries((manifest.items as FurnitureItem[]).map((m) => [m.id, m]));
-    const room: Room = { id: `fixture-${sample}`, name: fx.name, skeleton: fx.skeleton, source: 'sample' };
+    const room: Room = { id: `fixture-${sample}`, name: fx.name, skeleton: fx.skeleton, source: 'sample', spaceTypes: fx.spaceTypes ?? [], elements: fx.elements ?? [] };
     const items: LayoutItem[] = (fx.objects as LayoutItem[]).map((o, i) => ({ ...o, id: `${o.furnitureId}_${i + 1}` }));
     const layout: Layout = { id: 'fixture', roomId: room.id, name: 'Current Room', isCurrent: true, items, zones: [] };
     set({ room, furniture, layouts: [layout], activeId: 'fixture', items, zones: [], history: [], future: [], selectedId: null, saveState: 'readonly', loading: false });

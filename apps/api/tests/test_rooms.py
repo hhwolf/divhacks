@@ -9,6 +9,8 @@ def test_sample_room_seeds_current_layout(client: TestClient) -> None:
     body = r.json()
     sample = load_fixture("rooms", "sample-nyc-bedroom.json")
     assert body["room"]["skeleton"]["walls"] == [{**w} for w in sample["skeleton"]["walls"]]
+    assert body["room"]["spaceTypes"] == sample["spaceTypes"]
+    assert [e["id"] for e in body["room"]["elements"]] == [e["id"] for e in sample["elements"]]
     assert body["room"]["skeleton"]["doors"][0]["swing"] == "in"
     assert body["room"]["skeleton"]["windows"][0]["width"] == 1.2
     cur = body["currentLayout"]
