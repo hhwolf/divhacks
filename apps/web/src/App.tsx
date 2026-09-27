@@ -17,7 +17,7 @@ export function App() {
       <Route path="/compare/:a/:b" element={<ComparePage />} />
       <Route path="/snapshot/:id" element={<SnapshotPage />} />
       <Route path="/thumb/:furnitureId" element={<ThumbPage />} />
-      {import.meta.env.DEV && <Route path="/device" element={<DevicePreview />} />}
+      <Route path="/device" element={<DevicePreview />} />
     </Routes>
   );
 }

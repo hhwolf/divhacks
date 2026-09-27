@@ -36,7 +36,7 @@ export function Home() {
         </form>
       )}
       <button className="link" disabled={busy} onClick={() => create({ sample: 'studio' })}>or load the studio sample</button>
-      {import.meta.env.DEV && <p><a className="link" href="/device">Preview the mobile app in a phone frame →</a></p>}
+      <p><a className="link" href="/device">Preview the mobile app in a phone frame →</a></p>
       {err && <p className="err">{err}</p>}
       {rooms.length > 0 && (
         <section className="recent"><h2>Recent rooms</h2>
