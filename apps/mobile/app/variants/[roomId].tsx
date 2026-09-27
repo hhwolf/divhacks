@@ -89,7 +89,7 @@ export default function Variants() {
   };
 
   const remove = (l: Layout) => {
-    Alert.alert('Delete variant?', `“${l.name}” will be removed. The Current Room is never deleted.`, [
+    Alert.alert('Delete variant?', `“${l.name}” will be removed.`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', onPress: () => void run(l.id, () => api.deleteLayout(l.id), 'Deleted') },
     ]);
@@ -109,7 +109,7 @@ export default function Variants() {
               await load();
               setRefreshing(false);
             }}
-            tintColor={colors.ink}
+            tintColor={colors.forest}
           />
         }
       >
@@ -119,7 +119,6 @@ export default function Variants() {
           </Text>
           <Text style={type.subtitle}>
             {dims ? `${formatDims(dims, units)} · ${formatArea(dims.l, dims.w, units)}` : ' '}
-            {room?.source ? ` · ${room.source}` : ''}
           </Text>
           {room ? (
             <View style={styles.setupRow}>
@@ -128,7 +127,7 @@ export default function Variants() {
               ))}
               <Chip
                 icon="tune-variant"
-                label={room.spaceTypes?.length ? 'Edit setup' : 'Set up space'}
+                label="Edit"
                 onPress={() => router.push({ pathname: '/setup', params: { roomId: room.id } })}
                 style={styles.chipOutline}
               />
@@ -159,7 +158,7 @@ export default function Variants() {
             {layouts.map((l) => (
               <Tile key={l.id} style={[styles.card, l.isCurrent && styles.currentCard]}>
                 <Pressable onPress={() => router.push(`/editor/${encodeURIComponent(l.id)}`)} style={styles.cardHeader}>
-                  <View style={[styles.badge, { backgroundColor: l.isCurrent ? colors.ink : l.createdBy === 'agent' ? colors.accentDeep : colors.bgDeep }]}>
+                  <View style={[styles.badge, { backgroundColor: l.isCurrent ? colors.forest : l.createdBy === 'agent' ? colors.accentDeep : colors.accent }]}>
                     <MaterialCommunityIcons name={l.isCurrent ? 'lock' : l.createdBy === 'agent' ? 'robot-outline' : 'floor-plan'} size={20} color={colors.tile} />
                   </View>
                   <View style={{ flex: 1 }}>
@@ -168,8 +167,7 @@ export default function Variants() {
                     </Text>
                     <Text style={type.small} numberOfLines={1}>
                       {l.items.length} item{l.items.length === 1 ? '' : 's'}
-                      {l.metrics ? ` · ${Math.round(l.metrics.openFloor * (l.metrics.openFloor <= 1 ? 100 : 1))}% open · ${l.metrics.conflicts} conflict${l.metrics.conflicts === 1 ? '' : 's'}` : ''}
-                      {l.isCurrent ? ' · only you can change it' : l.requestText ? ` · “${l.requestText}”` : ''}
+                      {l.metrics ? ` · ${Math.round(l.metrics.openFloor * (l.metrics.openFloor <= 1 ? 100 : 1))}% open` : ''}
                     </Text>
                   </View>
                   <MaterialCommunityIcons name="chevron-right" size={22} color={colors.inkSoft} />
@@ -185,7 +183,7 @@ export default function Variants() {
                       {current ? (
                         <Chip
                           icon="compare-horizontal"
-                          label="Compare with Current"
+                          label="Compare"
                           tone="accent"
                           onPress={() => router.push({ pathname: '/compare/[a]/[b]', params: { a: current.id, b: l.id, roomId: roomId ?? '' } })}
                         />
@@ -205,7 +203,7 @@ export default function Variants() {
 const styles = StyleSheet.create({
   content: { padding: spacing.lg },
   card: { padding: spacing.md },
-  currentCard: { borderWidth: 2, borderColor: colors.ink },
+  currentCard: { borderWidth: 2, borderColor: colors.forest },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   badge: { width: 40, height: 40, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
   cardTitle: { fontSize: 16, fontWeight: '700', color: colors.ink },

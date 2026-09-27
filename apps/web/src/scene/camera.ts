@@ -30,5 +30,7 @@ export function hiddenWalls(sk: RoomSkeleton, orbit: number, inward: (i: number)
 export function fitZoom(sk: RoomSkeleton, aspect: number): number {
   const b = roomBounds(sk); const diag = Math.hypot(b.x1 - b.x0, b.z1 - b.z0);
   const halfH = Math.max(diag * 0.52, (sk.dimensions.h + diag * 0.3) * 0.78);
-  return aspect < 1.4 ? halfH * 1.25 : halfH;
+  const fitted = aspect < 1.4 ? halfH * 1.25 : halfH;
+  // Portrait: the isometric footprint is about `diag` wide, so the horizontal half-extent must cover it too.
+  return Math.max(fitted, (diag * 0.62) / aspect);
 }

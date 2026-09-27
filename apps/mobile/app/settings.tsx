@@ -58,20 +58,16 @@ export default function Settings() {
           <Tile style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
             <Chip icon="ruler" label="Feet & inches" tone={units === 'imperial' ? 'ink' : 'tile'} onPress={() => setUnits('imperial')} style={styles.chipOutline} />
             <Chip icon="ruler-square" label="Metric" tone={units === 'metric' ? 'ink' : 'tile'} onPress={() => setUnits('metric')} style={styles.chipOutline} />
-            <Text style={[type.small, { flex: 1, textAlign: 'right' }]}>Applies to the app and the editor</Text>
           </Tile>
 
           <SectionTitle>Servers</SectionTitle>
           <Tile>
-            <Field label="API URL (FastAPI)" value={apiDraft} onChangeText={setApiDraft} keyboardType="url" placeholder={DEFAULT_API_URL} />
-            <Field label="Web editor URL (Vite)" value={webDraft} onChangeText={setWebDraft} keyboardType="url" placeholder={DEFAULT_WEB_URL} />
+            <Field label="API URL" value={apiDraft} onChangeText={setApiDraft} keyboardType="url" placeholder={DEFAULT_API_URL} />
+            <Field label="Editor URL" value={webDraft} onChangeText={setWebDraft} keyboardType="url" placeholder={DEFAULT_WEB_URL} />
             <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <Button label="Reset to .env" variant="ghost" onPress={() => { resetUrls(); toast('Reset to EXPO_PUBLIC_* defaults'); }} style={{ flex: 1 }} />
+              <Button label="Reset" variant="ghost" onPress={() => { resetUrls(); toast('Reset'); }} style={{ flex: 1 }} />
               <Button label="Save" icon="content-save-outline" onPress={save} disabled={!dirty} style={{ flex: 1 }} />
             </View>
-            <Text style={[type.small, { marginTop: spacing.sm }]}>
-              Defaults come from EXPO_PUBLIC_API_URL / EXPO_PUBLIC_WEB_URL (use this Mac's LAN IP so the phone can reach it).
-            </Text>
           </Tile>
 
           <SectionTitle
@@ -81,17 +77,16 @@ export default function Settings() {
           </SectionTitle>
           <Tile>
             {health === null ? (
-              <Text style={type.body}>Checking {apiUrl}…</Text>
+              <Text style={type.body}>Checking…</Text>
             ) : health === 'down' ? (
               <View style={styles.row}>
                 <MaterialCommunityIcons name="cloud-off-outline" size={20} color={colors.danger} />
-                <Text style={[type.body, { color: colors.danger, flex: 1 }]}>Cannot reach {apiUrl}/health</Text>
+                <Text style={[type.body, { color: colors.danger, flex: 1 }]}>Server unreachable</Text>
               </View>
             ) : (
               <>
                 <View style={[styles.row, { marginBottom: spacing.sm }]}>
-                  <Chip label={`mode: ${health.mode}`} tone={health.mode === 'live' ? 'accent' : 'tile'} style={styles.chipOutline} />
-                  <Text style={type.small}>{apiUrl}</Text>
+                  <Chip label={health.mode} tone={health.mode === 'live' ? 'accent' : 'tile'} style={styles.chipOutline} />
                 </View>
                 {Object.entries(health.integrations ?? {}).map(([name, state]) => {
                   const live = state === 'live' || state === true;
@@ -109,17 +104,8 @@ export default function Settings() {
 
           <SectionTitle>About</SectionTitle>
           <Tile>
-            <Text style={[type.h2, { marginBottom: 6 }]}>Live Better, in 100–150 sq ft</Text>
-            <Text style={[type.body, { lineHeight: 22 }]}>
-              Adaptive Room Planner is for renters in small NYC rooms. Scan the room once with LiDAR (or type its dimensions), keep a
-              locked “Current Room” that only you edit, text furniture links or photos over iMessage when you want to test a new item,
-              and use the in-app assistant for room changes like reading corners, yoga space, and desk placement near the window. Every
-              answer is a new, named variant you can compare side by side; the planner never moves what you have locked.
-            </Text>
-            <Button label="Show the intro again" icon="play-circle-outline" variant="ghost" onPress={() => { setOnboarded(false); router.replace('/welcome'); }} style={{ marginTop: spacing.md }} />
-            <Text style={[type.small, { marginTop: spacing.md }]}>
-              DivHacks 2026 · Live Better track · v{Constants.expoConfig?.version ?? '1.0.0'} · Expo SDK {Constants.expoConfig?.sdkVersion ?? '54'}
-            </Text>
+            <Button label="Show intro" icon="play-circle-outline" variant="ghost" onPress={() => { setOnboarded(false); router.replace('/welcome'); }} />
+            <Text style={[type.small, { marginTop: spacing.md, textAlign: 'center' }]}>v{Constants.expoConfig?.version ?? '1.0.0'}</Text>
           </Tile>
         </ScrollView>
       </KeyboardAvoidingView>

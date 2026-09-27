@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { api } from '../src/api';
@@ -112,14 +112,6 @@ export default function Ask() {
     }
   };
 
-  const simulateIMessage = () => {
-    Alert.alert(
-      'Ask over iMessage (Photon)',
-      'Text furniture links or photos to the Photon iMessage line. Photon imports the item, checks it against your saved room, creates a variant, and replies with roomplanner://layout/{id}. This in-app assistant is for arranging the room itself.',
-      [{ text: 'Got it' }],
-    );
-  };
-
   const visibleLog = agentLog.filter((e) => !roomId || e.roomId === roomId);
 
   return (
@@ -130,7 +122,7 @@ export default function Ask() {
             <View style={styles.baseRow}>
               <MaterialCommunityIcons name="floor-plan" size={16} color={colors.inkSoft} />
               <Text style={type.small} numberOfLines={1}>
-                {baseLayout ? (baseLayout.isCurrent ? 'Starting from the Current Room (never modified)' : `Starting from “${baseLayout.name}”`) : roomId ? 'Loading layout…' : 'No room selected'}
+                {baseLayout ? (baseLayout.isCurrent ? 'Current Room' : baseLayout.name) : roomId ? 'Loading…' : 'No room selected'}
               </Text>
             </View>
             <TextInput
@@ -138,7 +130,7 @@ export default function Ask() {
               value={text}
               onChangeText={setText}
               placeholder={cfg.placeholder}
-              placeholderTextColor="#A08B7C"
+              placeholderTextColor={colors.inkSoft}
               style={styles.input}
               editable={!sending}
             />
@@ -151,16 +143,13 @@ export default function Ask() {
               {cfg.questions.map((s) => <Chip key={s} icon="auto-fix" label={s} onPress={() => setText(s)} tone="tile" style={styles.chipOutline} />)}
             </View>
             <Button label="Send" icon="send" onPress={send} busy={sending} disabled={!text.trim() || !baseLayoutId} style={{ marginTop: spacing.md }} />
-            <Pressable onPress={simulateIMessage} style={{ alignSelf: 'center', marginTop: spacing.md }}>
-              <Text style={styles.link}>Simulate iMessage (Photon)</Text>
-            </Pressable>
           </Tile>
 
           <View style={{ marginTop: spacing.xl }}>
-            <SectionTitle>Agent log</SectionTitle>
+            <SectionTitle>History</SectionTitle>
             {visibleLog.length === 0 ? (
               <Tile>
-                <EmptyNote>No requests yet. Try “{cfg.placeholder}”.</EmptyNote>
+                <EmptyNote>No requests yet</EmptyNote>
               </Tile>
             ) : (
               <View style={{ gap: spacing.sm }}>
@@ -202,11 +191,11 @@ function LogCard({ entry, onOpen }: { entry: AgentLogEntry; onOpen: (layoutId: s
           ) : null}
           {res.layout ? (
             <Button
-              label={`Open variant “${res.layout.name}”`}
+              label={`Open “${res.layout.name}”`}
               icon="open-in-new"
               variant="secondary"
               onPress={() => onOpen(res.layout!.id)}
-              style={{ marginTop: spacing.sm, backgroundColor: colors.tileMuted }}
+              style={{ marginTop: spacing.sm }}
             />
           ) : null}
         </>
@@ -230,6 +219,5 @@ const styles = StyleSheet.create({
   modeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
   chipOutline: { borderWidth: 1, borderColor: colors.tileMuted },
-  link: { color: colors.inkSoft, textDecorationLine: 'underline', fontSize: 13 },
   logHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
 });

@@ -10,6 +10,7 @@ import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 import { EditorMessage, editorRouteUrl, hostInjection, HostMessage, parseEditorMessage } from '../bridge';
 import { editorSessionScript, nativeAuth } from '../auth';
+import { nativeDemoSession } from '../session';
 import { useStore } from '../store';
 import { colors, radius, shadow } from '../theme';
 import type { LayoutMetrics } from '../types';
@@ -141,6 +142,8 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp, fpsProbe }:
         // mount a new WebView that announces itself again — an endless push loop.
         if (parts[1] === (currentLayoutId ?? layoutId)) return;
         go(`/editor/${encodeURIComponent(parts[1])}`);
+      } else if (parts[0] === 'back') {
+        if (router.canGoBack()) router.back(); else router.replace('/');
       } else if (parts[0] === 'ask') {
         router.push({ pathname: '/ask', params: { roomId: rid ?? '', layoutId: lid ?? '' } });
       } else if (parts[0] === 'variants' || parts[0] === 'rooms') {
@@ -178,7 +181,9 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp, fpsProbe }:
           if (msg.payload.metrics) showMetrics(msg.payload.metrics);
           break;
         case 'editor:snapshot':
-          void saveAndShareSnapshot(msg.payload.dataUrl, msg.payload.name ?? msg.payload.layoutId);
+          if (Platform.OS === 'web') {
+            const a = document.createElement('a'); a.href = msg.payload.dataUrl; a.download = 'room.png'; a.click();
+          } else void saveAndShareSnapshot(msg.payload.dataUrl, msg.payload.name ?? msg.payload.layoutId);
           break;
         case 'editor:navigate':
           navigate(msg.payload.route, msg.payload);
@@ -209,9 +214,28 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp, fpsProbe }:
   const left = insets.left >= 48 ? 8 : insets.left + 8;
   const right = insets.right + 8;
 
+  const [demoSession, setDemoSession] = useState<string | null>(null);
+  useEffect(() => { if (Platform.OS === 'web') void nativeDemoSession().then(setDemoSession); }, []);
+  // Web: the editor iframe posts bridge messages to this page (apps/web/src/lib/bridge.ts); accept only the editor's origin.
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const origin = new URL(webUrl).origin;
+    const listener = (e: MessageEvent) => {
+      if (e.origin === origin && typeof e.data === 'string') onMessage({ nativeEvent: { data: e.data } } as WebViewMessageEvent);
+    };
+    window.addEventListener('message', listener);
+    return () => window.removeEventListener('message', listener);
+  }, [webUrl, onMessage]);
+  const webFrame =
+    Platform.OS === 'web' && demoSession
+      ? React.createElement('iframe', { src: `${url}&demoSession=${encodeURIComponent(demoSession)}`, title: 'Room', onLoad: () => setLoading(false), style: { flex: 1, width: '100%', height: '100%', border: 0 } })
+      : null;
+
   return (
     <View style={[styles.root, { paddingLeft: insets.left, paddingRight: insets.right }]}>
-      {sessionScript && <WebView
+      {/* react-native-webview has no web implementation; the editor's ?embedded=1 mode works standalone in an iframe. */}
+      {webFrame}
+      {Platform.OS !== 'web' && sessionScript && <WebView
         key={sessionScript}
         ref={webRef}
         source={{ uri: url }}
@@ -240,16 +264,14 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp, fpsProbe }:
 
       {loading && !loadError ? (
         <View style={styles.center} pointerEvents="none">
-          <ActivityIndicator color={colors.ink} size="large" />
-          <Text style={styles.loadingText}>Loading editor…</Text>
+          <ActivityIndicator color={colors.forest} size="large" />
         </View>
       ) : null}
 
       {loadError ? (
         <View style={styles.center}>
-          <Text style={styles.errorTitle}>Can't reach the web editor</Text>
+          <Text style={styles.errorTitle}>Can't load the room</Text>
           <Text style={styles.errorBody}>{loadError}</Text>
-          <Text style={styles.errorBody}>{url}</Text>
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
             <Pressable
               style={styles.pillButton}
@@ -294,13 +316,13 @@ export function EditorWebView({ route, layoutId, roomId: roomIdProp, fpsProbe }:
 
 const styles = StyleSheet.create({
   // Matches the editor page's own background so the safe-area strips blend in.
-  root: { flex: 1, backgroundColor: '#84AA9D' },
-  web: { flex: 1, backgroundColor: '#84AA9D' },
+  root: { flex: 1, backgroundColor: colors.bg },
+  web: { flex: 1, backgroundColor: colors.bg },
   center: { position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: 'rgba(243,244,239,0.92)' },
   loadingText: { color: colors.ink, marginTop: 10, fontWeight: '600' },
   errorTitle: { color: colors.ink, fontSize: 18, fontWeight: '800', marginBottom: 6 },
   errorBody: { color: colors.ink, fontSize: 13, textAlign: 'center', marginTop: 2 },
-  pillButton: { backgroundColor: colors.ink, paddingHorizontal: 16, paddingVertical: 10, borderRadius: radius.pill },
+  pillButton: { backgroundColor: colors.forest, paddingHorizontal: 16, paddingVertical: 10, borderRadius: radius.pill },
   pillText: { color: colors.tile, fontWeight: '700' },
   back: {
     position: 'absolute',
@@ -308,8 +330,8 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(37,52,32,0.88)',
+    borderRadius: radius.md,
+    backgroundColor: colors.forest,
     ...shadow.soft,
   },
   chip: {

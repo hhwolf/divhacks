@@ -76,9 +76,9 @@ export function Button({
   disabled?: boolean;
   style?: ViewStyle;
 }) {
-  const bg =
-    variant === 'primary' ? colors.ink : variant === 'danger' ? colors.danger : variant === 'secondary' ? colors.tile : 'transparent';
-  const fg = variant === 'primary' || variant === 'danger' ? colors.tile : colors.ink;
+  // Same pair as the welcome screen: solid forest primary, white with a forest outline for the rest.
+  const bg = variant === 'primary' ? colors.forest : variant === 'danger' ? colors.danger : colors.white;
+  const fg = variant === 'primary' || variant === 'danger' ? colors.white : colors.forest;
   return (
     <Pressable
       onPress={onPress}
@@ -88,7 +88,7 @@ export function Button({
       style={({ pressed }) => [
         styles.button,
         { backgroundColor: bg },
-        variant === 'ghost' && { borderWidth: 1.5, borderColor: colors.ink },
+        (variant === 'secondary' || variant === 'ghost') && { borderWidth: 1.5, borderColor: colors.forest },
         pressed && styles.pressed,
         (busy || disabled) && { opacity: 0.55 },
         style,
@@ -120,8 +120,8 @@ export function Chip({
   style?: ViewStyle;
 }) {
   const bg =
-    tone === 'ink' ? colors.ink : tone === 'accent' ? colors.accent : tone === 'danger' ? colors.danger : tone === 'warn' ? colors.warn : colors.tile;
-  const fg = tone === 'ink' || tone === 'danger' ? colors.tile : colors.ink;
+    tone === 'ink' ? colors.forest : tone === 'accent' ? colors.sageTint : tone === 'danger' ? colors.danger : tone === 'warn' ? colors.warn : colors.tile;
+  const fg = tone === 'ink' || tone === 'danger' ? colors.white : colors.forest;
   const inner = (
     <>
       {icon ? <MaterialCommunityIcons name={icon} size={14} color={fg} style={{ marginRight: 4 }} /> : null}
@@ -194,17 +194,17 @@ const styles = StyleSheet.create({
   },
   bigIcon: { width: 56, height: 56, borderRadius: radius.md, backgroundColor: colors.forest, alignItems: 'center', justifyContent: 'center' },
   bigTitle: { fontSize: 18, fontWeight: '700', color: colors.ink, marginBottom: 2 },
-  pressed: { opacity: 0.75, transform: [{ scale: 0.99 }] },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
   button: {
-    minHeight: 48,
+    minHeight: 52,
     paddingVertical: 12,
     paddingHorizontal: spacing.lg,
-    borderRadius: radius.md,
+    borderRadius: radius.md + 2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonLabel: { fontSize: 15, fontWeight: '700', flexShrink: 1, textAlign: 'center' },
+  buttonLabel: { fontSize: 16, fontWeight: '700', flexShrink: 1, textAlign: 'center' },
   chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill },
   fieldLabel: { ...type.small, fontWeight: '600', marginBottom: 4 },
   input: {

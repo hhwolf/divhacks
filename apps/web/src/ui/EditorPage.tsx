@@ -18,7 +18,6 @@ import { onHostMessage, postToHost } from '../lib/bridge';
 import { setApiBase } from '../lib/api';
 import { Backdrop } from './Backdrop';
 import { FurnishCard } from './FurnishCard';
-import { QuickActions } from './QuickActions';
 import { FurnitureImport } from './FurnitureImport';
 
 export function EditorPage() {
@@ -85,7 +84,10 @@ export function EditorPage() {
       {!loading && !room && lastError && <div className="loading error">Couldn’t load this layout.<br /><small>{lastError}</small></div>}
       {ui && room && (
         <>
-          <TopLeft /><TopRight /><VariantTabs /><AnalysisTile /><RoomNeeds /><Palette /><SidePanel /><QuickActions /><FurnishCard /><BottomCenter /><RequestBar /><Drawers />
+          <TopLeft /><TopRight /><VariantTabs /><Palette />
+          {/* right rail: stacked cards that never overlap each other */}
+          <div className="right-rail"><AnalysisTile /><SidePanel /><RoomNeeds /></div>
+          <FurnishCard /><BottomCenter /><RequestBar /><Drawers />
         </>
       )}
       {reviewOpen && reviewFurniture && <FurnitureImport existing={reviewFurniture} onClose={() => setReviewOpen(false)} />}

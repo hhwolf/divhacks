@@ -10,7 +10,7 @@ def test_compare_current_vs_desk_variant(client: TestClient, bedroom: dict) -> N
     assert body["deltas"]["openFloor"] < 0 and body["deltas"]["conflicts"] == 0
     assert set(body["deltas"]) == {"openFloor", "conflicts", "reachableStorage", "largestFreeRectArea"}
     assert body["moved"] == [] and body["removed"] == []
-    assert len(body["added"]) == 1 and body["added"][0]["name"] == "Desk"
+    assert len(body["added"]) == 1 and body["added"][0]["name"] == "Solid wood desk"
 
 
 def test_compare_reports_moved_items(client: TestClient, bedroom: dict) -> None:

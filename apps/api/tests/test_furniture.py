@@ -12,7 +12,7 @@ def test_presets_listed(client: TestClient) -> None:
 
 
 def test_parse_listing_extracts_dims_and_price() -> None:
-    meta = parse_listing((FIXTURES / "listings" / "desk.html").read_text())
+    meta = parse_listing((FIXTURES / "listings" / "desk.html").read_text(encoding="utf-8"))
     assert meta["price"] == 80.0
     assert meta["dims"] == {"w": 1.194, "d": 0.61, "h": 0.762}
     assert meta["jsonld"]["name"] == "Solid wood desk" and meta["og:title"].startswith("Solid wood desk")
@@ -26,7 +26,7 @@ def test_from_link_fixture(client: TestClient) -> None:
     assert r.status_code == 201
     item = r.json()
     assert item["source"] == "link" and item["category"] == "imported" and item["kind"] == "desk"
-    assert item["dims"] == {"w": 1.2, "d": 0.6, "h": 0.75} and item["price"] == 80 and item["estimated"] is False
+    assert item["name"] == "Solid wood desk" and item["dims"] == {"w": 1.194, "d": 0.61, "h": 0.762} and item["price"] == 80 and item["estimated"] is False
     assert item["glbUrl"] == "/assets/furniture/desk.glb"
     assert any(i["id"] == item["id"] for i in client.get("/furniture").json()["items"])
 

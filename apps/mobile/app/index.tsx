@@ -108,7 +108,6 @@ export default function Home() {
             <Pressable onPress={() => router.push('/scan')} accessibilityRole="button" accessibilityLabel="Scan room" style={({ pressed }) => [styles.scanCard, pressed && styles.pressed]}>
               <View style={styles.scanMark}><MaterialCommunityIcons name="cube-scan" size={40} color={colors.white} /></View>
               <Text style={styles.scanTitle}>Scan room</Text>
-              <Text style={styles.scanSub}>LiDAR scan with RoomPlan</Text>
               <View style={styles.scanCta}><Text style={styles.scanCtaText}>Start scan</Text><MaterialCommunityIcons name="arrow-right" size={16} color={colors.forest} /></View>
             </Pressable>
 
@@ -219,7 +218,7 @@ function RoomActionsSheet({ room, busy, onClose, onRename, onDelete }: { room: R
           <Text style={sheet.title} numberOfLines={1}>{room?.name}</Text>
           {confirm ? (
             <>
-              <Text style={[type.small, { marginBottom: spacing.md }]}>Delete this room, its layouts and condition photos? Payment records are retained.</Text>
+              <Text style={[type.small, { marginBottom: spacing.md }]}>Delete this room and its layouts?</Text>
               <Pressable onPress={onDelete} disabled={busy} style={({ pressed }) => [sheet.action, sheet.danger, pressed && { opacity: 0.85 }]}>
                 {busy ? <ActivityIndicator color={colors.white} /> : <Text style={[sheet.actionText, { color: colors.white }]}>Delete room</Text>}
               </Pressable>

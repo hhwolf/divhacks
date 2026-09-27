@@ -86,12 +86,12 @@ export function Item({ item, f, selected, level, shake, bounce, ghost, onPointer
     if (!g.current) return;
     const dt = (performance.now() - t0.current) / 1000; let dx = 0, y = 0, s = 1;
     if (shake && dt < 0.4) dx = Math.sin(dt * 60) * 0.04 * (1 - dt / 0.4);
-    if (bounce && dt < 0.35) { const k = dt / 0.35; y = Math.sin(k * Math.PI) * 0.08; s = 1 + Math.sin(k * Math.PI) * 0.04; }
+    if (bounce && dt < 0.35) { const k = dt / 0.35; y = Math.sin(k * Math.PI) * 0.02; s = 1 + Math.sin(k * Math.PI) * 0.01; }
     const ent = enterIdx === undefined ? null : useEditor.getState().entrance;
     if (ent && enterIdx !== undefined) {
       // furnish drop-in: hidden until its turn, then falls from ~1.4 m and settles with a small overshoot
       const k = (performance.now() - ent.at - enterIdx * ENTRANCE_STAGGER) / ENTER_MS;
-      if (k < 1) { const c = Math.max(0, k); y += (1 - c) ** 2 * 1.4; s *= c <= 0 ? 0.001 : 0.55 + 0.45 * easeOutBack(c); }
+      if (k < 1) { const c = Math.max(0, k); y += (1 - c) ** 2 * 0.5; s *= c <= 0 ? 0.001 : 0.55 + 0.45 * easeOutBack(c); }
     }
     g.current.position.set(item.x + dx, y + lift, item.z); g.current.scale.setScalar(s);
   });
@@ -114,12 +114,12 @@ export function Item({ item, f, selected, level, shake, bounce, ghost, onPointer
           <div className="pill">
             <span className="dot" style={{ background: item.color ?? sw?.[0] ?? f.colors?.[0] ?? f.color ?? '#c9a27e' }} />
             <span className="dot" style={{ background: sw?.[1] ?? f.colors?.[1] ?? '#5c3b2a' }} />
-            <span className="pill-name">{f.name}{item.locked ? ' 🔒' : ''}</span>
+            <span className="pill-name">{f.name}</span>
           </div>
         </Html>
       )}
       {item.locked && !ghost && (
-        <Html position={[fx / 2 - 0.1, f.dims.h + 0.08, fz / 2 - 0.1]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}><div className="lock-badge" title="Locked">🔒</div></Html>
+        <Html position={[fx / 2 - 0.1, f.dims.h + 0.08, fz / 2 - 0.1]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}><div className="lock-badge" title="Locked"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="6" y="11" width="12" height="9" rx="2" /><path d="M9 11V8.5a3 3 0 0 1 6 0V11" /></svg></div></Html>
       )}
     </group>
   );
