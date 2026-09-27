@@ -8,6 +8,7 @@ import { api } from '../../src/api';
 import { useToast } from '../../src/components/Toast';
 import { Button, Chip, EmptyNote, Screen, Tile } from '../../src/components/ui';
 import { useStore } from '../../src/store';
+import { SPACE_TYPES } from '../../src/setupVocab';
 import { colors, radius, spacing, type } from '../../src/theme';
 import type { Layout, Room } from '../../src/types';
 import { formatArea, formatDims } from '../../src/units';
@@ -32,7 +33,7 @@ export default function Variants() {
       const sorted = [...res.layouts].sort((a, b) => Number(b.isCurrent) - Number(a.isCurrent) || (a.createdAt ?? '').localeCompare(b.createdAt ?? ''));
       setLayouts(sorted);
     } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
+      toast(((e as Error | null)?.message ?? String(e)), { tone: 'danger', ms: 4500 });
       setLayouts([]);
     }
   }, [roomId, toast]);
@@ -52,7 +53,7 @@ export default function Variants() {
       if (okMsg) toast(okMsg);
       await load();
     } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
+      toast(((e as Error | null)?.message ?? String(e)), { tone: 'danger', ms: 4500 });
     } finally {
       setBusyId(null);
     }
@@ -120,6 +121,19 @@ export default function Variants() {
             {dims ? `${formatDims(dims, units)} · ${formatArea(dims.l, dims.w, units)}` : ' '}
             {room?.source ? ` · ${room.source}` : ''}
           </Text>
+          {room ? (
+            <View style={styles.setupRow}>
+              {(room.spaceTypes ?? []).map((t) => (
+                <Chip key={t} label={SPACE_TYPES.find((s) => s.id === t)?.label ?? t} tone="ink" />
+              ))}
+              <Chip
+                icon="tune-variant"
+                label={room.spaceTypes?.length ? 'Edit setup' : 'Set up space'}
+                onPress={() => router.push({ pathname: '/setup', params: { roomId: room.id } })}
+                style={styles.chipOutline}
+              />
+            </View>
+          ) : null}
         </View>
 
         <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg }}>
@@ -196,5 +210,6 @@ const styles = StyleSheet.create({
   badge: { width: 40, height: 40, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
   cardTitle: { fontSize: 16, fontWeight: '700', color: colors.ink },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
+  setupRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
   chipOutline: { borderWidth: 1, borderColor: colors.tileMuted },
 });

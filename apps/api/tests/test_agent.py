@@ -21,8 +21,28 @@ def _bed(layout: dict) -> dict:
     return next(i for i in layout["items"] if i["furnitureId"] == "bed_double")
 
 
+def _import_desk(client: TestClient) -> dict:
+    r = client.post("/furniture/from-link", json={"url": "http://testserver/fixtures/listings/desk"})
+    assert r.status_code == 201
+    item = r.json()
+    confirmed = client.patch(
+        f"/furniture/{item['id']}/details",
+        json={
+            "name": item["name"],
+            "dims": item["dims"],
+            "category": item["category"],
+            "price": item["price"],
+            "sourceUrl": item["sourceUrl"],
+            "dimensionsConfirmed": True,
+        },
+    )
+    assert confirmed.status_code == 200
+    return confirmed.json()
+
+
 def test_marketplace_desk_request(client: TestClient, bedroom: dict) -> None:
-    out = _ask(client, bedroom, DESK_Q)
+    item = _import_desk(client)
+    out = _ask(client, bedroom, "Will this fit beside my window without moving my bed?", furnitureId=item["id"])
     assert out["status"] == "ok"
     PLAN_OK.validate(out["plan"])
     layout = out["layout"]
@@ -38,6 +58,26 @@ def test_marketplace_desk_request(client: TestClient, bedroom: dict) -> None:
     assert names == ["Current Room", "Marketplace Desk"]
     current = client.get(f"/layouts/{bedroom['currentId']}").json()["layout"]
     assert current["items"] == bedroom["current"]["items"]
+
+
+def test_app_assistant_rejects_new_furniture_links(client: TestClient, bedroom: dict) -> None:
+    out = _ask(client, bedroom, DESK_Q)
+    assert out["status"] == "clarify" and out["layout"] is None
+    assert "iMessage/Photon" in out["reply"]
+    assert [l["name"] for l in client.get(f"/rooms/{bedroom['roomId']}").json()["layouts"]] == ["Current Room"]
+
+
+def test_basic_addition_recommends_preset_item(client: TestClient, bedroom: dict) -> None:
+    out = _ask(client, bedroom, "Can you add a small desk where it fits best?")
+    assert out["status"] == "ok"
+    PLAN_OK.validate(out["plan"])
+    layout = out["layout"]
+    assert layout["name"] == "Add desk" and layout["isCurrent"] is False
+    assert _bed(layout) == _bed(bedroom["current"])
+    desk = next(i for i in layout["items"] if i["furnitureId"] == "desk")
+    assert desk["rotation"] in (0, 90, 180, 270)
+    assert layout["metrics"]["conflicts"] == 0
+    assert "desk" in out["reply"].lower() and "bed" in out["reply"].lower()
 
 
 def test_yoga_request_creates_clear_zone(client: TestClient, bedroom: dict) -> None:
@@ -91,14 +131,16 @@ def _patch_gemini(client: TestClient, plans: list[dict]) -> list[list[str] | Non
 def test_retry_after_violation_succeeds(client: TestClient, bedroom: dict) -> None:
     good = {"intent": "fit_item", "variantName": "Desk by window", "actions": [{"type": "add", "item": "desk_mkt", "zone": "window wall, beside window"}], "reply": "Beside the window it goes."}
     calls = _patch_gemini(client, _bad_then(good))
-    out = _ask(client, bedroom, DESK_Q)
+    item = _import_desk(client)
+    out = _ask(client, bedroom, "Will this fit beside my window without moving my bed?", furnitureId=item["id"])
     assert out["status"] == "ok" and out["layout"]["name"] == "Desk by window"
     assert len(calls) == 2 and calls[1] and "door swing" in calls[1][0]
 
 
 def test_two_bad_plans_reject_and_keep_layouts(client: TestClient, bedroom: dict) -> None:
     calls = _patch_gemini(client, _bad_then(_bad_then({})[0]))
-    out = _ask(client, bedroom, DESK_Q)
+    item = _import_desk(client)
+    out = _ask(client, bedroom, "Will this fit beside my window without moving my bed?", furnitureId=item["id"])
     assert out["status"] == "rejected" and out["layout"] is None
     assert len(calls) == 2
     assert {v["rule"] for v in out["violations"]} == {"door_clearance"}

@@ -1,5 +1,4 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -12,7 +11,35 @@ import { type AgentLogEntry, useStore } from '../src/store';
 import { colors, radius, spacing, type } from '../src/theme';
 import type { AgentStatus, Layout } from '../src/types';
 
-const PLACEHOLDER = 'Will this fit beside my window without moving my bed?';
+type AssistMode = 'plan' | 'add' | 'clear' | 'protect' | 'compare';
+
+const PROMPTS: Record<AssistMode, { label: string; placeholder: string; questions: string[] }> = {
+  plan: {
+    label: 'Plan',
+    placeholder: 'Where should my desk go if the bed stays put?',
+    questions: ['Where should my desk go if the bed stays put?', 'Can you create a reading corner near the window?', 'Can you make this room feel more open?'],
+  },
+  add: {
+    label: 'Add',
+    placeholder: 'Can you add a small desk where it fits best?',
+    questions: ['Can you add a small desk where it fits best?', 'Can you add a floor lamp for a reading corner?', 'Can you add a plant without blocking the door?'],
+  },
+  clear: {
+    label: 'Clear',
+    placeholder: 'Can you make space for yoga without moving my dresser?',
+    questions: ['Can you make space for yoga without moving my dresser?', 'Can you clear a path from the door to the desk?', 'Can you open up the center of the room?'],
+  },
+  protect: {
+    label: 'Protect',
+    placeholder: "Can you rearrange this without moving my bed?",
+    questions: ["Can you rearrange this without moving my bed?", 'Can you keep the dresser where it is?', 'Can you keep the window area clear?'],
+  },
+  compare: {
+    label: 'Compare',
+    placeholder: 'Can you make a second option with more open floor?',
+    questions: ['Can you make a second option with more open floor?', 'Can you try a layout for guests?', 'Can you compare a study setup with a lounge setup?'],
+  },
+};
 
 export default function Ask() {
   const router = useRouter();
@@ -25,9 +52,9 @@ export default function Ask() {
   const [baseLayoutId, setBaseLayoutId] = useState(params.layoutId ?? '');
   const [baseLayout, setBaseLayout] = useState<Layout | null>(null);
   const [text, setText] = useState('');
-  const [furniture, setFurniture] = useState<{ id: string; name: string } | null>(null);
+  const [mode, setMode] = useState<AssistMode>('plan');
   const [sending, setSending] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const cfg = PROMPTS[mode];
 
   // Resolve missing ids: layout -> room, or room -> its Current layout.
   useEffect(() => {
@@ -49,55 +76,13 @@ export default function Ask() {
           }
         }
       } catch (e) {
-        if (!cancelled) toast((e as Error).message, { tone: 'danger' });
+        if (!cancelled) toast(((e as Error | null)?.message ?? String(e)), { tone: 'danger' });
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [baseLayoutId, roomId, toast]);
-
-  const pasteLink = () => {
-    const apply = (url?: string) => {
-      const u = (url ?? '').trim();
-      if (!u) return;
-      setText((t) => (t.trim() ? `${t.trim()} ${u}` : u));
-    };
-    if (Platform.OS === 'ios') {
-      Alert.prompt('Paste a product link', 'The planner will read the listing to size the item.', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Add', onPress: (v?: string) => apply(v) },
-      ]);
-    } else {
-      // Alert.prompt is iOS-only; on Android the user can paste straight into the text box.
-      toast('Paste the link directly into the request box.');
-    }
-  };
-
-  const pickPhoto = async () => {
-    try {
-      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!perm.granted) {
-        toast('Photo library permission is needed to attach a photo.', { tone: 'danger' });
-        return;
-      }
-      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: false });
-      if (result.canceled || !result.assets[0]) return;
-      const asset = result.assets[0];
-      setUploading(true);
-      const item = await api.furnitureFromPhoto({
-        uri: asset.uri,
-        name: asset.fileName ?? `photo-${Date.now()}.jpg`,
-        type: asset.mimeType ?? 'image/jpeg',
-      });
-      setFurniture({ id: item.id, name: item.name ?? 'Photo item' });
-      toast(`Attached ${item.name ?? 'photo item'}${item.estimated ? ' (estimated size)' : ''}`);
-    } catch (e) {
-      toast(`Photo upload failed: ${(e as Error).message}`, { tone: 'danger', ms: 4500 });
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const send = async () => {
     const trimmed = text.trim();
@@ -112,18 +97,16 @@ export default function Ask() {
       text: trimmed,
       roomId,
       baseLayoutId,
-      furnitureId: furniture?.id,
       pending: true,
     };
     pushAgentLog(entry);
     setSending(true);
     setText('');
-    setFurniture(null);
     try {
-      const res = await api.agentRequest({ text: trimmed, roomId, baseLayoutId, furnitureId: entry.furnitureId });
+      const res = await api.agentRequest({ text: trimmed, roomId, baseLayoutId });
       updateAgentLog(entry.id, { pending: false, response: res });
     } catch (e) {
-      updateAgentLog(entry.id, { pending: false, error: (e as Error).message });
+      updateAgentLog(entry.id, { pending: false, error: ((e as Error | null)?.message ?? String(e)) });
     } finally {
       setSending(false);
     }
@@ -132,7 +115,7 @@ export default function Ask() {
   const simulateIMessage = () => {
     Alert.alert(
       'Ask over iMessage (Photon)',
-      'In production you text the same request to our Photon iMessage line. Photon POSTs it to /webhooks/photon, the agent runs the identical plan → solver → validate pipeline, and replies with one sentence plus roomplanner://layout/{id} and a web link. In mock mode the API answers with a canned plan, so this screen exercises the exact same path via POST /agent/request with channel "app".',
+      'Text furniture links or photos to the Photon iMessage line. Photon imports the item, checks it against your saved room, creates a variant, and replies with roomplanner://layout/{id}. This in-app assistant is for arranging the room itself.',
       [{ text: 'Got it' }],
     );
   };
@@ -154,15 +137,18 @@ export default function Ask() {
               multiline
               value={text}
               onChangeText={setText}
-              placeholder={PLACEHOLDER}
+              placeholder={cfg.placeholder}
               placeholderTextColor="#A08B7C"
               style={styles.input}
               editable={!sending}
             />
+            <View style={styles.modeRow}>
+              {(Object.keys(PROMPTS) as AssistMode[]).map((m) => (
+                <Chip key={m} label={PROMPTS[m].label} onPress={() => setMode(m)} tone={mode === m ? 'ink' : 'tile'} style={mode === m ? undefined : styles.chipOutline} />
+              ))}
+            </View>
             <View style={styles.chipRow}>
-              <Chip icon="link-variant" label="Paste link" onPress={pasteLink} tone="tile" style={styles.chipOutline} />
-              <Chip icon="camera-outline" label={uploading ? 'Uploading…' : furniture ? `Photo: ${furniture.name}` : 'Photo'} onPress={uploading ? undefined : pickPhoto} tone={furniture ? 'accent' : 'tile'} style={styles.chipOutline} />
-              {furniture ? <Chip icon="close" label="Remove" onPress={() => setFurniture(null)} tone="tile" style={styles.chipOutline} /> : null}
+              {cfg.questions.map((s) => <Chip key={s} icon="auto-fix" label={s} onPress={() => setText(s)} tone="tile" style={styles.chipOutline} />)}
             </View>
             <Button label="Send" icon="send" onPress={send} busy={sending} disabled={!text.trim() || !baseLayoutId} style={{ marginTop: spacing.md }} />
             <Pressable onPress={simulateIMessage} style={{ alignSelf: 'center', marginTop: spacing.md }}>
@@ -174,7 +160,7 @@ export default function Ask() {
             <SectionTitle>Agent log</SectionTitle>
             {visibleLog.length === 0 ? (
               <Tile>
-                <EmptyNote>No requests yet. Try “{PLACEHOLDER}” or “make space for yoga, keep my dresser”.</EmptyNote>
+                <EmptyNote>No requests yet. Try “{cfg.placeholder}”.</EmptyNote>
               </Tile>
             ) : (
               <View style={{ gap: spacing.sm }}>
@@ -207,7 +193,6 @@ function LogCard({ entry, onOpen }: { entry: AgentLogEntry; onOpen: (layoutId: s
         <Text style={[type.body, { flex: 1, fontWeight: '600' }]}>{entry.text}</Text>
         <Chip label={status} tone={entry.pending ? 'tile' : statusTone(res?.status, entry.error)} />
       </View>
-      {entry.furnitureId ? <Text style={type.small}>with photo item {entry.furnitureId}</Text> : null}
       {entry.error ? <Text style={[type.small, { color: colors.danger, marginTop: 6 }]}>{entry.error}</Text> : null}
       {res ? (
         <>
@@ -242,6 +227,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
     textAlignVertical: 'top',
   },
+  modeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
   chipOutline: { borderWidth: 1, borderColor: colors.tileMuted },
   link: { color: colors.inkSoft, textDecorationLine: 'underline', fontSize: 13 },

@@ -1,0 +1,4 @@
+{
+  "description": "Import permitted StreetEasy/HUD snapshots using scripts/import_housing_benchmarks.py. No invented public-source figures.",
+  "benchmarks": []
+}

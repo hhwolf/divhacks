@@ -12,9 +12,9 @@
       "bundleIdentifier": "dev.roomplanner.app",
       "infoPlist": {
         "NSCameraUsageDescription": "Room Planner uses the camera and LiDAR to scan your room with RoomPlan.",
-        "NSPhotoLibraryUsageDescription": "Room Planner lets you pick a furniture photo so the assistant can size it.",
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "appleTeamId": "59MGA3685P"
     },
     "android": {
       "package": "dev.roomplanner.app",
@@ -45,12 +45,6 @@
         }
       ],
       "./plugins/withXcode16Podfile",
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "Room Planner lets you pick a furniture photo so the assistant can size it."
-        }
-      ],
       [
         "expo-screen-orientation",
         {

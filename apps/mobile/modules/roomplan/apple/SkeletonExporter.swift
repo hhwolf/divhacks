@@ -287,11 +287,13 @@ enum SkeletonExporter {
 
   /// Yaw in degrees -> 0 / 90 / 180 / 270.
   static func quantise(_ deg: Double) -> Int {
+    guard deg.isFinite else { return 0 }
     let q = Int((deg / 90).rounded()) * 90
     return ((q % 360) + 360) % 360
   }
 
   static func clamp(_ v: Double, _ lo: Double, _ hi: Double) -> Double { min(max(v, lo), hi) }
-  static func r3(_ v: Double) -> Double { (v * 1000).rounded() / 1000 }
+  /// Round to mm; non-finite values (degenerate transforms) become 0 so the JSON stays valid for the API.
+  static func r3(_ v: Double) -> Double { v.isFinite ? (v * 1000).rounded() / 1000 : 0 }
 }
 #endif

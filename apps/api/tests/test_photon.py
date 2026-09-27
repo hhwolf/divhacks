@@ -13,23 +13,37 @@ from fastapi.testclient import TestClient
 from tests.conftest import FIXTURES, load_fixture
 
 PHOTON_FIXTURES = sorted(p.name for p in (FIXTURES / "photon").glob("*.json"))
+PHOTON_FURNITURE_FIXTURES = [name for name in PHOTON_FIXTURES if name != "yoga.json"]
 
 
-@pytest.mark.parametrize("name", PHOTON_FIXTURES)
+@pytest.mark.parametrize("name", PHOTON_FURNITURE_FIXTURES)
 def test_fixture_round_trip_creates_variant(client: TestClient, bedroom: dict, name: str, data_dir: Path) -> None:
     payload = load_fixture("photon", name)
     r = client.post("/webhooks/photon", json=payload)
     assert r.status_code == 200
     body = r.json()
-    assert body["ok"] is True and body["layoutId"]
-    layouts = client.get(f"/rooms/{bedroom['roomId']}").json()["layouts"]
-    assert any(l["id"] == body["layoutId"] and l["createdBy"] == "agent" for l in layouts)
+    assert body["ok"] is True and body["layoutId"] is None
+    assert "confirm" in body["reply"]
+    item = next(i for i in reversed(client.get('/furniture').json()['items']) if i['source'] in ('photo', 'link'))
+    confirmed = client.patch(f"/furniture/{item['id']}/details", json={"name":item['name'],"dims":item['dims'],"category":item['category'],"dimensionsConfirmed":True})
+    assert confirmed.status_code == 200
+    result = client.post('/agent/request',json={"text":"Will this fit beside my window without moving my bed?","roomId":bedroom['roomId'],"baseLayoutId":bedroom['currentId'],"furnitureId":item['id'],"channel":"app"}).json()
+    assert result['layout'] and result['layout']['createdBy'] == 'agent'
     outbox = client.app.state.ctx.photon.outbox
     assert outbox[-1]["to"] == payload["message"]["from"]
     assert outbox[-1]["text"] == body["reply"]
-    assert f"roomplanner://layout/{body['layoutId']}" in outbox[-1]["links"]
     lines = (data_dir / "photon_outbox.jsonl").read_text().splitlines()
     assert json.loads(lines[-1])["links"] == outbox[-1]["links"]
+
+
+def test_photon_plain_spatial_request_redirects_to_app(client: TestClient, bedroom: dict) -> None:
+    r = client.post("/webhooks/photon", json=load_fixture("photon", "yoga.json"))
+    assert r.status_code == 200
+    body = r.json()
+    assert body["ok"] is True and body["layoutId"] is None
+    assert "listing link or photo" in body["reply"]
+    assert "in-app assistant" in body["reply"]
+    assert [l["name"] for l in client.get(f"/rooms/{bedroom['roomId']}").json()["layouts"]] == ["Current Room"]
 
 
 def test_unknown_shape_gets_clarifying_reply(client: TestClient) -> None:
@@ -40,7 +54,7 @@ def test_unknown_shape_gets_clarifying_reply(client: TestClient) -> None:
 
 
 def test_no_room_yet_replies_gracefully(client: TestClient) -> None:
-    r = client.post("/webhooks/photon", json=load_fixture("photon", "yoga.json"))
+    r = client.post("/webhooks/photon", json=load_fixture("photon", "text-question.json"))
     assert r.status_code == 200 and r.json()["layoutId"] is None and "room" in r.json()["reply"]
 
 

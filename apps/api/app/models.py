@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 Rotation = Literal[0, 90, 180, 270]
-FurnitureCategory = Literal["bed", "desk", "seating", "storage", "table", "decor", "imported"]
+FurnitureCategory = Literal["bed", "desk", "seating", "storage", "table", "decor", "divider", "imported"]
 FurnitureKind = Literal["bed", "desk", "wardrobe", "dresser", "storage", "seating", "table", "decor", "floor"]
 FurnitureSource = Literal["preset", "link", "photo", "manual", "scan"]
 Walkability = Literal["Good", "Tight", "Blocked"]
@@ -75,13 +75,27 @@ class RoomSkeleton(Strict):
     outlets: list[Outlet] = []
 
 
+class RoomElement(Loose):
+    """Something the user says the space needs (bed, desk, yoga zone…); `furnitureIds` are the catalog items that satisfy it."""
+
+    id: str
+    label: str
+    furnitureIds: list[str] = []
+    custom: bool = False
+    zone: dict[str, float] | None = None  # e.g. {"w": 1.8, "d": 1.2} for clear-floor elements like a yoga zone
+
+
 class Room(Loose):
     id: str
     userId: str | None = None
     name: str
     skeleton: RoomSkeleton
     source: Literal["scan", "manual", "sample"]
+    supersedesRoomId: str | None = None
     createdAt: str
+    spaceTypes: list[str] = []
+    elements: list[RoomElement] = []
+    detectedObjects: list[dict[str, Any]] = []  # RoomPlan-detected furniture kept aside when the room is created clean
 
 
 class Dims(Strict):
@@ -109,6 +123,8 @@ class FurnitureItem(FurnitureRef):
     price: float | None = None
     color: str | None = None
     estimated: bool = False
+    dimensionsConfirmed: bool = False
+    deliveryCost: float = Field(default=0, ge=0)
     frontAxis: Literal["+z", "-z", "+x", "-x"] = "+z"
 
 
@@ -225,76 +241,8 @@ class AgentRequestLog(Loose):
     createdAt: str
 
 
-class HousingProfile(Loose):
-    roomId: str
-    address: str | None = None
-    zip: str | None = None
-    borough: str | None = None
-    neighborhood: str | None = None
-    bbl: str | None = None
-    source: Literal["user", "fixture", "open_data"] = "user"
-    askingRent: float
-    depositRequested: float | None = None
-    applicationFee: float | None = None
-    utilitiesIncluded: bool = False
-    occupancyType: OccupancyType = "private_room"
-    bedrooms: int | None = None
-    declaredIssues: list[str] = []
-
-
-class SpaceQuality(Loose):
-    floorAreaSqFt: float
-    usableAreaSqFt: float
-    openFloorPct: float
-    ceilingHeightFt: float
-    windowCount: int
-    floorMaterial: FloorMaterial = "unknown"
-    materialConfidence: Confidence = "low"
-    conditionScore: int
-    issuePenalties: list[str] = []
-
-
-class RentRange(Strict):
-    low: int
-    mid: int
-    high: int
-
-
-class SourceBreakdown(Strict):
-    source: str
-    label: str
-    value: str
-
-
-class RentAssessment(Loose):
-    id: str
-    roomId: str
-    layoutId: str | None = None
-    profile: HousingProfile
-    spaceQuality: SpaceQuality
-    estimatedFairRange: RentRange
-    askingRent: float
-    deltaVsMid: float
-    pricePerSqFt: float
-    confidence: Confidence
-    explanation: list[str]
-    sourceBreakdown: list[SourceBreakdown]
-    legalFlags: list[str]
-    buildingHealthSignals: list[str]
-    createdAt: str
-    updatedAt: str
-
-
-class PaymentQuote(Loose):
-    id: str
-    roomId: str | None = None
-    assessmentId: str | None = None
-    purpose: PaymentPurpose
-    amount: float
-    rentAmount: float | None = None
-    status: PaymentStatus
-    guardrails: list[str]
-    stripeCheckoutUrl: str | None = None
-    stripeSessionId: str | None = None
-    createdAt: str
-    updatedAt: str
+# Financial and housing contracts are strict and versioned independently of geometry.
+from app.housing_models import (  # noqa: E402,F401
+    HousingProfile, ConditionObservation, RentalComparable, SourceInfo, BuildingRecord,
+    RentRange, RentAssessment, PaymentQuote, PaymentRecord, Tenancy, QuoteRequest,
+)

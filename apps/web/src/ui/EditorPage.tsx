@@ -10,12 +10,14 @@ import { SidePanel } from './SidePanel';
 import { BottomCenter } from './BottomCenter';
 import { VariantTabs } from './VariantTabs';
 import { AnalysisTile } from './AnalysisTile';
+import { RoomNeeds } from './RoomNeeds';
 import { RequestBar } from './RequestBar';
 import { Drawers } from './Drawers';
 import { Toasts } from './Toasts';
 import { onHostMessage, postToHost } from '../lib/bridge';
 import { setApiBase } from '../lib/api';
 import { Backdrop } from './Backdrop';
+import { QuickActions } from './QuickActions';
 
 export function EditorPage() {
   const { id, sample } = useParams();
@@ -47,7 +49,7 @@ export function EditorPage() {
   // keyboard
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const st = s.getState(); const tag = (e.target as HTMLElement)?.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const st = s.getState(); const tag = (e.target as HTMLElement)?.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.querySelector('dialog[open]')) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey) st.redo(); else st.undo(); return; }
       if (e.key === 'Escape') { st.cancelPlacing(); st.select(null); st.setDrawer(null); return; }
       if (!st.selectedId) return;
@@ -68,7 +70,7 @@ export function EditorPage() {
       {!loading && !room && lastError && <div className="loading error">Couldn’t load this layout.<br /><small>{lastError}</small></div>}
       {ui && room && (
         <>
-          <TopLeft /><TopRight /><VariantTabs /><AnalysisTile /><Palette /><SidePanel /><BottomCenter /><RequestBar /><Drawers />
+          <TopLeft /><TopRight /><VariantTabs /><AnalysisTile /><RoomNeeds /><Palette /><SidePanel /><QuickActions /><BottomCenter /><RequestBar /><Drawers />
         </>
       )}
       <Toasts />

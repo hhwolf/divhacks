@@ -3,9 +3,9 @@ import { useEditor } from '../store';
 import { I } from './icons';
 import { api } from '../lib/api';
 
-const WALLS = ['#F3DEC2', '#F7F2EA', '#5A845E', '#8FBDB0', '#D9A56E', '#C9B7E8', '#F2C7C0', '#B8CDE0', '#6B6E80', '#3E4A48'];
+const WALLS = ['#F3EDE4', '#F3DEC2', '#DCE3DA', '#5A845E', '#8FBDB0', '#C9B7E8', '#F2C7C0', '#B8CDE0', '#6B6E80', '#3E4A48'];
 const FLOORS: { style: 'brick' | 'herringbone' | 'plank'; color: string; label: string }[] = [
-  { style: 'brick', color: '#B0684C', label: 'Terracotta brick' }, { style: 'herringbone', color: '#BA7A57', label: 'Herringbone oak' }, { style: 'plank', color: '#8E5A3C', label: 'Walnut plank' }, { style: 'plank', color: '#D6B48A', label: 'Pale plank' }, { style: 'brick', color: '#7F7F86', label: 'Concrete' },
+  { style: 'plank', color: '#C9A57C', label: 'Light oak plank' }, { style: 'herringbone', color: '#BA7A57', label: 'Herringbone oak' }, { style: 'plank', color: '#8E5A3C', label: 'Walnut plank' }, { style: 'brick', color: '#B0684C', label: 'Terracotta brick' }, { style: 'brick', color: '#8A8A90', label: 'Concrete' },
 ];
 export function Drawers() {
   const drawer = useEditor((s) => s.drawer); const set = useEditor;
@@ -40,10 +40,12 @@ function Paint() {
   const wallColor = useEditor((s) => s.wallColor); const floorStyle = useEditor((s) => s.floorStyle); const floorColor = useEditor((s) => s.floorColor); const set = useEditor;
   return (
     <div className="drawer paint" data-testid="drawer-paint">
-      <h3>Walls</h3>
+      <h3>Wall materials</h3>
       <div className="swatch-row">{WALLS.map((c) => <button key={c} className={`tile swatch ${wallColor === c ? 'on' : ''}`} style={{ background: c }} aria-label={`Wall ${c}`} onClick={() => set.getState().setWallColor(c)} />)}</div>
-      <h3>Floor</h3>
+      <h3>Floor materials</h3>
       {FLOORS.map((f) => <button key={f.label} className={`drawer-item ${floorStyle === f.style && floorColor === f.color ? 'active' : ''}`} onClick={() => set.getState().setFloorStyle(f.style, f.color)}><span className="swatch-dot" style={{ background: f.color }} />{f.label}</button>)}
+      <h3>Furniture materials</h3>
+      <div className="paint-note">Select an item, then use its swatches to change fabric, wood, paint, or metal color.</div>
     </div>
   );
 }

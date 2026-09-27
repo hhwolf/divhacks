@@ -12,7 +12,7 @@ DivHacks 2026 · **Live Better** track. Scan your NYC room once, text furniture 
 | API + OpenAPI docs | https://adaptive-room-planner-api.vercel.app/docs · `GET /health` shows live vs mock per service |
 | Photon webhook (real mode) | `POST https://adaptive-room-planner-api.vercel.app/webhooks/photon` |
 
-Redeploy: `scripts/deploy_api.sh` then `scripts/deploy_web.sh https://adaptive-room-planner-api.vercel.app` (Vercel CLI, logged in, team `ast18`). The deployed API persists to a Vercel Blob store shared by all instances; `scripts/sync_env_to_vercel.sh` pushes real-mode keys (Gemini, Backboard, Photon, Atlas) from `.env` and redeploys.
+Redeploy: `scripts/deploy_api.sh` then `scripts/deploy_web.sh https://adaptive-room-planner-api.vercel.app` (Vercel CLI, logged in, team `ast18`). The deployed API persists to Supabase when `SUPABASE_URL` and a server-only key are configured, otherwise it can fall back to Vercel Blob or local JSON. `scripts/sync_env_to_vercel.sh` pushes real-mode keys from `.env` and redeploys.
 
 ## One-command setup
 
@@ -24,6 +24,8 @@ make web            # Vite editor on :5173
 ```
 
 Everything runs in **mock mode with zero env vars and no network**: the JSON store lives in `.data/`, Gemini/Backboard/Photon return deterministic fixtures. Copy `.env.example` to `.env` and add keys to switch each service to its real implementation independently (`GET /health` shows live vs mock per service).
+
+Channel split: **Photon/iMessage brings new furniture into the room** from listing links or photos, checks it against the saved scan, and creates a layout variant. The **in-app AI assistant arranges the room**: reading corners, yoga space, window placement, locked-item rules, and other spatial changes inside the existing 3D room.
 
 ```bash
 make test           # pnpm typecheck + lint + vitest, then pytest (incl. TS/Python parity on fixtures/validation)
@@ -37,7 +39,26 @@ make thumbs         # re-render palette thumbnails from the GLBs
 make screenshots    # docs/screenshots/iter-N (needs api + web running)
 ```
 
-Storage picks itself: `MONGODB_URI` → MongoDB Atlas; else `BLOB_READ_WRITE_TOKEN` → Vercel Blob snapshots (what the deployed API uses so every serverless instance sees the same rooms); else a JSON file in `.data/`. `GET /health` reports which one is active.
+Storage picks itself: `SUPABASE_URL` + `SUPABASE_SECRET_KEY` → Supabase REST/Postgres; else `BLOB_READ_WRITE_TOKEN` → Vercel Blob snapshots (what the deployed API can use so every serverless instance sees the same rooms); else a JSON file in `.data/`. `GET /health` reports which one is active.
+
+Supabase setup: create this table once in the SQL editor, then add `SUPABASE_URL` and the server-only secret key to `.env` / Vercel env.
+
+```sql
+create table if not exists public.arp_documents (
+  collection text not null,
+  id text not null,
+  room_id text,
+  user_id text,
+  phone text,
+  doc jsonb not null,
+  seq bigint not null,
+  primary key (collection, id)
+);
+create index if not exists arp_documents_collection_seq_idx on public.arp_documents (collection, seq);
+create index if not exists arp_documents_room_idx on public.arp_documents (collection, room_id);
+create index if not exists arp_documents_phone_idx on public.arp_documents (collection, phone);
+grant select, insert, update, delete on public.arp_documents to service_role;
+```
 
 ## Repository layout
 
@@ -52,23 +73,13 @@ Storage picks itself: `MONGODB_URI` → MongoDB Atlas; else `BLOB_READ_WRITE_TOK
 | `fixtures/` | sample rooms, validation parity suite, canned plans, listing page, Photon payloads |
 | `docs/` | specs, reference images, per-iteration screenshots, demo recording |
 
-## Rent Reality Check + guarded payments
+## Rent comparisons and guarded test payments
 
-The editor's analysis tile now has **Fit / Space / Rent** tabs. Rent check combines the scanned floor polygon, current open-floor metrics, fixture-backed ZIP rent baselines, material/condition penalties, and NYC open-data-style building signals into an explainable estimated fair range. It is intentionally labeled as an estimate, not a legal rent or appraisal.
+**Fit / Space / Rent** preserves the designer and adds confirmed measurements, structured condition reports, private optional photos, comparable asking-rent ranges and property-specific NYC records. Rent calculations do not change when furniture moves. Condition effects appear only when at least five documented comparable units match; real-data failures never silently substitute fixtures.
 
-Mock-first endpoints:
+Payment review uses documented tenancy rent, cumulative deposit/screening caps, required screening evidence and broker distinctions. Checkout accepts an immutable server quote ID and explicit confirmation. Stripe Connect direct charges work in test mode with Supabase sign-in and Postgres; live payments are disabled. The zero-credential path is a separately labeled SQLite demo simulation.
 
-```bash
-POST /rent/assess
-GET  /rooms/{room_id}/rent-assessment
-POST /payments/quote
-POST /payments/checkout
-POST /webhooks/stripe
-```
-
-Payment guardrails block security deposits above one month of rent and application fees above $20. Stripe stays in mock mode unless `MOCK_MODE=false`, `STRIPE_SECRET_KEY` is present, and `STRIPE_PRICE_MODE=test`; real landlord/seller payouts remain disabled unless `STRIPE_CONNECT_ENABLED=true`. No escrow or stored card data is implemented.
-
-The agent can answer rent/payment prompts such as “I pay $1600 for this room in 10027. Is that fair?”, “Can I safely send a $500 deposit?”, and “This application fee is $75.” Furniture-planning prompts still use the original Gemini/solver pipeline.
+See [setup, data provenance, migrations, production gates and the reproducible walkthrough](docs/HOUSING_PAYMENTS.md). Run `.venv/bin/python scripts/e2e_housing.py` for the new browser demo. Legacy mock assessments/payments are not current valuations or Stripe transactions.
 
 ## Running on the phone
 
@@ -76,14 +87,28 @@ The agent can answer rent/payment prompts such as “I pay $1600 for this room i
 2. `cd apps/mobile && npm install`.
 3. **Expo Go** (everything except live scan): `npx expo start`, scan the QR.
 4. **Dev client with RoomPlan** (iPhone Pro, LiDAR): `npx expo run:ios --device`, then `make mobile`.
+5. **TestFlight** (Xcode-free, cloud build): `npx eas-cli build --platform ios --profile production` then `npx eas-cli submit --platform ios --profile production --latest`. The first build needs an interactive Apple login (2FA); App Store Connect app id 6816528380, team 59MGA3685P are in `eas.json`.
 
 The editor screen locks to landscape and embeds the web editor through a typed `postMessage` bridge (`packages/contracts/schemas/bridge.schema.json`).
 
+### Scanning a real room (LiDAR iPhone Pro / iPad Pro, iOS 16+)
+
+The Scan screen hosts Apple's `RoomCaptureView` through the local Expo module in `apps/mobile/modules/roomplan` (Swift). Flow on device:
+
+1. **Start** — the app asks for camera access (first time), then runs a `RoomCaptureSession` with coaching on. Walk the room slowly; the chip shows Apple's instructions ("Move closer to the wall", "Slow down") and live wall / door / window / object counts.
+2. **Stop** — RoomPlan post-processes the capture; the promise resolves only when the final `CapturedRoom` arrives (30 s timeout), then it is exported to our skeleton JSON: walls projected to the floor plane and chained into a closed polygon, doors/windows as offsets along their parent wall, detected furniture mapped to the catalog (bed → `bed_double`/`bed_single` by width, table near a chair → `desk`, storage → `wardrobe`/`dresser` by height, sofa, chair, television → `tv_stand`).
+3. **Use this scan** → room setup (space types → elements) → the clean scanned room opens in the editor. Detected furniture stays on the room as `detectedObjects`.
+
+If the camera is denied the screen shows an "Open Settings" button. Without LiDAR (or in Expo Go / the Simulator) the screen falls back to sample room, typed dimensions, or pasted RoomPlan JSON — `fixtures/rooms/roomplan-export-sample.json` is a hand-authored export in exactly the shape the module produces.
+
 ## Photon (iMessage) in real mode
+
+Photon and the editor’s **Import furniture** button share the same import backend. Send a supported listing or screenshot, then confirm dimensions in the editor before requesting a fit variant. For Facebook Marketplace use screenshots/manual entry and preserve the original purchase link. Live Photon requires a signed webhook and a verified phone linked to the signed-in user; see [housing setup](docs/HOUSING_PAYMENTS.md). Spatial planning requests without new furniture belong in the in-app assistant.
 
 ```bash
 ngrok http 8000           # public URL for the webhook
-# in the Photon dashboard: webhook → https://<ngrok>/webhooks/photon ; put the signing secret in PHOTON_WEBHOOK_SECRET
+# set SPECTRUM_PROJECT_ID + SPECTRUM_PROJECT_SECRET (or PHOTON_API_KEY) plus PHOTON_WEBHOOK_SECRET
+# in the Photon dashboard: webhook → https://<ngrok>/webhooks/photon
 .venv/bin/python scripts/simulate_photon.py     # posts fixtures/photon/*.json to the local webhook (works in mock mode too)
 ```
 
@@ -98,20 +123,20 @@ Setup before walking up: `make api`, `make web`, phone on the same Wi-Fi with th
 | 0:50 | Editor: drag the dresser, rotate it with R, tap the bed → lock | "It plays like a cozy game. The bed is locked: it never moves, whatever I ask for." |
 | 1:05 | Drag the dresser into the door swing → red, analysis tile counts the conflict → drag back | "Fit validation runs on every drag: bounds, overlaps, the 90 cm you need in front of a door, a 75 cm edge to get into bed." |
 | 1:20 | Phone: iMessage the Marketplace link + "Will this fit beside my window without moving my bed?" | "I don't open an app to ask. I text the room." |
-| 1:40 | Reply arrives with a link; **Marketplace Desk** tab animates in; desk sits beside the window, bed untouched | "Gemini read the listing and turned the question into constraints. Backboard remembered the bed rule. Plain Python placed it and the same validator signed off: 2 inches to spare." |
-| 2:05 | Second text: "make space for yoga, keep my dresser" → **Yoga corner** variant with the blue zone | "Every answer is a named variant. The Current Room is never overwritten." |
+| 1:40 | Reply arrives with a link; confirm item dimensions in the editor, then ask for **Marketplace Desk**; bed stays untouched | "Gemini read the listing and turned the question into constraints. Backboard remembered the bed rule. Plain Python placed it and the same validator signed off: 2 inches to spare." |
+| 2:05 | In-app assistant: "make space for yoga, keep my dresser" → **Yoga corner** variant with the blue zone | "Furniture comes in over text. Room changes happen right inside the app, and every answer is a named variant. The Current Room is never overwritten." |
 | 2:25 | 🌲 ghost compare, then the compare view: open floor 62 → 55 %, "Added Desk" | "Two layouts side by side, what moved, how much floor I keep. I can buy with confidence." |
 | 2:45 | Menu → health chip shows live/mock per service | "Real room, casual input, game-like editing, saved variants. Same solver later checks a 1.5 m wheelchair turning radius or stages an apartment listing." |
 
-Optional rent beat: open the Rent tab, enter ZIP `10027` and rent `$1600`, then run “Rent check.” Say: “Now the scan becomes a price sanity check: it measures the private room, discounts for rats/leaks or rough floors, and warns before you send a deposit or illegal application fee.”
+Rent demo: open Rent, confirm the room measurement, report rats or a leak, and compare the synthetic baseline with documented condition matches. Preview a divider, reject a $75 processing fee, then complete an offline simulation or configured Stripe test checkout. There are no universal condition discounts. See [the setup, data provenance, test walkthrough and production gates](docs/HOUSING_PAYMENTS.md).
 
 ## Devpost blurb
 
 **Adaptive Room Planner — Where did my space go?** (Live Better)
 
-Renters in 100–150 sq ft NYC rooms buy secondhand and guess. We scan the room once with RoomPlan, rebuild the furniture you already own in a cozy isometric editor, and then let you *text* the room: send a Facebook Marketplace link over iMessage and ask "will this fit beside my window without moving my bed?". Gemini turns the listing and the question into structured constraints, Backboard remembers your non-negotiables ("never move the bed"), a Python placement solver finds a spot on a 10 cm grid, and a shared TypeScript/Python fit validator checks bounds, overlaps, door swing clearance, access edges and walkable paths before anything is saved. Every answer becomes a named layout variant next to your untouched Current Room, with open-floor %, conflicts and walkability side by side in a compare view. MongoDB Atlas stores rooms, furniture and variants; everything degrades to an offline mock mode so the demo never depends on Wi-Fi.
+Renters in 100–150 sq ft NYC rooms buy secondhand and guess. We scan the room once with RoomPlan, rebuild the furniture you already own in a cozy isometric editor, and split the AI workflow into two natural channels: text a Facebook Marketplace/IKEA/Amazon listing or photo over iMessage to bring new furniture into the room, then use the in-app assistant for layout changes like "make space for yoga" or "place the desk near the window." Gemini turns listings and spatial requests into structured constraints, Backboard remembers your non-negotiables ("never move the bed"), a Python placement solver finds a spot on a 10 cm grid, and a shared TypeScript/Python fit validator checks bounds, overlaps, door swing clearance, access edges and walkable paths before anything is saved. Every answer becomes a named layout variant next to your untouched Current Room, with open-floor %, conflicts and walkability side by side in a compare view. Supabase stores rooms, furniture, rent assessments and variants when configured; everything degrades to an offline mock mode so the synthetic demo works without credentials. Real housing sources report unavailable states rather than silently substituting fixtures.
 
-Sponsors used: **Photon** (iMessage in/out), **Gemini API** (structured output + listing/photo extraction), **Backboard** (preference memory), **MongoDB Atlas** (storage).
+Sponsors used: **Photon** (iMessage in/out), **Gemini API** (structured output + listing/photo extraction), **Backboard** (preference memory), **Supabase** (storage).
 
 Try it: https://adaptive-room-planner.vercel.app · API docs: https://adaptive-room-planner-api.vercel.app/docs · source: this repo · `make demo` replays the 3-minute script headlessly.
 

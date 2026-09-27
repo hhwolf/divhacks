@@ -4,8 +4,11 @@ import React, { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { ToastProvider } from '../src/components/Toast';
+import { installCrashGuard } from '../src/crashGuard';
 import { useStore } from '../src/store';
 import { colors } from '../src/theme';
+
+installCrashGuard();
 
 export default function RootLayout() {
   const hydrated = useStore((s) => s.hydrated);
@@ -38,6 +41,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="scan" options={{ title: 'Scan room' }} />
+        <Stack.Screen name="setup" options={{ title: 'Set up room' }} />
         <Stack.Screen name="editor/[layoutId]" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="compare/[a]/[b]" options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name="layout/[id]" options={{ headerShown: false }} />

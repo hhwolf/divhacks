@@ -1,10 +1,46 @@
 {
   "$schema": "https://json.schemastore.org/eas.json",
-  "cli": { "version": ">= 12.0.0", "appVersionSource": "remote" },
-  "build": {
-    "simulator": { "distribution": "internal", "ios": { "simulator": true }, "env": { "EXPO_PUBLIC_API_URL": "https://adaptive-room-planner-api.vercel.app", "EXPO_PUBLIC_WEB_URL": "https://adaptive-room-planner.vercel.app" } },
-    "preview": { "distribution": "internal", "env": { "EXPO_PUBLIC_API_URL": "https://adaptive-room-planner-api.vercel.app", "EXPO_PUBLIC_WEB_URL": "https://adaptive-room-planner.vercel.app" } },
-    "production": { "distribution": "store", "autoIncrement": true, "env": { "EXPO_PUBLIC_API_URL": "https://adaptive-room-planner-api.vercel.app", "EXPO_PUBLIC_WEB_URL": "https://adaptive-room-planner.vercel.app" } }
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
   },
-  "submit": { "production": { "ios": { "appleTeamId": "59MGA3685P" } } }
+  "build": {
+    "simulator": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://adaptive-room-planner-api.vercel.app",
+        "EXPO_PUBLIC_WEB_URL": "https://adaptive-room-planner.vercel.app"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://10.206.202.177:8000",
+        "EXPO_PUBLIC_WEB_URL": "http://10.206.202.177:5173"
+      },
+      "developmentClient": true,
+      "ios": {
+        "simulator": false
+      }
+    },
+    "production": {
+      "distribution": "store",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://adaptive-room-planner-api.vercel.app",
+        "EXPO_PUBLIC_WEB_URL": "https://adaptive-room-planner.vercel.app"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleTeamId": "59MGA3685P",
+        "ascAppId": "6816528380"
+      }
+    }
+  }
 }

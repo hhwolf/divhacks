@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
+import { PaymentPage } from './ui/PaymentPage';
 import { Home } from './ui/Home';
 import { EditorPage } from './ui/EditorPage';
 import { ComparePage } from './ui/ComparePage';
@@ -8,6 +9,7 @@ import { ThumbPage } from './ui/ThumbPage';
 export function App() {
   return (
     <Routes>
+      <Route path="/payment/:id" element={<PaymentPage />} />
       <Route path="/" element={<Home />} />
       <Route path="/layout/:id" element={<EditorPage />} />
       <Route path="/preview/:sample" element={<EditorPage />} />

@@ -8,9 +8,9 @@ import {
   type CaptureProgress,
   type CaptureStatus,
   EMPTY_EXPORT,
+  getRoomPlanCapability,
   getRoomPlanModule,
-  isRoomPlanAvailable,
-  isSupported,
+  type RoomPlanCapability,
   RoomPlanView,
 } from '../modules/roomplan';
 import { api } from '../src/api';
@@ -19,12 +19,14 @@ import { useToast } from '../src/components/Toast';
 import { Button, Chip, Screen, Tile } from '../src/components/ui';
 import { useStore } from '../src/store';
 import { colors, radius, spacing, type } from '../src/theme';
-import type { Dimensions, RoomPlanExport } from '../src/types';
+import type { Dimensions, RoomDraft, RoomPlanExport } from '../src/types';
+import { useKeepAwake } from 'expo-keep-awake';
+import { Linking } from 'react-native';
 import { formatArea, formatDims } from '../src/units';
 
 export default function Scan() {
-  const supported = useMemo(() => isSupported(), []);
-  return supported ? <LiveScan /> : <Fallback />;
+  const capability = useMemo(() => getRoomPlanCapability(), []);
+  return capability.supported ? <LiveScan /> : <Fallback capability={capability} />;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -35,25 +37,37 @@ function LiveScan() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const units = useStore((s) => s.units);
+  const setRoomDraft = useStore((s) => s.setRoomDraft);
   const [progress, setProgress] = useState<CaptureProgress>({ status: 'idle' });
   const [scan, setScan] = useState<RoomPlanExport | null>(null);
-  const [busy, setBusy] = useState<'stop' | 'save' | null>(null);
+  const [busy, setBusy] = useState<'stop' | null>(null);
   const mod = getRoomPlanModule();
   const status: CaptureStatus = progress.status;
+  const [cameraDenied, setCameraDenied] = useState(false);
+  useKeepAwake(); // a room scan takes a minute or two; never let the screen sleep mid-capture
 
-  const onCaptureStatus = useCallback((e: { nativeEvent: CaptureProgress }) => {
+  const onCaptureStatus = useCallback((e: { nativeEvent?: CaptureProgress | null } | CaptureProgress | null | undefined) => {
+    // Expo delivers view events as { nativeEvent: payload } on the new architecture, but the payload can also arrive
+    // bare; a null payload on a real device crashed the release build here (TypeError 'message' of null).
+    const raw = e && typeof e === 'object' && 'nativeEvent' in e ? e.nativeEvent : (e as CaptureProgress | null | undefined);
+    if (!raw || typeof raw !== 'object' || typeof raw.status !== 'string') return;
+    const p: CaptureProgress = raw;
     // Keep the last known counts when an instruction-only event arrives.
-    setProgress((prev) => ({ ...prev, ...e.nativeEvent, message: e.nativeEvent.message ?? (e.nativeEvent.status === prev.status ? prev.message : undefined) }));
+    setProgress((prev) => ({ ...prev, ...p, message: p.message ?? (p.status === prev.status ? prev.message : undefined) }));
   }, []);
 
   const start = async () => {
     try {
       setScan(null);
+      setCameraDenied(false);
       await mod?.startCapture();
       setProgress({ status: 'scanning', walls: 0, doors: 0, windows: 0, objects: 0 });
     } catch (e) {
-      setProgress({ status: 'error', message: (e as Error).message });
-      toast(`Could not start capture: ${(e as Error).message}`, { tone: 'danger' });
+      const err = (e ?? {}) as Error & { code?: string };
+      const denied = err.code === 'CameraPermissionDenied' || /camera access/i.test(err.message ?? '');
+      setCameraDenied(denied);
+      setProgress({ status: 'error', message: denied ? 'Camera access is off for Room Planner.' : err.message ?? String(e) });
+      if (!denied) toast(`Could not start capture: ${err.message ?? String(e)}`, { tone: 'danger' });
     }
   };
 
@@ -71,24 +85,19 @@ function LiveScan() {
       setScan(result);
       setProgress((p) => ({ ...p, status: 'done', message: undefined }));
     } catch (e) {
-      setProgress({ status: 'error', message: (e as Error).message });
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
+      const msg = (e as Error | null)?.message ?? String(e);
+      setProgress({ status: 'error', message: msg });
+      toast(msg, { tone: 'danger', ms: 4500 });
     } finally {
       setBusy(null);
     }
   };
 
-  const useScan = async () => {
+  // Hand the scan to /setup (space types + elements); the clean room is created there with seed:false.
+  const useScan = () => {
     if (!scan) return;
-    setBusy('save');
-    try {
-      const res = await api.createScannedRoom(scan, 'Scanned room');
-      router.replace(`/editor/${encodeURIComponent(res.currentLayout.id)}`);
-    } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
-    } finally {
-      setBusy(null);
-    }
+    setRoomDraft({ name: 'Scanned room', source: 'scan', skeleton: scan.skeleton, objects: scan.objects });
+    router.push('/setup');
   };
 
   const chipLabel =
@@ -124,11 +133,14 @@ function LiveScan() {
           </Text>
         ) : null}
 
+        {cameraDenied ? (
+          <Button label="Open Settings to allow the camera" icon="cog" onPress={() => Linking.openSettings()} variant="secondary" style={{ marginTop: spacing.sm }} />
+        ) : null}
         <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
           {status === 'done' && scan ? (
             <>
               <Button label="Rescan" icon="refresh" onPress={start} variant="secondary" style={{ flex: 1 }} disabled={busy !== null} />
-              <Button label="Use this scan" icon="arrow-right-bold" onPress={useScan} busy={busy === 'save'} style={{ flex: 2 }} />
+              <Button label="Use this scan" icon="arrow-right-bold" onPress={useScan} disabled={busy !== null} style={{ flex: 2 }} />
             </>
           ) : (
             <>
@@ -152,19 +164,21 @@ function LiveScan() {
 // ---------------------------------------------------------------------------------------------
 // Fallback (Expo Go, Simulator, non-LiDAR device, Android).
 // ---------------------------------------------------------------------------------------------
-function Fallback() {
+function Fallback({ capability }: { capability: RoomPlanCapability }) {
   const router = useRouter();
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const units = useStore((s) => s.units);
-  const [busy, setBusy] = useState<'sample' | 'manual' | 'paste' | null>(null);
+  const setRoomDraft = useStore((s) => s.setRoomDraft);
+  const [busy, setBusy] = useState<'sample' | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasted, setPasted] = useState('');
 
-  const reason = isRoomPlanAvailable()
-    ? 'This device has no LiDAR sensor, so RoomPlan cannot run here.'
-    : 'You are running in Expo Go or the Simulator, where the RoomPlan native module is not linked.';
+  const title = capability.moduleLinked ? 'RoomPlan needs a LiDAR iPhone or iPad Pro' : 'Install the TestFlight build on a LiDAR iPhone';
+  const reason = capability.moduleLinked
+    ? 'RoomPlan is linked, but Apple reports this device cannot run room capture. Use an iPhone Pro or iPad Pro with LiDAR on iOS 16 or newer.'
+    : 'This runtime does not include our RoomPlan native module. Expo Go, web, and generic simulator builds cannot scan rooms.';
 
   const openEditor = useCallback(
     (layoutId: string) => router.replace(`/editor/${encodeURIComponent(layoutId)}`),
@@ -177,26 +191,19 @@ function Fallback() {
       const res = await api.createSampleRoom('nyc-bedroom');
       openEditor(res.currentLayout.id);
     } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
+      toast(((e as Error | null)?.message ?? String(e)), { tone: 'danger', ms: 4500 });
     } finally {
       setBusy(null);
     }
   };
 
-  const createManual = async (dims: Dimensions, name: string) => {
-    setBusy('manual');
-    try {
-      const res = await api.createManualRoom(dims, name);
-      setSheetOpen(false);
-      openEditor(res.currentLayout.id);
-    } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
-    } finally {
-      setBusy(null);
-    }
+  const createManual = (dims: Dimensions, name: string) => {
+    setSheetOpen(false);
+    setRoomDraft({ name, source: 'manual', dimensions: dims, objects: [] });
+    router.push('/setup');
   };
 
-  const submitPasted = async () => {
+  const submitPasted = () => {
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(pasted) as Record<string, unknown>;
@@ -205,18 +212,13 @@ function Fallback() {
       toast('That is not valid JSON. Paste a RoomPlan export or our {skeleton, objects} JSON.', { tone: 'danger', ms: 4000 });
       return;
     }
-    setBusy('paste');
-    try {
-      const name = typeof parsed.name === 'string' ? parsed.name : 'Scanned room';
-      // Only the fields POST /rooms understands; `meta` from exportSkeleton() is debug-only.
-      const { meta: _meta, name: _name, ...payload } = parsed;
-      const res = await api.createRoomFromJson(payload, name);
-      openEditor(res.currentLayout.id);
-    } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
-    } finally {
-      setBusy(null);
+    const draft = draftFromJson(parsed);
+    if (!draft) {
+      toast('That JSON has no "skeleton" or "dimensions", so there is no room to set up.', { tone: 'danger', ms: 4000 });
+      return;
     }
+    setRoomDraft(draft);
+    router.push('/setup');
   };
 
   return (
@@ -227,10 +229,10 @@ function Fallback() {
             <View style={styles.heroIcon}>
               <MaterialCommunityIcons name="cube-scan" size={40} color={colors.tile} />
             </View>
-            <Text style={[type.h2, { textAlign: 'center' }]}>RoomPlan needs a LiDAR iPhone and the dev-client build</Text>
+            <Text style={[type.h2, { textAlign: 'center' }]}>{title}</Text>
             <Text style={[type.body, { textAlign: 'center', color: colors.inkSoft }]}>{reason}</Text>
             <Text style={[type.small, { textAlign: 'center' }]}>
-              Run <Text style={styles.mono}>npx expo run:ios --device</Text> on an iPhone Pro to scan for real. Meanwhile, pick another way in:
+              Install the latest TestFlight build, or run <Text style={styles.mono}>npx expo run:ios --device</Text> on a LiDAR iPhone Pro to scan for real. Meanwhile, pick another way in:
             </Text>
           </Tile>
 
@@ -248,7 +250,7 @@ function Fallback() {
           {pasteOpen ? (
             <Tile style={{ marginTop: spacing.lg }}>
               <Text style={[type.small, { marginBottom: spacing.sm }]}>
-                Paste a RoomPlan export (walls / doors / windows / objects) or our skeleton JSON. It is sent to POST /rooms unchanged.
+                Paste our {'{'}skeleton, objects{'}'} export (or {'{'}dimensions{'}'}). You will pick the space type next; the geometry is sent to POST /rooms unchanged.
               </Text>
               <TextInput
                 multiline
@@ -260,15 +262,32 @@ function Fallback() {
                 autoCorrect={false}
                 style={styles.textarea}
               />
-              <Button label="Create room from JSON" icon="upload" onPress={submitPasted} busy={busy === 'paste'} disabled={!pasted.trim()} style={{ marginTop: spacing.sm }} />
+              <Button label="Set up room from JSON" icon="upload" onPress={submitPasted} disabled={!pasted.trim()} style={{ marginTop: spacing.sm }} />
             </Tile>
           ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <DimensionsSheet visible={sheetOpen} units={units} busy={busy === 'manual'} onClose={() => setSheetOpen(false)} onSubmit={createManual} />
+      <DimensionsSheet visible={sheetOpen} units={units} onClose={() => setSheetOpen(false)} onSubmit={createManual} />
     </Screen>
   );
+}
+
+/** Pull the fields POST /rooms understands out of pasted JSON; `meta` from exportSkeleton() is debug-only. */
+function draftFromJson(parsed: Record<string, unknown>): RoomDraft | null {
+  const skeleton = parsed.skeleton as RoomDraft['skeleton'] | undefined;
+  const dimensions = parsed.dimensions as RoomDraft['dimensions'] | undefined;
+  if (!skeleton && !dimensions) return null;
+  const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
+  return {
+    name: typeof parsed.name === 'string' && parsed.name.trim() ? parsed.name : 'Scanned room',
+    source: skeleton ? 'scan' : 'manual',
+    skeleton,
+    dimensions: skeleton ? undefined : dimensions,
+    doors: arr(parsed.doors),
+    windows: arr(parsed.windows),
+    objects: arr(parsed.objects),
+  };
 }
 
 const styles = StyleSheet.create({

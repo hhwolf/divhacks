@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Account } from '../src/components/Account';
 import { api } from '../src/api';
 import { useToast } from '../src/components/Toast';
 import { Button, Chip, Field, Screen, SectionTitle, Tile } from '../src/components/ui';
@@ -50,6 +51,7 @@ export default function Settings() {
     <Screen>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + spacing.xl }]} keyboardShouldPersistTaps="handled">
+          <SectionTitle>Account</SectionTitle><Account />
           <SectionTitle>Units</SectionTitle>
           <Tile style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
             <Chip icon="ruler" label="Feet & inches" tone={units === 'imperial' ? 'ink' : 'tile'} onPress={() => setUnits('imperial')} style={styles.chipOutline} />
@@ -108,9 +110,9 @@ export default function Settings() {
             <Text style={[type.h2, { marginBottom: 6 }]}>Live Better, in 100–150 sq ft</Text>
             <Text style={[type.body, { lineHeight: 22 }]}>
               Adaptive Room Planner is for renters in small NYC rooms. Scan the room once with LiDAR (or type its dimensions), keep a
-              locked “Current Room” that only you edit, and ask in plain language — in the app or over iMessage — whether a desk fits
-              beside the window or how to clear space for yoga. Every answer is a new, named variant you can compare side by side; the
-              planner never moves what you have locked.
+              locked “Current Room” that only you edit, text furniture links or photos over iMessage when you want to test a new item,
+              and use the in-app assistant for room changes like reading corners, yoga space, and desk placement near the window. Every
+              answer is a new, named variant you can compare side by side; the planner never moves what you have locked.
             </Text>
             <Text style={[type.small, { marginTop: spacing.md }]}>
               DivHacks 2026 · Live Better track · v{Constants.expoConfig?.version ?? '1.0.0'} · Expo SDK {Constants.expoConfig?.sdkVersion ?? '57'}

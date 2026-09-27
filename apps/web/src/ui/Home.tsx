@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Room } from '@arp/contracts';
 import { api } from '../lib/api';
+import { Account } from './Account';
 import { Backdrop } from './Backdrop';
 
 export function Home() {
@@ -10,7 +11,7 @@ export function Home() {
   useEffect(() => { api.rooms().then(setRooms).catch(() => undefined); api.health().then((h) => setHealth(h.mode)).catch(() => setHealth('offline')); }, []);
   const create = async (body: unknown) => {
     setBusy(true); setErr(null);
-    try { const r = await api.createRoom(body); const cur = r.currentLayout ?? r.layouts.find((l) => l.isCurrent) ?? r.layouts[0]; nav(`/layout/${cur.id}`); }
+    try { const r = await api.createRoom(body); const cur = r.currentLayout ?? r.layouts.find((l) => l.isCurrent) ?? r.layouts[0]; nav(`/layout/${cur.id}?onboarding=rent`); }
     catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   };
   const ft = (v: string) => (parseFloat(v) || 0) * 0.3048;
@@ -18,6 +19,7 @@ export function Home() {
     <div className="home theme-peach">
       <Backdrop />
       <header><h1>Adaptive Room Planner</h1><p>Where did my space go? Scan once, then every idea becomes a named variant. <span className={`chip ${health}`}>API: {health}</span></p></header>
+      <Account />
       <div className="cards">
         <button className="card" onClick={() => alert('Scanning needs the iPhone app (LiDAR). Use the sample room here.')}><span className="card-icon">📐</span><b>Scan room</b><small>RoomPlan on iPhone Pro</small></button>
         <button className="card" disabled={busy} onClick={() => create({ sample: 'nyc-bedroom' })}><span className="card-icon">🛏️</span><b>Load sample room</b><small>3.4 × 3.0 m NYC bedroom</small></button>
@@ -35,7 +37,7 @@ export function Home() {
       {err && <p className="err">{err}</p>}
       {rooms.length > 0 && (
         <section className="recent"><h2>Recent rooms</h2>
-          {rooms.slice().reverse().slice(0, 6).map((r) => <button key={r.id} className="recent-row" onClick={async () => { const rr = await api.room(r.id); const cur = rr.layouts.find((l) => l.isCurrent) ?? rr.layouts[0]; if (cur) nav(`/layout/${cur.id}`); }}><b>{r.name}</b><span>{r.skeleton.dimensions.l.toFixed(1)} × {r.skeleton.dimensions.w.toFixed(1)} m</span></button>)}
+          {rooms.slice().reverse().slice(0, 6).map((r) => <button key={r.id} className="recent-row" onClick={async () => { const rr = await api.room(r.id); const cur = rr.layouts.find((l) => l.isCurrent) ?? rr.layouts[0]; if (cur) nav(`/layout/${cur.id}?onboarding=rent`); }}><b>{r.name}</b><span>{r.skeleton.dimensions.l.toFixed(1)} × {r.skeleton.dimensions.w.toFixed(1)} m</span></button>)}
         </section>
       )}
     </div>

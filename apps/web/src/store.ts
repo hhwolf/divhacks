@@ -54,7 +54,7 @@ const lsSet = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.st
 
 export const useEditor = create<EditorState>((set, get) => ({
   embedded: false, units: ls('arp.units', 'imperial'), theme: ls('arp.theme', 'peach'), night: false, sound: false, viewMode: 'cutaway', orbit: 0,
-  wallColor: ls('arp.wallColor', '#F3DEC2'), floorStyle: ls('arp.floorStyle', 'brick'), floorColor: ls('arp.floorColor', '#B0684C'),
+  wallColor: ls('arp.wallColor', '#F3EDE4'), floorStyle: ls('arp.floorStyle', 'plank'), floorColor: ls('arp.floorColor', '#C9A57C'),
   room: null, layouts: [], activeId: null, furniture: {}, items: [], zones: [], history: [], future: [],
   selectedId: null, placing: null, dragging: null, hoverId: null,
   overlays: { walkable: false, keepClear: false, lowClearance: false }, overlaysOpen: false, ghostId: null, ghostOpen: false,
@@ -83,7 +83,7 @@ export const useEditor = create<EditorState>((set, get) => ({
     set({ loading: true });
     const [fx, manifest] = await Promise.all([fetch(`/fixtures/rooms/sample-${sample}.json`).then((r) => r.json()), fetch('/assets/furniture/manifest.json').then((r) => r.json())]);
     const furniture = Object.fromEntries((manifest.items as FurnitureItem[]).map((m) => [m.id, m]));
-    const room: Room = { id: `fixture-${sample}`, name: fx.name, skeleton: fx.skeleton, source: 'sample' };
+    const room: Room = { id: `fixture-${sample}`, name: fx.name, skeleton: fx.skeleton, source: 'sample', spaceTypes: fx.spaceTypes ?? [], elements: fx.elements ?? [] };
     const items: LayoutItem[] = (fx.objects as LayoutItem[]).map((o, i) => ({ ...o, id: `${o.furnitureId}_${i + 1}` }));
     const layout: Layout = { id: 'fixture', roomId: room.id, name: 'Current Room', isCurrent: true, items, zones: [] };
     set({ room, furniture, layouts: [layout], activeId: 'fixture', items, zones: [], history: [], future: [], selectedId: null, saveState: 'readonly', loading: false });

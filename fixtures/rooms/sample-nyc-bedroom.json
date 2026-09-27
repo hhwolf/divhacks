@@ -1,6 +1,14 @@
 {
   "name": "NYC bedroom (sample)",
   "source": "sample",
+  "spaceTypes": ["bedroom", "study"],
+  "elements": [
+    {"id": "bed", "label": "Bed", "furnitureIds": ["bed_double", "bed_single"]},
+    {"id": "nightstand", "label": "Nightstand", "furnitureIds": ["nightstand"]},
+    {"id": "wardrobe", "label": "Wardrobe or dresser", "furnitureIds": ["wardrobe", "dresser"]},
+    {"id": "desk", "label": "Desk and chair", "furnitureIds": ["desk", "chair_desk"]},
+    {"id": "reading", "label": "Reading corner", "furnitureIds": ["armchair", "floor_lamp", "bookshelf_low"]}
+  ],
   "skeleton": {
     "dimensions": {"l": 3.4, "w": 3.0, "h": 2.7},
     "walls": [

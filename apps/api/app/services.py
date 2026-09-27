@@ -9,7 +9,7 @@ from typing import Any
 
 from app.catalog import FIXTURES_DIR, all_furniture
 from app.deps import AppContext
-from app.models import Dimensions, Door, Layout, LayoutItem, Room, RoomSkeleton, ValidationResult, WallSegment, Window, Zone
+from app.models import RoomElement, Dimensions, Door, Layout, LayoutItem, Room, RoomSkeleton, ValidationResult, WallSegment, Window, Zone
 from app.solver.validate import validate_layout
 
 SAMPLES = {"nyc-bedroom": "sample-nyc-bedroom.json", "studio": "sample-studio.json"}
@@ -45,9 +45,16 @@ async def validate_for_room(ctx: AppContext, room: Room, items: list[LayoutItem]
     return validate_layout(room.skeleton, catalog, items, zones, base.items if base else None)
 
 
-async def create_room(ctx: AppContext, *, name: str, skeleton: RoomSkeleton, source: str, objects: list[dict[str, Any]], user_id: str) -> tuple[Room, Layout]:
-    room = Room(id=new_id(), userId=user_id, name=name, skeleton=skeleton, source=source, createdAt=now_iso())  # type: ignore[arg-type]
-    items = seed_items(objects)
+async def create_room(
+    ctx: AppContext, *, name: str, skeleton: RoomSkeleton, source: str, objects: list[dict[str, Any]], user_id: str,
+    seed: bool = True, space_types: list[str] | None = None, elements: list[RoomElement] | None = None,
+) -> tuple[Room, Layout]:
+    """`seed=False` creates a clean base room (empty Current Room); detected objects are kept on the room for later."""
+    room = Room(  # type: ignore[arg-type]
+        id=new_id(), userId=user_id, name=name, skeleton=skeleton, source=source, createdAt=now_iso(),
+        spaceTypes=space_types or [], elements=elements or [], detectedObjects=[] if seed else objects,
+    )
+    items = seed_items(objects) if seed else []
     validation = await validate_for_room(ctx, room, items, [])
     layout = Layout(
         id=new_id(), roomId=room.id, name="Current Room", isCurrent=True, parentLayoutId=None, items=items, zones=[],

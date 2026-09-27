@@ -1,6 +1,14 @@
 {
   "name": "Studio (sample)",
   "source": "sample",
+  "spaceTypes": ["living", "shared"],
+  "elements": [
+    {"id": "sofa", "label": "Sofa", "furnitureIds": ["sofa", "armchair"]},
+    {"id": "coffee_table", "label": "Coffee table", "furnitureIds": ["coffee_table", "side_table"]},
+    {"id": "dining", "label": "Small dining table", "furnitureIds": ["table_round", "table", "chair"]},
+    {"id": "second_bed", "label": "Second bed", "furnitureIds": ["bed_single"]},
+    {"id": "mini_fridge", "label": "Mini fridge", "furnitureIds": ["mini_fridge"]}
+  ],
   "skeleton": {
     "dimensions": {"l": 5.0, "w": 3.6, "h": 2.6},
     "walls": [

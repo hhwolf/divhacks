@@ -2,7 +2,9 @@ from fastapi.testclient import TestClient
 
 
 def test_compare_current_vs_desk_variant(client: TestClient, bedroom: dict) -> None:
-    out = client.post("/agent/request", json={"text": "Will this fit beside my window without moving my bed? http://testserver/fixtures/listings/desk", "roomId": bedroom["roomId"], "baseLayoutId": bedroom["currentId"], "channel": "app"}).json()
+    item = client.post("/furniture/from-link", json={"url": "http://testserver/fixtures/listings/desk"}).json()
+    client.patch(f"/furniture/{item["id"]}/details", json={"name": item["name"], "dims": item["dims"], "category": item["category"], "dimensionsConfirmed": True})
+    out = client.post("/agent/request", json={"text": "Will this fit beside my window without moving my bed?", "roomId": bedroom["roomId"], "baseLayoutId": bedroom["currentId"], "furnitureId": item["id"], "channel": "app"}).json()
     body = client.get(f"/layouts/{bedroom['currentId']}/compare/{out['layout']['id']}").json()
     assert body["a"]["id"] == bedroom["currentId"] and body["b"]["id"] == out["layout"]["id"]
     assert body["deltas"]["openFloor"] < 0 and body["deltas"]["conflicts"] == 0

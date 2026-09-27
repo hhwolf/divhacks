@@ -10,10 +10,10 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-import httpx
 from bs4 import BeautifulSoup
 
 from app.catalog import FIXTURES_DIR, PRESETS
+from app.safe_fetch import fetch_public
 from app.integrations.gemini import GeminiAdapter
 from app.models import FurnitureItem, FurnitureKind, FurnitureSource
 from app.repo.base import Repository
@@ -31,7 +31,7 @@ KIND_WORDS: list[tuple[str, FurnitureKind]] = [
     ("chair", "seating"), ("sofa", "seating"), ("couch", "seating"), ("stool", "seating"), ("bench", "seating"),
     ("table", "table"), ("rug", "floor"), ("mat", "floor"), ("lamp", "decor"), ("plant", "decor"),
 ]
-CATEGORY_KIND: dict[str, FurnitureKind] = {"bed": "bed", "desk": "desk", "seating": "seating", "storage": "storage", "table": "table", "decor": "decor"}
+CATEGORY_KIND: dict[str, FurnitureKind] = {"bed": "bed", "desk": "desk", "seating": "seating", "storage": "storage", "table": "table", "decor": "decor", "divider": "decor"}
 
 
 def local_fixture_path(url: str) -> Path | None:
@@ -39,6 +39,8 @@ def local_fixture_path(url: str) -> Path | None:
     u = urlparse(url)
     if u.hostname in LOCAL_HOSTS and u.path.startswith("/fixtures/listings/"):
         name = u.path.rsplit("/", 1)[-1]
+        if name not in {"desk", "desk.html", "desk.jpg"}:
+            return None
         path = FIXTURES_DIR / "listings" / (name if "." in name else f"{name}.html")
         return path if path.exists() else None
     return None
@@ -49,10 +51,7 @@ async def fetch_bytes(url: str) -> tuple[bytes, str]:
     if local is not None:
         mime = "text/html" if local.suffix == ".html" else "image/jpeg" if local.suffix in (".jpg", ".jpeg") else "application/octet-stream"
         return local.read_bytes(), mime
-    async with httpx.AsyncClient(timeout=10, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 AdaptiveRoomPlanner/0.1"}) as client:
-        resp = await client.get(url)
-        resp.raise_for_status()
-        return resp.content, resp.headers.get("content-type", "").split(";")[0]
+    return await fetch_public(url)
 
 
 def parse_dims(text: str) -> dict[str, float] | None:
@@ -116,11 +115,11 @@ def build_item(listing: dict[str, Any], *, user_id: str, source: FurnitureSource
         id=f"imp_{uuid.uuid4().hex[:8]}",
         userId=user_id,
         name=name,
-        category="imported",
+        category=listing.get("category") if source == "manual" and listing.get("category") in CATEGORY_KIND else "imported",
         kind=kind,
         dims=dims,
-        glbUrl=preset.glbUrl if preset else None,
-        thumbUrl=preset.thumbUrl if preset else None,
+        glbUrl=preset.glbUrl if preset and listing.get("category") != "divider" else None,
+        thumbUrl=preset.thumbUrl if preset and listing.get("category") != "divider" else None,
         source=source,
         sourceUrl=source_url,
         price=listing.get("price"),

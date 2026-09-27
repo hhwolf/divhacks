@@ -17,12 +17,12 @@ export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const toast = useToast();
-  const { units, apiUrl } = useStore();
+  const { units, apiUrl, setRoomDraft } = useStore();
 
   const [rooms, setRooms] = useState<RoomListEntry[] | null>(null);
   const [health, setHealth] = useState<HealthResponse | null | 'down'>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [busy, setBusy] = useState<'sample' | 'manual' | null>(null);
+  const [busy, setBusy] = useState<'sample' | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const load = useCallback(async () => {
@@ -49,23 +49,17 @@ export default function Home() {
       const res = await api.createSampleRoom('nyc-bedroom');
       router.push(`/editor/${encodeURIComponent(res.currentLayout.id)}`);
     } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
+      toast(((e as Error | null)?.message ?? String(e)), { tone: 'danger', ms: 4500 });
     } finally {
       setBusy(null);
     }
   };
 
-  const createManual = async (dims: Dimensions, name: string) => {
-    setBusy('manual');
-    try {
-      const res = await api.createManualRoom(dims, name);
-      setSheetOpen(false);
-      router.push(`/editor/${encodeURIComponent(res.currentLayout.id)}`);
-    } catch (e) {
-      toast((e as Error).message, { tone: 'danger', ms: 4500 });
-    } finally {
-      setBusy(null);
-    }
+  // Manual rooms go through /setup (space types + elements) before POST /rooms creates the clean room.
+  const createManual = (dims: Dimensions, name: string) => {
+    setSheetOpen(false);
+    setRoomDraft({ name, source: 'manual', dimensions: dims, objects: [] });
+    router.push('/setup');
   };
 
   const modeLabel = health === null ? 'checking…' : health === 'down' ? 'API offline' : health.mode;
@@ -104,7 +98,6 @@ export default function Home() {
             title="Enter dimensions"
             subtitle={units === 'metric' ? 'Length, width and height in meters' : 'Length, width and height in feet and inches'}
             onPress={() => setSheetOpen(true)}
-            busy={busy === 'manual'}
           />
         </View>
 
@@ -156,7 +149,7 @@ export default function Home() {
         </View>
       </ScrollView>
 
-      <DimensionsSheet visible={sheetOpen} units={units} busy={busy === 'manual'} onClose={() => setSheetOpen(false)} onSubmit={createManual} />
+      <DimensionsSheet visible={sheetOpen} units={units} onClose={() => setSheetOpen(false)} onSubmit={createManual} />
     </Screen>
   );
 }

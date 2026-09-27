@@ -25,4 +25,4 @@ Autolinked via `expo-module.config.json` on `npx expo prebuild` / `npx expo run:
 iOS 16.0, so the app's deployment target must be >= 16.0 (set via `expo-build-properties` in app.json) or Expo autolinking
 silently skips the pod ("roomplan doesn't support iOS platform" in `pod install --verbose`). Builds with Expo SDK 54 on
 Xcode 16.0 (see `plugins/withXcode16Podfile.js`); `SkeletonExporter.swift` also typechecks standalone with
-`xcrun swiftc -typecheck -sdk "$(xcrun --sdk iphoneos --show-sdk-path)" -target arm64-apple-ios16.0 ios/SkeletonExporter.swift`.
+`xcrun swiftc -typecheck -sdk "$(xcrun --sdk iphoneos --show-sdk-path)" -target arm64-apple-ios16.0 apple/SkeletonExporter.swift`.

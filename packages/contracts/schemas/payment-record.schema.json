@@ -1,0 +1,148 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "quoteId": {
+      "title": "Quoteid",
+      "type": "string"
+    },
+    "userId": {
+      "title": "Userid",
+      "type": "string"
+    },
+    "roomId": {
+      "title": "Roomid",
+      "type": "string"
+    },
+    "tenancyId": {
+      "title": "Tenancyid",
+      "type": "string"
+    },
+    "recipientId": {
+      "title": "Recipientid",
+      "type": "string"
+    },
+    "purpose": {
+      "enum": [
+        "rent_payment",
+        "deposit",
+        "application_fee",
+        "screening_fee",
+        "broker_fee",
+        "other",
+        "furniture_purchase"
+      ],
+      "title": "Purpose",
+      "type": "string"
+    },
+    "rentalPeriod": {
+      "title": "Rentalperiod",
+      "type": "string"
+    },
+    "amountCents": {
+      "title": "Amountcents",
+      "type": "integer"
+    },
+    "currency": {
+      "const": "usd",
+      "default": "usd",
+      "title": "Currency",
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "demo",
+        "test"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "created",
+        "pending",
+        "succeeded",
+        "failed",
+        "canceled",
+        "expired",
+        "refunded",
+        "disputed"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "sessionId": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sessionid"
+    },
+    "paymentIntentId": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Paymentintentid"
+    },
+    "checkoutUrl": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Checkouturl"
+    },
+    "refundedCents": {
+      "default": 0,
+      "title": "Refundedcents",
+      "type": "integer"
+    },
+    "createdAt": {
+      "format": "date-time",
+      "title": "Createdat",
+      "type": "string"
+    },
+    "updatedAt": {
+      "format": "date-time",
+      "title": "Updatedat",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "quoteId",
+    "userId",
+    "roomId",
+    "tenancyId",
+    "recipientId",
+    "purpose",
+    "rentalPeriod",
+    "amountCents",
+    "mode",
+    "status",
+    "createdAt",
+    "updatedAt"
+  ],
+  "title": "PaymentRecord",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/payment-record.schema.json"
+}

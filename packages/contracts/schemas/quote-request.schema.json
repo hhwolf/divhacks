@@ -1,0 +1,43 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "tenancyId": {
+      "title": "Tenancyid",
+      "type": "string"
+    },
+    "purpose": {
+      "enum": [
+        "rent_payment",
+        "deposit",
+        "application_fee",
+        "screening_fee",
+        "broker_fee",
+        "other",
+        "furniture_purchase"
+      ],
+      "title": "Purpose",
+      "type": "string"
+    },
+    "amountCents": {
+      "exclusiveMinimum": 0,
+      "maximum": 100000000,
+      "title": "Amountcents",
+      "type": "integer"
+    },
+    "rentalPeriod": {
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+      "title": "Rentalperiod",
+      "type": "string"
+    }
+  },
+  "required": [
+    "tenancyId",
+    "purpose",
+    "amountCents",
+    "rentalPeriod"
+  ],
+  "title": "QuoteRequest",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomplanner.dev/schemas/quote-request.schema.json"
+}

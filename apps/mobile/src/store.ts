@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
-import type { AgentRequestResponse, Units } from './types';
+import type { AgentRequestResponse, RoomDraft, Units } from './types';
 
 const STORAGE_KEY = 'arp.settings.v1';
 
@@ -25,6 +25,9 @@ interface PersistedSettings { units: Units; apiUrl: string; webUrl: string }
 interface AppState extends PersistedSettings {
   hydrated: boolean;
   agentLog: AgentLogEntry[];
+  /** Captured-but-not-created room handed from scan / dimensions to /setup. In-memory only. */
+  roomDraft: RoomDraft | null;
+  setRoomDraft: (draft: RoomDraft | null) => void;
   hydrate: () => Promise<void>;
   setUnits: (units: Units) => void;
   setUrls: (urls: Partial<Pick<PersistedSettings, 'apiUrl' | 'webUrl'>>) => void;
@@ -51,6 +54,8 @@ export const useStore = create<AppState>((set, get) => ({
   webUrl: DEFAULT_WEB_URL,
   hydrated: false,
   agentLog: [],
+  roomDraft: null,
+  setRoomDraft: (roomDraft) => set({ roomDraft }),
 
   hydrate: async () => {
     try {
