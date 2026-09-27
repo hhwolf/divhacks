@@ -11,5 +11,5 @@ npm-debug.*
 /ios
 /android
 # the local Expo module's Swift sources must stay tracked even though the root .gitignore has `ios/`
-!modules/roomplan/ios/
+!modules/roomplan/apple/
 modules/roomplan/ios/build/
