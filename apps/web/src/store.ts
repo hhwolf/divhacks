@@ -68,7 +68,7 @@ const ls = <T,>(k: string, d: T, legacy?: T | T[]): T => {
 const lsSet = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } };
 
 export const useEditor = create<EditorState>((set, get) => ({
-  embedded: false, units: ls('arp.units', 'imperial'), theme: ls('arp.theme', 'teal'), night: false, sound: false, viewMode: 'cutaway', orbit: 0,
+  embedded: false, units: ls('arp.units', 'imperial'), theme: ls('arp.theme', 'teal', 'peach'), night: false, sound: false, viewMode: 'cutaway', orbit: 0,
   wallColor: ls('arp.wallColor', '#EEF3EC', ['#F3EDE4', '#F3DEC2']), floorStyle: ls('arp.floorStyle', 'plank'), floorColor: ls('arp.floorColor', '#B9C8BE', ['#C9A57C', '#BA7A57', '#8E5A3C', '#B0684C']),
   room: null, layouts: [], activeId: null, furniture: {}, style: null, furnishing: false, entrance: null, items: [], zones: [], history: [], future: [],
   selectedId: null, placing: null, dragging: null, hoverId: null,

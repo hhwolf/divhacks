@@ -1,8 +1,8 @@
 /* Sizes are expressed for a 1920-wide layout and scaled with --u (1px at 1920 → 1vmin/10.8 at 1080 high). */
 :root {
   --u: calc(100vmin / 1080);
-  --ink: #4A3327; --ink-85: rgba(62, 44, 38, 0.84); --tile: #F4F7FA; --tile-lip: #8B5D46; --tile-shadow: rgba(80, 40, 20, 0.22);
-  --peach-bg: #B57C56; --peach-bg-dark: #9E6B4A; --peach-hill: #A06A48;
+  --ink: #2F3E39; --ink-85: rgba(42, 55, 50, 0.88); --tile: #F4F7FA; --tile-lip: #8AA096; --tile-shadow: rgba(31, 56, 48, 0.18);
+  --peach-bg: #84AA9D; --peach-bg-dark: #6F958A; --peach-hill: #7A9E92;
   --teal-bg: #84AA9D; --teal-bg-dark: #6F958A; --teal-hill: #7A9E92;
   --red: #E85A4F; --yellow: #F4B942; --green: #5CB78E; --blue: #7FA8C9;
   --font: -apple-system, "SF Pro Rounded", "Nunito", "Avenir Next", "Segoe UI", system-ui, sans-serif;
@@ -20,16 +20,17 @@ a { color: inherit; }
 
 /* Backdrop */
 .backdrop { position: absolute; inset: 0; pointer-events: none; }
-.theme-peach .backdrop { background: radial-gradient(ellipse 85% 75% at 50% 42%, #BE845B 0%, var(--peach-bg) 50%, var(--peach-bg-dark) 100%); }
+.theme-peach .backdrop { background: radial-gradient(ellipse 80% 70% at 50% 45%, #8FB5A8 0%, var(--peach-bg) 55%, var(--peach-bg-dark) 100%); }
 .theme-teal .backdrop { background: radial-gradient(ellipse 80% 70% at 50% 45%, #8FB5A8 0%, var(--teal-bg) 55%, var(--teal-bg-dark) 100%); }
 .night .backdrop { filter: brightness(0.55) saturate(0.8); }
 .backdrop .hills { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: calc(300 * var(--u)); opacity: 0.55; }
 .theme-peach .hills { color: var(--peach-hill); } .theme-teal .hills { color: var(--teal-hill); }
 .corner { position: absolute; width: calc(42 * var(--u)); height: calc(42 * var(--u)); opacity: 0.7; }
-.corner::before, .corner::after { content: ''; position: absolute; background: rgba(70, 40, 22, 0.55); }
-.theme-teal .corner::before, .theme-teal .corner::after { background: rgba(40, 60, 55, 0.45); }
+.corner::before, .corner::after { content: ''; position: absolute; background: rgba(40, 60, 55, 0.45); }
+.theme-teal .corner::before, .theme-teal .corner::after, .theme-peach .corner::before, .theme-peach .corner::after { background: rgba(40, 60, 55, 0.45); }
 .corner::before { width: 100%; height: calc(2.5 * var(--u)); } .corner::after { height: 100%; width: calc(2.5 * var(--u)); }
-.corner i { position: absolute; width: calc(9 * var(--u)); height: calc(9 * var(--u)); border: calc(2.5 * var(--u)) solid rgba(70, 40, 22, 0.55); }
+.corner i { position: absolute; width: calc(9 * var(--u)); height: calc(9 * var(--u)); border: calc(2.5 * var(--u)) solid rgba(40, 60, 55, 0.45); }
+.theme-peach .corner i, .theme-teal .corner i { border-color: rgba(40, 60, 55, 0.45); }
 .corner.tl i { left: calc(5 * var(--u)); top: calc(5 * var(--u)); } .corner.tr i { right: calc(5 * var(--u)); top: calc(5 * var(--u)); } .corner.bl i { left: calc(5 * var(--u)); bottom: calc(5 * var(--u)); } .corner.br i { right: calc(5 * var(--u)); bottom: calc(5 * var(--u)); }
 .corner.tl { top: calc(28 * var(--u)); left: calc(28 * var(--u)); } .corner.tl::before, .corner.tl::after { top: 0; left: 0; }
 .corner.tr { top: calc(28 * var(--u)); right: calc(28 * var(--u)); } .corner.tr::before { top: 0; right: 0; } .corner.tr::after { top: 0; right: 0; }

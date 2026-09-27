@@ -31,7 +31,7 @@ function Menu() {
       <h3>Units</h3>
       <div className="seg"><button className={units === 'imperial' ? 'on' : ''} onClick={() => set.getState().setUnits('imperial')}>feet & inches</button><button className={units === 'metric' ? 'on' : ''} onClick={() => set.getState().setUnits('metric')}>metric</button></div>
       <h3>Theme</h3>
-      <div className="seg">{(['stone', 'peach', 'teal'] as const).map((t) => <button key={t} className={theme === t ? 'on' : ''} onClick={() => set.getState().setTheme(t)}>{t}</button>)}</div>
+      <div className="seg">{(['stone', 'teal'] as const).map((t) => <button key={t} className={theme === t ? 'on' : ''} onClick={() => set.getState().setTheme(t)}>{t}</button>)}</div>
       <h3>Designer</h3>
       <button className="drawer-item" onClick={() => set.getState().toggleNight()}>Toggle day / night</button>
       <button className="drawer-item" onClick={() => set.getState().toggleSound()}>Toggle sound</button>
