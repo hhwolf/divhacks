@@ -17,6 +17,7 @@ export function TopLeft() {
   return (
     <div className="cluster top-left" data-testid="top-left">
       <button className={`sq ${drawer === 'menu' ? 'active' : ''}`} title="Menu" aria-label="Menu" onClick={() => set.getState().setDrawer(drawer === 'menu' ? null : 'menu')}><I.menu /></button>
+      <a className="sq" title="Home" aria-label="Home" href="/"><I.home /></a>
       <button className="sq" title="Snapshot" aria-label="Snapshot" onClick={snap}><I.camera /></button>
       <button className="sq" title="Undo (⌘Z)" aria-label="Undo" disabled={history.length === 0} onClick={() => set.getState().undo()}><I.undo /></button>
     </div>
